@@ -1,9 +1,5 @@
 package com.mashup
 
-class SampleDomain {
+class SampleDomain
 
-}
-
-class SampleRepository {
-
-}
+class SampleRepository

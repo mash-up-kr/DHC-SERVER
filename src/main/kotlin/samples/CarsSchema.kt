@@ -25,7 +25,9 @@ data class Car(
     }
 }
 
-class CarService(private val database: MongoDatabase) {
+class CarService(
+    private val database: MongoDatabase
+) {
     var collection: MongoCollection<Document>
 
     init {
@@ -34,25 +36,31 @@ class CarService(private val database: MongoDatabase) {
     }
 
     // Create new car
-    suspend fun create(car: Car): String = withContext(Dispatchers.IO) {
-        val doc = car.toDocument()
-        collection.insertOne(doc)
-        doc["_id"].toString()
-    }
+    suspend fun create(car: Car): String =
+        withContext(Dispatchers.IO) {
+            val doc = car.toDocument()
+            collection.insertOne(doc)
+            doc["_id"].toString()
+        }
 
     // Read a car
-    suspend fun read(id: String): Car? = withContext(Dispatchers.IO) {
-        collection.find(Filters.eq("_id", ObjectId(id))).first()?.let(Car::fromDocument)
-    }
+    suspend fun read(id: String): Car? =
+        withContext(Dispatchers.IO) {
+            collection.find(Filters.eq("_id", ObjectId(id))).first()?.let(Car::fromDocument)
+        }
 
     // Update a car
-    suspend fun update(id: String, car: Car): Document? = withContext(Dispatchers.IO) {
-        collection.findOneAndReplace(Filters.eq("_id", ObjectId(id)), car.toDocument())
-    }
+    suspend fun update(
+        id: String,
+        car: Car
+    ): Document? =
+        withContext(Dispatchers.IO) {
+            collection.findOneAndReplace(Filters.eq("_id", ObjectId(id)), car.toDocument())
+        }
 
     // Delete a car
-    suspend fun delete(id: String): Document? = withContext(Dispatchers.IO) {
-        collection.findOneAndDelete(Filters.eq("_id", ObjectId(id)))
-    }
+    suspend fun delete(id: String): Document? =
+        withContext(Dispatchers.IO) {
+            collection.findOneAndDelete(Filters.eq("_id", ObjectId(id)))
+        }
 }
-

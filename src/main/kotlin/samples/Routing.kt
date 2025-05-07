@@ -22,9 +22,11 @@ fun Application.configureRouting() {
     install(Resources)
     install(RequestValidation) {
         validate<String> { bodyText ->
-            if (!bodyText.startsWith("Hello"))
+            if (!bodyText.startsWith("Hello")) {
                 ValidationResult.Invalid("Body text should start with 'Hello'")
-            else ValidationResult.Valid
+            } else {
+                ValidationResult.Valid
+            }
         }
     }
     install(AutoHeadResponse)
@@ -51,4 +53,6 @@ fun Application.configureRouting() {
 
 @Serializable
 @Resource("/articles")
-class Articles(val sort: String? = "new")
+class Articles(
+    val sort: String? = "new"
+)

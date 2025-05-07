@@ -1,7 +1,5 @@
 package com.mashup
 
-class AService {
-}
+class AService
 
-class BService {
-}
+class BService
