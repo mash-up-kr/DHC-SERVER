@@ -1,9 +1,5 @@
 package com.mashup
 
-class AController {
+class AController
 
-}
-
-class BController {
-
-}
+class BController
