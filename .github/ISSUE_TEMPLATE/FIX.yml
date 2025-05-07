@@ -1,0 +1,20 @@
+name: 버그 레포트
+description: 문제 상황과 관련된 버그를 보고하는데 사용합니다.
+title: "fix: "
+labels: [ "fix" ]
+body:
+  - type: markdown
+    attributes:
+      value: "## Issue Title\n<!-- 문제 상황을 나타내는 제목을 작성 -->"
+
+  - type: textarea
+    attributes:
+      label: "문제 상황"
+      description: "어떤 문제가 발생했는가?"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: "제안하는 해결 방법"
+      description: "어떻게 해결할 것인지 작성"
