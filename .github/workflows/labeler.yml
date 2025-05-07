@@ -1,6 +1,8 @@
 name: 'PR 라벨 자동 할당'
+
 on:
   - pull_request_target
+
 jobs:
   labeler:
     permissions:

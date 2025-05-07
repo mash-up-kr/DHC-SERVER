@@ -1,4 +1,4 @@
-name: 자동 PR 작성자 할당
+name: 'PR 작성자 자동 할당'
 
 on:
   pull_request:
