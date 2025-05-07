@@ -1,0 +1,26 @@
+Documentation:
+  - head-branch: [ '^documentation', 'documentation', '^docs', 'docs', '^doc', 'doc' ]
+
+Configuration:
+  - head-branch: [ '^configuration', 'configuration', '^config', 'config' ]
+
+Feature:
+  - head-branch: [ '^feat', 'feat', '^feature', 'feature' ]
+
+Style:
+  - head-branch: [ '^style', 'style' ]
+
+Refactoring:
+  - head-branch: [ '^refactoring', 'refactoring', '^refactor', 'refactor', '^refact', 'refact' ]
+
+Fix:
+  - head-branch: [ '^hotfix', 'hotfix', '^fix', 'fix' ]
+
+Chore:
+  - head-branch: [ '^chore', 'chore', '^misc', 'misc', '^maintenance', 'maintenance' ]
+
+Test:
+  - head-branch: [ '^test', 'test', '^unittest', 'unittest', '^integration', 'integration' ]
+
+Deployment:
+  - base-branch: [ 'main' ]
