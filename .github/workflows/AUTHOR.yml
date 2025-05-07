@@ -1,0 +1,28 @@
+name: 자동 PR 작성자 할당
+
+on:
+  pull_request:
+    types: [ opened, reopened ]
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: 작성자를 할당자에 추가
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                assignees: [context.payload.pull_request.user.login]
+              });
+            } catch (error) {
+              core.setFailed(error.message);
+            }
