@@ -1,53 +1,4 @@
 services:
-  postgres:
-    image: postgres:latest
-    container_name: mashup-postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: mydatabase
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '1.5'
-          memory: 2.5G
-        reservations:
-          cpus: '0.5'
-          memory: 1G
-
-  redis:
-    image: redis:latest
-    container_name: mashup-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-    command: redis-server --appendonly yes
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 1G
-        reservations:
-          cpus: '0.2'
-          memory: 512M
-
   mongodb:
     image: mongo:latest
     container_name: mashup-mongodb
@@ -66,13 +17,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.5'
-          memory: 2.5G
+          cpus: '1'
+          memory: 2G
         reservations:
-          cpus: '0.5'
+          cpus: '1'
           memory: 1G
 
 volumes:
-  postgres-data:
-  redis-data:
   mongodb-data:
