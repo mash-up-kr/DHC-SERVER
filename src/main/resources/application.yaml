@@ -4,27 +4,6 @@ ktor:
       - com.mashup.ApplicationKt.module
   deployment:
     port: 8080
-  kafka:
-    schema.registry.url:
-      - "SCHEMA_REGISTRY_URL"
-    common:
-      bootstrap.servers:
-        - "BOOTSTRAP_SERVERS"
-      # Additional attributes
-    admin:
-    # Additional attributes
-    consumer:
-      group.id: "my-group-id"
-      # Additional attributes
-    producer:
-      client.id: "my-client-id"
-      # Additional attributes
-    topics:
-      - name: my-topic
-        partitions: 1
-        configs:
-          message.timestamp.type: CreateTime
-          # Additional attributes
 
 # MongoDB 설정
 db:
@@ -33,14 +12,4 @@ db:
     port: "27017"
     database:
       name: "test"
-    # 아래는 선택사항입니다
-    # user: "mongo사용자"
-    # password: "mongo비밀번호"
     maxPoolSize: 20
-
-# JWT 설정
-jwt:
-  domain: "https://jwt-provider-domain/"
-  audience: "jwt-audience"
-  realm: "ktor sample app"
-  secret: "secret"
