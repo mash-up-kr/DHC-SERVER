@@ -1,3 +1,33 @@
+# Terraform 상태 파일
+*.tfstate
+*.tfstate.*
+
+# 임시 파일
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.d/
+
+# 민감한 변수 파일
+*.auto.tfvars
+terraform.tfvars
+*.tfvars
+
+# 백업 파일
+*.backup
+*.bak
+
+# 로그 파일
+*.log
+
+# 시크릿 키/환경변수 파일
+.env
+.env.*
+secrets.tf
+credentials.tf
+*.pem
+*.key
+*.crt
+
 /logs
 .idea
 .kotlin
