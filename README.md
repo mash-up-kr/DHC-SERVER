@@ -44,3 +44,29 @@
 
 ---
 
+## 현재 패키지 구조 및 설명
+
+```
+com.mashup.dhc
+├── Application.kt   # main entry point
+├── plugins          # Ktor 플러그인 설정
+├── routes           # 라우팅 핸들러
+├── domain           # 도메인 모델
+│   ├── model        # 도메인 모델 클래스
+│   └── service      # 도메인 서비스
+└── utils            # 공통 유틸리티
+```
+
+---
+
+## 테스트
+
+- [Kotest](https://kotest.io/)를 사용하여 테스트를 작성할 수 있습니다.
+- 테스트 실행:  
+  ```
+  ./gradlew test
+  ```
+
+`
+````
+
