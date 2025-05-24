@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.ktor.network.tls)
     implementation(libs.mongodb.driver.core)
     implementation(libs.mongodb.driver.sync)
+    implementation(libs.mongodb.driver.kotlin.coroutine)
     implementation(libs.bson)
     implementation(libs.ktor.serialization.jackson)
     implementation(libs.ktor.serialization.gson)
@@ -74,4 +75,7 @@ dependencies {
     implementation(libs.ktor.server.config.yaml)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
+    testImplementation(libs.embedded.mongo)
+    testImplementation(libs.mongodb.driver.kotlin.coroutine)
+    testImplementation(libs.mockk)
 }

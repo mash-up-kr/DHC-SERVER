@@ -6,6 +6,7 @@ mongo-version = "5.4.0"
 prometheus-version = "1.6.13"
 ktlint-version = "12.2.0"
 ktlint-engine-version = "1.5.0"
+mockk-version = "1.13.10"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-version" }
@@ -19,6 +20,8 @@ ktor-server-websockets = { module = "io.ktor:ktor-server-websockets", version.re
 ktor-network-tls = { module = "io.ktor:ktor-network-tls", version.ref = "ktor-version" }
 mongodb-driver-core = { module = "org.mongodb:mongodb-driver-core", version.ref = "mongo-version" }
 mongodb-driver-sync = { module = "org.mongodb:mongodb-driver-sync", version.ref = "mongo-version" }
+mongodb-driver-kotlin-coroutine = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version = "4.11.0" }
+embedded-mongo = { module = "de.flapdoodle.embed:de.flapdoodle.embed.mongo", version = "4.12.2" }
 bson = { module = "org.mongodb:bson", version.ref = "mongo-version" }
 ktor-serialization-jackson = { module = "io.ktor:ktor-serialization-jackson", version.ref = "ktor-version" }
 ktor-serialization-gson = { module = "io.ktor:ktor-serialization-gson", version.ref = "ktor-version" }
@@ -42,6 +45,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor-version" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin-version" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk-version" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
