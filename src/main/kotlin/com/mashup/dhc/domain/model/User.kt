@@ -17,9 +17,16 @@ data class User(
     val gender: Gender,
     val userToken: String,
     val birthDate: LocalDate,
+    val preferredMissionCategoryList: List<MissionCategory>,
     val longTermMission: Mission,
     val todayDailyMissionList: List<Mission>,
-    val pastRoutineHistoryIds: List<ObjectId>
+    val pastRoutineHistoryIds: List<ObjectId>,
+    val currentAmulet: Amulet
+)
+
+data class Amulet(
+    val totalPiece: Int,
+    val remainPiece: Int
 )
 
 class UserRepository(
