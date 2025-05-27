@@ -4,6 +4,7 @@ import com.mashup.com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import com.mashup.com.mashup.dhc.domain.service.MissionPicker
 import com.mashup.com.mashup.dhc.domain.service.UserService
 import com.mashup.com.mashup.dhc.utils.Money
+import com.mashup.dhc.domain.model.Amulet
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
@@ -97,7 +98,12 @@ class UserServiceTest {
                         ),
                     todayDailyMissionList = listOf(missionToReplace),
                     pastRoutineHistoryIds = listOf(),
-                    preferredMissionCategoryList = listOf(missionCategory)
+                    preferredMissionCategoryList = listOf(missionCategory),
+                    currentAmulet =
+                        Amulet(
+                            totalPiece = 0,
+                            remainPiece = 0
+                        )
                 )
 
             // Mock repository calls

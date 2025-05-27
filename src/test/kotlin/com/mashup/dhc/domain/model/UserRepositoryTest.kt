@@ -47,7 +47,12 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             )
                         ),
                     pastRoutineHistoryIds = emptyList(),
-                    preferredMissionCategoryList = listOf(MissionCategory.FOOD)
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD),
+                    currentAmulet =
+                        Amulet(
+                            totalPiece = 0,
+                            remainPiece = 0
+                        )
                 )
 
             // When
@@ -98,7 +103,12 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             )
                         ),
                     pastRoutineHistoryIds = emptyList(),
-                    preferredMissionCategoryList = listOf(MissionCategory.FOOD)
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD),
+                    currentAmulet =
+                        Amulet(
+                            totalPiece = 0,
+                            remainPiece = 0
+                        )
                 )
 
             // When
@@ -132,7 +142,12 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             )
                         ),
                     pastRoutineHistoryIds = listOf(ObjectId()), // Added mission history
-                    preferredMissionCategoryList = listOf(MissionCategory.FOOD)
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD),
+                    currentAmulet =
+                        Amulet(
+                            totalPiece = 0,
+                            remainPiece = 0
+                        )
                 )
 
             val updateCount = userRepository.updateOne(objectId, updatedUser)
@@ -168,7 +183,12 @@ class UserRepositoryTest : BaseMongoDBTest() {
                         ),
                     todayDailyMissionList = emptyList(),
                     pastRoutineHistoryIds = emptyList(),
-                    preferredMissionCategoryList = listOf(MissionCategory.FOOD)
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD),
+                    currentAmulet =
+                        Amulet(
+                            totalPiece = 0,
+                            remainPiece = 0
+                        )
                 )
 
             // When
