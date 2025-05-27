@@ -1,6 +1,7 @@
 package com.mashup.dhc.domain.service
 
 import com.mashup.com.mashup.dhc.domain.model.PastRoutineHistoryRepository
+import com.mashup.com.mashup.dhc.domain.service.MissionPicker
 import com.mashup.com.mashup.dhc.domain.service.UserService
 import com.mashup.com.mashup.dhc.utils.Money
 import com.mashup.dhc.domain.model.Gender
@@ -35,16 +36,26 @@ class UserServiceTest {
     @MockK
     private lateinit var pastRoutineHistoryRepository: PastRoutineHistoryRepository
 
+    private lateinit var missionPicker: MissionPicker
+
     private lateinit var userService: UserService
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        userService = UserService(transactionService, userRepository, missionRepository, pastRoutineHistoryRepository)
+        missionPicker = MissionPicker(missionRepository)
+        userService =
+            UserService(
+                transactionService,
+                userRepository,
+                missionRepository,
+                pastRoutineHistoryRepository,
+                missionPicker
+            )
     }
 
     @Test
-    fun `switchTodayMission returns same category`() =
+    fun `switchTodayMission returns not always same category`() =
         runBlocking {
             // Given
             val userId = "507f1f77bcf86cd799439011"
@@ -107,7 +118,6 @@ class UserServiceTest {
 
             val updatedMission = userSlot.captured.todayDailyMissionList[0]
             assertEquals(randomMission.id, updatedMission.id)
-            assertEquals(randomMission.category, updatedMission.category)
             assertEquals(randomMission.difficulty, updatedMission.difficulty)
             assertEquals(randomMission.type, updatedMission.type)
             assertEquals(randomMission.cost, updatedMission.cost)
