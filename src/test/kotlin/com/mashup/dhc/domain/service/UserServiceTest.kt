@@ -85,7 +85,8 @@ class UserServiceTest {
                             cost = Money(300)
                         ),
                     todayDailyMissionList = listOf(missionToReplace),
-                    listOf()
+                    pastRoutineHistoryIds = listOf(),
+                    preferredMissionCategoryList = listOf(missionCategory)
                 )
 
             // Mock repository calls

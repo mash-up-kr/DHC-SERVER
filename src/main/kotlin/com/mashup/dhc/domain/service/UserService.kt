@@ -65,7 +65,9 @@ class UserService(
         val rolledTodayMissionList =
             user.todayDailyMissionList.map { todayMission ->
                 if (todayMission.id == ObjectId(missionId)) {
-                    val randomPeekMission = missionRepository.findDailyByCategory(todayMission.category).random()
+                    val peekMissionCategory = user.preferredMissionCategoryList.random()
+                    val randomPeekMission =
+                        missionRepository.findDailyByCategory(peekMissionCategory).random()
 
                     todayMission.copy(
                         id = randomPeekMission.id,

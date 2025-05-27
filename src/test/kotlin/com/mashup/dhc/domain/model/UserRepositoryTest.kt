@@ -46,7 +46,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 cost = Money("10.00")
                             )
                         ),
-                    pastRoutineHistoryIds = emptyList()
+                    pastRoutineHistoryIds = emptyList(),
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD)
                 )
 
             // When
@@ -96,7 +97,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 cost = Money("10.00")
                             )
                         ),
-                    pastRoutineHistoryIds = emptyList()
+                    pastRoutineHistoryIds = emptyList(),
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD)
                 )
 
             // When
@@ -129,7 +131,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 cost = Money("15.00") // Changed cost
                             )
                         ),
-                    pastRoutineHistoryIds = listOf(ObjectId()) // Added mission history
+                    pastRoutineHistoryIds = listOf(ObjectId()), // Added mission history
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD)
                 )
 
             val updateCount = userRepository.updateOne(objectId, updatedUser)
@@ -164,7 +167,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             cost = Money("10.00")
                         ),
                     todayDailyMissionList = emptyList(),
-                    pastRoutineHistoryIds = emptyList()
+                    pastRoutineHistoryIds = emptyList(),
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD)
                 )
 
             // When
