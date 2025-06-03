@@ -45,6 +45,9 @@ ktor-server-csrf = { module = "io.ktor:ktor-server-csrf", version.ref = "ktor-ve
 ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor-version" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-version" }
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor-version" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor-version" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor-version" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor-version" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin-version" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk-version" }
