@@ -83,6 +83,9 @@ dependencies {
     implementation(libs.aws.sdk.s3.jvm)
     implementation(libs.kotlinx.coroutines.core)
 
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.embedded.mongo)
