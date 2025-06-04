@@ -1,11 +1,13 @@
 package com.mashup.dhc.domain.model
 
+import com.mashup.com.mashup.dhc.utils.BirthDate
+import com.mashup.com.mashup.dhc.utils.CalendarType
 import com.mashup.com.mashup.dhc.utils.Money
-import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import org.bson.types.ObjectId
 import org.junit.Test
 
@@ -24,10 +26,14 @@ class UserRepositoryTest : BaseMongoDBTest() {
             val user =
                 User(
                     id = null,
-                    name = "Test User",
                     gender = Gender.MALE,
                     userToken = "test-token",
-                    birthDate = LocalDate.of(2000, 1, 1),
+                    birthDate =
+                        BirthDate(
+                            LocalDate(2000, 1, 1),
+                            CalendarType.SOLAR
+                        ),
+                    birthTime = null,
                     longTermMission =
                         Mission(
                             id = null,
@@ -64,11 +70,11 @@ class UserRepositoryTest : BaseMongoDBTest() {
 
             // Then
             assertNotNull(foundUser)
-            assertEquals("Test User", foundUser.name)
             assertEquals(Gender.MALE, foundUser.gender)
             assertEquals("test-token", foundUser.userToken)
-            assertEquals(LocalDate.of(2000, 1, 1), foundUser.birthDate)
-            assertEquals(MissionCategory.FOOD, foundUser.longTermMission.category)
+            assertEquals(LocalDate(2000, 1, 1), foundUser.birthDate!!.date)
+            assertEquals(CalendarType.SOLAR, foundUser.birthDate!!.calendarType)
+            assertEquals(MissionCategory.FOOD, foundUser.longTermMission!!.category)
             assertEquals(1, foundUser.todayDailyMissionList.size)
             assertEquals(MissionCategory.FOOD, foundUser.todayDailyMissionList[0].category)
         }
@@ -80,10 +86,10 @@ class UserRepositoryTest : BaseMongoDBTest() {
             val user =
                 User(
                     id = null,
-                    name = "Test User",
                     gender = Gender.MALE,
                     userToken = "test-token",
-                    birthDate = LocalDate.of(2000, 1, 1),
+                    birthDate = BirthDate(LocalDate(2000, 1, 1), CalendarType.SOLAR),
+                    birthTime = null,
                     longTermMission =
                         Mission(
                             id = null,
@@ -119,10 +125,10 @@ class UserRepositoryTest : BaseMongoDBTest() {
             val updatedUser =
                 User(
                     id = objectId,
-                    name = "Test User", // Same data
                     gender = Gender.MALE,
                     userToken = "test-token",
-                    birthDate = LocalDate.of(2000, 1, 1),
+                    birthDate = BirthDate(LocalDate(2000, 1, 1), CalendarType.SOLAR),
+                    birthTime = null,
                     longTermMission =
                         Mission(
                             id = null,
@@ -169,10 +175,10 @@ class UserRepositoryTest : BaseMongoDBTest() {
             val user =
                 User(
                     id = null,
-                    name = "Test User",
                     gender = Gender.MALE,
                     userToken = "test-token",
-                    birthDate = LocalDate.of(2000, 1, 1),
+                    birthDate = BirthDate(LocalDate(2000, 1, 1), CalendarType.SOLAR),
+                    birthTime = null,
                     longTermMission =
                         Mission(
                             id = null,
