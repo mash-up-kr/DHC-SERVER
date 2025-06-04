@@ -1,27 +1,28 @@
 package com.mashup.dhc.domain.model
 
+import com.mashup.com.mashup.dhc.utils.BirthDate
+import com.mashup.dhc.utils.BirthTime
 import com.mongodb.MongoException
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.UpdateOptions
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import java.time.LocalDate
 import kotlinx.coroutines.flow.firstOrNull
 import org.bson.BsonValue
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
 data class User(
-    @BsonId val id: ObjectId?,
-    val name: String,
+    @BsonId val id: ObjectId? = null,
     val gender: Gender,
     val userToken: String,
-    val birthDate: LocalDate,
+    val birthDate: BirthDate?,
+    val birthTime: BirthTime?,
     val preferredMissionCategoryList: List<MissionCategory>,
-    val longTermMission: Mission,
-    val todayDailyMissionList: List<Mission>,
-    val pastRoutineHistoryIds: List<ObjectId>,
-    val currentAmulet: Amulet
+    val longTermMission: Mission? = null,
+    val todayDailyMissionList: List<Mission> = listOf(),
+    val pastRoutineHistoryIds: List<ObjectId> = listOf(),
+    val currentAmulet: Amulet? = null
 )
 
 data class Amulet(
