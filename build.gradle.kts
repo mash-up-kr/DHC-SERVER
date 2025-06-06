@@ -33,6 +33,12 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+ktor {
+    fatJar {
+        archiveFileName.set("dhc-app-all.jar")
+    }
+}
+
 repositories {
     mavenCentral()
     maven { url = uri("https://packages.confluent.io/maven/") }

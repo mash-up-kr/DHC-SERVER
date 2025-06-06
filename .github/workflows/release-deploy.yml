@@ -1,0 +1,120 @@
+name: Release Deploy
+
+on:
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ${{ secrets.NCP_CONTAINER_REGISTRY }}
+  IMAGE_NAME: dhc-ktor-app
+
+jobs:
+  deploy-production:
+    name: 프로덕션 배포
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: SSH 설정
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.NCP_SERVER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.NCP_SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: 배포
+        env:
+          SSH_HOST: ${{ secrets.NCP_SERVER_HOST }}
+          SSH_USER: ${{ secrets.NCP_SERVER_USER }}
+          REGISTRY: ${{ secrets.NCP_CONTAINER_REGISTRY }}
+          IMAGE_NAME: dhc-ktor-app
+        run: |
+          scp scripts/deploy.sh $SSH_USER@$SSH_HOST:/tmp/deploy.sh
+          
+          ssh $SSH_USER@$SSH_HOST << 'EOF'
+            export REGISTRY="${{ env.REGISTRY }}"
+            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
+            export TAG="latest"
+            export NCP_ACCESS_KEY="${{ secrets.NCP_ACCESS_KEY }}"
+            export NCP_SECRET_KEY="${{ secrets.NCP_SECRET_KEY }}"
+            export MONGO_CONNECTION_STRING="${{ secrets.MONGO_CONNECTION_STRING }}"
+          
+            chmod +x /tmp/deploy.sh
+            /tmp/deploy.sh production
+          EOF
+
+      - name: 헬스 체크
+        run: |
+          echo "애플리케이션 시작 대기중..."
+          
+          max_retries=20
+          retry_count=0
+          
+          while [ $retry_count -lt $max_retries ]; do
+            if curl -f http://${{ secrets.NCP_SERVER_HOST }}:8080/health; then
+              echo "헬스 체크 성공"
+              exit 0
+            else
+              retry_count=$((retry_count + 1))
+              echo "헬스 체크 재시도 $retry_count/$max_retries"
+              sleep 3
+            fi
+          done
+          
+          echo "헬스 체크 실패"
+          exit 1
+
+  update-release-notes:
+    name: 릴리즈 노트 업데이트
+    runs-on: ubuntu-latest
+    needs: deploy-production
+
+    steps:
+      - name: 릴리즈 업데이트
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const release = await github.rest.repos.getRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id
+            });
+            
+            const additionalNotes = `
+            
+            ## 배포 정보
+            
+            - **버전**: ${context.payload.release.tag_name}
+            - **이미지**: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            - **환경**: Production
+            - **시간**: ${new Date().toISOString()}
+            `;
+            
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id,
+              body: release.data.body + additionalNotes
+            });
+
+#  notify-slack:
+#    name: Slack 알림
+#    runs-on: ubuntu-latest
+#    needs: deploy-production
+#    if: always() && vars.SLACK_WEBHOOK_URL != ''
+#
+#    steps:
+#      - name: 알림 전송
+#        uses: 8398a7/action-slack@v3
+#        with:
+#          status: ${{ needs.deploy-production.result }}
+#          text: |
+#            릴리즈 배포: ${{ github.event.release.tag_name }}
+#            상태: ${{ needs.deploy-production.result }}
+#        env:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
