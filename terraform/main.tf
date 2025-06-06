@@ -83,3 +83,39 @@ module "server" {
     module.server_info
   ]
 }
+
+# Object Storage 모듈 - Container Registry와 정적 파일 호스팅 지원
+module "object_storage" {
+  source = "./modules/object_storage"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  bucket_name               = "${var.project_name}-${var.environment}-storage-${random_string.bucket_suffix.result}"
+  bucket_public_read        = var.object_storage_public_read
+  versioning                = var.object_storage_versioning
+  enable_container_registry = true
+  enable_static_hosting     = true
+
+  # CORS와 라이프사이클은 NCP ncloud provider에서 직접 지원하지 않으므로
+  # AWS CLI를 통해 별도로 설정해야 함
+  cors_rules      = []
+  lifecycle_rules = []
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+    Purpose     = "Container Registry and Static Files"
+  }
+
+  providers = {
+    ncloud = ncloud
+  }
+}
+
+# 버킷 이름을 고유하게 만들기 위한 랜덤 문자열
+resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
