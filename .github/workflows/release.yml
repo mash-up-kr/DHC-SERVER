@@ -1,8 +1,6 @@
 name: Release Build and Deploy
 
 on:
-  push:
-    branches: [ infra/docker-registry-deploy ]
   release:
     types: [published]
   workflow_dispatch:
