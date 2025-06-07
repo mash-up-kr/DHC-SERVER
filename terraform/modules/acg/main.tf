@@ -30,7 +30,7 @@ resource "ncloud_access_control_group_rule" "server_https" {
 }
 
 # 보안 그룹 규칙 - HTTPS 접근 허용
-resource "ncloud_access_control_group_rule" "server_https" {
+resource "ncloud_access_control_group_rule" "server_unique" {
   access_control_group_no = ncloud_access_control_group.server.id
 
   inbound {
