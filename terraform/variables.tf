@@ -21,11 +21,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "environment" {
-  description = "환경 (dev/prod)"
-  type        = string
-}
-
 variable "vpc_cidr" {
   description = "VPC CIDR"
   type        = string

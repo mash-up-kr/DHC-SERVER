@@ -1,0 +1,227 @@
+name: Release Build and Deploy
+
+on:
+  push:
+    branches: [ infra/docker-registry-deploy ]
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '버전 태그 (예: v1.0.0)'
+        required: true
+        type: string
+
+env:
+  REGISTRY: ${{ secrets.NCP_CONTAINER_REGISTRY }}
+  IMAGE_NAME: dhc-ktor-app
+
+jobs:
+  build:
+    name: 빌드
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      image-digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 버전
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="$(date +%Y%m%d-%H%M%S)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "버전: $VERSION"
+
+      - name: JDK 21 설정
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Gradle 캐시 복원
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            build
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: JAR 빌드
+        run: |
+          ./gradlew buildFatJar \
+            --no-daemon \
+            --build-cache \
+            --parallel \
+            -Pversion=${{ steps.version.outputs.version }}
+        env:
+          GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false"
+
+      - name: Docker Buildx 설정
+        uses: docker/setup-buildx-action@v3
+
+      - name: NCP 레지스트리 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.NCP_ACCESS_KEY }}
+          password: ${{ secrets.NCP_SECRET_KEY }}
+
+      - name: 메타데이터 추출
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=latest
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.version }},enable=${{ github.event_name == 'release' }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.version }},enable=${{ github.event_name == 'release' }}
+            type=semver,pattern={{major}},value=${{ steps.version.outputs.version }},enable=${{ github.event_name == 'release' }}
+
+      - name: 이미지 빌드/푸시
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          build-args: |
+            VERSION=${{ steps.version.outputs.version }}
+            BUILD_TIME=${{ github.event.release.created_at || github.event.repository.updated_at }}
+          provenance: false
+
+      - name: 빌드 요약
+        run: |
+          echo "### 릴리즈 빌드 완료" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 이미지 정보" >> $GITHUB_STEP_SUMMARY
+          echo "- **버전:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **레지스트리:** ${{ env.REGISTRY }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **이미지:** ${{ env.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **태그:**" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### 릴리즈 정보" >> $GITHUB_STEP_SUMMARY
+          echo "- **릴리즈 제목:** ${{ github.event.release.name || '수동 실행' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **다이제스트:** ${{ steps.build.outputs.digest }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **빌드 시간:** $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M:%S KST')" >> $GITHUB_STEP_SUMMARY
+
+  deploy:
+    name: 배포
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 배포 시작 알림
+        run: |
+          echo "### 배포 시작" >> $GITHUB_STEP_SUMMARY
+          echo "- **버전:** ${{ needs.build.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **시작 시간:** $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M:%S KST')" >> $GITHUB_STEP_SUMMARY
+
+      - name: 배포 스크립트 복사
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.NCP_SERVER_HOST }}
+          username: ${{ secrets.NCP_SERVER_USER }}
+          password: ${{ secrets.NCP_SERVER_PASSWORD }}
+          key: ${{ secrets.NCP_SERVER_SSH_KEY }}
+          source: "scripts/deploy.sh"
+          target: "/home"
+          strip_components: 1
+
+      - name: 배포 실행
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.NCP_SERVER_HOST }}
+          username: ${{ secrets.NCP_SERVER_USER }}
+          password: ${{ secrets.NCP_SERVER_PASSWORD }}
+          key: ${{ secrets.NCP_SERVER_SSH_KEY }}
+          script: |
+            if ! command -v docker &> /dev/null && ! command -v podman &> /dev/null; then
+              sudo yum install -y podman podman-docker --disablerepo='*docker*'
+              sudo touch /etc/containers/nodocker
+              echo "alias docker=podman" | sudo tee /etc/profile.d/podman.sh
+            fi
+            
+            export REGISTRY="${{ env.REGISTRY }}"
+            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
+            export TAG="${{ needs.build.outputs.version }}"
+            export NCP_ACCESS_KEY="${{ secrets.NCP_ACCESS_KEY }}"
+            export NCP_SECRET_KEY="${{ secrets.NCP_SECRET_KEY }}"
+            export MONGO_CONNECTION_STRING="${{ secrets.MONGO_CONNECTION_STRING }}"
+            
+            chmod +x /home/deploy.sh
+            sudo -E /home/deploy.sh
+
+      - name: 헬스 체크
+        run: |
+          echo "애플리케이션 시작 대기중..."
+          
+          max_retries=30
+          retry_count=0
+          
+          while [ $retry_count -lt $max_retries ]; do
+            if curl -f -s -X GET http://${{ secrets.NCP_SERVER_HOST }}:8080/health; then
+              echo "헬스 체크 성공"
+              exit 0
+            fi
+          
+            retry_count=$((retry_count + 1))
+            echo "헬스 체크 재시도 $retry_count/$max_retries"
+            sleep 2
+          done
+          
+          echo "헬스 체크 실패"
+          exit 1
+
+      - name: 배포 완료/릴리즈 노트 업데이트
+        if: success() && github.event_name == 'release'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentInfo = `
+            
+            ---
+            
+            ## 배포 정보
+            
+            - **상태**: 배포 완료
+            - **버전**: ${{ needs.build.outputs.version }}
+            - **이미지**: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}
+            - **배포 시간**: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
+            - **서버**: ${{ secrets.NCP_SERVER_HOST }}
+            - **헬스체크**: 정상
+            `;
+            
+            await github.rest.repos.updateRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: context.payload.release.id,
+              body: context.payload.release.body + deploymentInfo
+            });
+
+      - name: 요약
+        if: always()
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 배포 결과" >> $GITHUB_STEP_SUMMARY
+          echo "- **상태**: ${{ job.status == 'success' && '성공' || '실패' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **완료 시간**: $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M:%S KST')" >> $GITHUB_STEP_SUMMARY
