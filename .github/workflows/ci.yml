@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, infra/docker-registry-build ]
   workflow_dispatch:
 
 env:
@@ -30,27 +30,37 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Gradle 설정
-        uses: gradle/actions/setup-gradle@v4
+      - name: Gradle 캐시 복원
+        uses: actions/cache@v4
         with:
-          cache-read-only: false
-          gradle-home-cache-includes: |
-            caches
-            notifications
-            jdks
-            wrapper
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            build
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: JAR 빌드
         run: |
           ./gradlew buildFatJar \
             --no-daemon \
             --build-cache \
-            --parallel
+            --parallel \
+            -Pversion=${{ github.sha }}
         env:
-          GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m"
+          GRADLE_OPTS: "-Xmx2g -XX:MaxMetaspaceSize=512m -Dorg.gradle.daemon=false"
+
+      - name: QEMU 설정
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: linux/arm64
 
       - name: Docker Buildx 설정
         uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            image=moby/buildkit:v0.14.0
 
       - name: NCP 레지스트리 로그인
         uses: docker/login-action@v3
@@ -65,11 +75,14 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
-            latest=true
+            latest=auto
+            prefix=
+            suffix=
           tags: |
             type=ref,event=branch
-            type=sha,prefix={{branch}}-,format=short
+            type=sha,prefix={{branch}}-
             type=raw,value={{date 'YYYYMMDD-HHmmss' tz='Asia/Seoul'}}
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: 빌드 및 푸시
         id: build
@@ -79,39 +92,37 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          cache-from: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-to: |
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:buildcache,mode=max
           build-args: |
             VERSION=${{ github.sha }}
-            BUILD_TIME=${{ github.event.repository.updated_at }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp }}
             BUILDKIT_INLINE_CACHE=1
           provenance: false
-          platforms: linux/amd64,linux/arm64
 
       - name: 빌드 요약
+        if: always()
         run: |
-          echo "### 🚀 빌드 완료" >> $GITHUB_STEP_SUMMARY
+          echo "### 빌드 완료" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### 📦 이미지 정보" >> $GITHUB_STEP_SUMMARY
+          echo "#### 이미지 정보" >> $GITHUB_STEP_SUMMARY
           echo "- **레지스트리:** \`${{ env.REGISTRY }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **이미지:** \`${{ env.IMAGE_NAME }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **태그:**" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.meta.outputs.tags }}" | sed 's/,/\n/g' | sed 's/^/  - /' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /' >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "#### 🔍 상세 정보" >> $GITHUB_STEP_SUMMARY
           echo "- **커밋:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **다이제스트:** \`${{ steps.build.outputs.digest }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **빌드 시간:** $(date +'%Y-%m-%d %H:%M:%S KST')" >> $GITHUB_STEP_SUMMARY
+          echo "- **빌드 시간:** $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M:%S KST')" >> $GITHUB_STEP_SUMMARY
+          echo "- **빌드 결과:** ${{ steps.build.outcome == 'success' && '✅ 성공' || '❌ 실패' }}" >> $GITHUB_STEP_SUMMARY
 
-#      - name: Slack 알림
-#        uses: 8398a7/action-slack@v3
-#        if: always() && secrets.SLACK_WEBHOOK_URL != ''
-#        with:
-#          status: ${{ job.status }}
-#          text: |
-#            CI Pipeline: ${{ job.status }}
-#            Branch: ${{ github.ref_name }}
-#            Commit: ${{ github.sha }}
-#            Image: ${{ steps.meta.outputs.tags }}
-#        env:
-#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - name: 이미지 검증
+        if: success()
+        run: |
+          echo "이미지 검증 ..."
+          docker manifest inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} || true
