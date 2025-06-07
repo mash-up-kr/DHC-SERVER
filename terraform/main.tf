@@ -2,7 +2,7 @@
 module "vpc" {
   source = "./modules/vpc"
 
-  vpc_name = "${var.project_name}-${var.environment}-vpc"
+  vpc_name = "${var.project_name}-vpc"
   vpc_cidr = var.vpc_cidr
   zone     = var.zone
 
@@ -16,7 +16,7 @@ module "public_subnet" {
   source = "./modules/subnet"
 
   vpc_id         = module.vpc.vpc_id
-  subnet_name    = "${var.project_name}-${var.environment}-subnet"
+  subnet_name    = "${var.project_name}-subnet"
   subnet_cidr    = var.public_subnet_cidr
   zone           = var.zone
   network_acl_id = module.vpc.network_acl_id
@@ -38,7 +38,6 @@ module "acg" {
   vpc_id         = module.vpc.vpc_id
   network_acl_id = module.vpc.network_acl_id
   project_name   = var.project_name
-  environment    = var.environment
 
   providers = {
     ncloud = ncloud
@@ -65,7 +64,7 @@ module "server" {
   source = "./modules/server"
 
   subnet_id                 = module.public_subnet.subnet_id
-  server_name               = "${var.project_name}-${var.environment}"
+  server_name               = var.project_name
   server_image_product_code = var.server_image_code
   server_product_code       = var.server_product_code
   block_storage_size        = 100
@@ -89,8 +88,7 @@ module "object_storage" {
   source = "./modules/object_storage"
 
   project_name              = var.project_name
-  environment               = var.environment
-  bucket_name               = "${var.project_name}-${var.environment}-storage-${random_string.bucket_suffix.result}"
+  bucket_name               = "${var.project_name}-storage-${random_string.bucket_suffix.result}"
   bucket_public_read        = var.object_storage_public_read
   versioning                = var.object_storage_versioning
   enable_container_registry = true
@@ -102,10 +100,9 @@ module "object_storage" {
   lifecycle_rules = []
 
   tags = {
-    Project     = var.project_name
-    Environment = var.environment
-    ManagedBy   = "Terraform"
-    Purpose     = "Container Registry and Static Files"
+    Project   = var.project_name
+    ManagedBy = "Terraform"
+    Purpose   = "Container Registry and Static Files"
   }
 
   providers = {

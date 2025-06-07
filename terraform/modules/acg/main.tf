@@ -1,7 +1,7 @@
 # 보안 그룹(ACG) 생성
 resource "ncloud_access_control_group" "server" {
   vpc_no      = var.vpc_id
-  name        = "${var.project_name}-${var.environment}-server-acg"
+  name        = "${var.project_name}-server-acg"
   description = "서버용 보안 그룹"
 }
 
@@ -26,6 +26,18 @@ resource "ncloud_access_control_group_rule" "server_https" {
     port_range  = "443"
     ip_block    = "0.0.0.0/0"
     description = "HTTPS 접근"
+  }
+}
+
+# 보안 그룹 규칙 - HTTPS 접근 허용
+resource "ncloud_access_control_group_rule" "server_https" {
+  access_control_group_no = ncloud_access_control_group.server.id
+
+  inbound {
+    protocol    = "TCP"
+    port_range  = "8080"
+    ip_block    = "0.0.0.0/0"
+    description = "서버 포트 직접 접근"
   }
 }
 

@@ -3,11 +3,6 @@ variable "project_name" {
   type        = string
 }
 
-variable "environment" {
-  description = "환경 (dev/prod)"
-  type        = string
-}
-
 variable "bucket_name" {
   description = "Object Storage 버킷 이름"
   type        = string
