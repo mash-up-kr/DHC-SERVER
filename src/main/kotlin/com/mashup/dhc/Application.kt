@@ -1,11 +1,41 @@
 package com.mashup.dhc
 
+import com.mashup.com.mashup.dhc.domain.model.PastRoutineHistoryRepository
+import com.mashup.com.mashup.dhc.domain.service.MissionPicker
+import com.mashup.com.mashup.dhc.domain.service.UserService
 import com.mashup.com.mashup.dhc.plugins.configureRouting
+import com.mashup.dhc.domain.model.MissionRepository
+import com.mashup.dhc.domain.model.UserRepository
+import com.mashup.dhc.domain.service.TransactionService
+import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import io.ktor.server.application.Application
+import io.ktor.server.config.tryGetString
 import io.ktor.server.netty.EngineMain
 
 fun main(args: Array<String>) = EngineMain.main(args)
 
 fun Application.module() {
-    configureRouting()
+    val user = environment.config.tryGetString("db.mongo.user")
+    val password = environment.config.tryGetString("db.mongo.password")
+    val host = environment.config.tryGetString("db.mongo.host") ?: "127.0.0.1"
+    val port = environment.config.tryGetString("db.mongo.port") ?: "27017"
+    val maxPoolSize = environment.config.tryGetString("db.mongo.maxPoolSize")?.toInt() ?: 20
+    val databaseName = environment.config.tryGetString("db.mongo.database.name") ?: "myDatabase"
+
+    val credentials = user?.let { userVal -> password?.let { passwordVal -> "$userVal:$passwordVal@" } }.orEmpty()
+    val uri = "mongodb://$credentials$host:$port/?maxPoolSize=$maxPoolSize&w=majority" // TODO
+
+    val mongoClient: MongoClient = MongoClient.create(uri)
+    val mongoDatabase: MongoDatabase = mongoClient.getDatabase(databaseName)
+
+    val userService =
+        UserService(
+            transactionService = TransactionService(mongoClient),
+            userRepository = UserRepository(mongoDatabase),
+            missionRepository = MissionRepository(mongoDatabase),
+            pastRoutineHistoryRepository = PastRoutineHistoryRepository(mongoDatabase),
+            missionPicker = MissionPicker(MissionRepository(mongoDatabase))
+        )
+    configureRouting(userService)
 }
