@@ -3,6 +3,8 @@ package com.mashup.dhc.domain.service
 import com.mashup.com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import com.mashup.com.mashup.dhc.domain.service.MissionPicker
 import com.mashup.com.mashup.dhc.domain.service.UserService
+import com.mashup.com.mashup.dhc.utils.BirthDate
+import com.mashup.com.mashup.dhc.utils.CalendarType
 import com.mashup.com.mashup.dhc.utils.Money
 import com.mashup.dhc.domain.model.Amulet
 import com.mashup.dhc.domain.model.Gender
@@ -17,9 +19,11 @@ import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.slot
 import io.mockk.verify
-import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.bson.types.ObjectId
 import org.junit.Before
 import org.junit.Test
@@ -84,10 +88,10 @@ class UserServiceTest {
             val user =
                 User(
                     id = ObjectId(userId),
-                    name = "Test User",
                     gender = Gender.MALE,
                     userToken = "test-token",
-                    birthDate = LocalDate.now(),
+                    birthDate = BirthDate(now(), CalendarType.SOLAR),
+                    birthTime = null,
                     longTermMission =
                         Mission(
                             id = ObjectId("507f1f77bcf86cd799439044"),
@@ -128,4 +132,10 @@ class UserServiceTest {
             assertEquals(randomMission.type, updatedMission.type)
             assertEquals(randomMission.cost, updatedMission.cost)
         }
+
+    private fun now() =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
 }

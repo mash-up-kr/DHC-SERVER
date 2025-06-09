@@ -2,12 +2,16 @@ package com.mashup.com.mashup.dhc.domain.service
 
 import com.mashup.com.mashup.dhc.domain.model.PastRoutineHistory
 import com.mashup.com.mashup.dhc.domain.model.PastRoutineHistoryRepository
+import com.mashup.com.mashup.dhc.utils.BirthDate
+import com.mashup.com.mashup.dhc.utils.Money
+import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionRepository
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.UserRepository
 import com.mashup.dhc.domain.service.TransactionService
+import com.mashup.dhc.utils.BirthTime
 import kotlinx.datetime.LocalDate
 import org.bson.types.ObjectId
 
@@ -25,14 +29,32 @@ class UserService(
     suspend fun getPastRoutineHistories(userId: String): List<PastRoutineHistory> =
         pastRoutineHistoryRepository.findSortedByUserId(ObjectId(userId))
 
+    suspend fun registerUser(
+        userToken: String,
+        gender: Gender,
+        birthDate: BirthDate?,
+        birthTime: BirthTime?,
+        preferredMissionCategoryList: List<MissionCategory>
+    ) {
+        userRepository.insertOne(
+            User(
+                gender = gender,
+                userToken = userToken,
+                birthDate = birthDate,
+                birthTime = birthTime,
+                preferredMissionCategoryList = preferredMissionCategoryList
+            )
+        )
+    }
+
     suspend fun summaryTodayMission(
         userId: String,
         date: LocalDate
-    ) {
-        transactionService.executeInTransaction {
-            val user = userRepository.findById(ObjectId(userId))!!
-            val todayMissionList = user.todayDailyMissionList
+    ): Money {
+        val user = userRepository.findById(ObjectId(userId))!!
+        val todayMissionList = user.todayDailyMissionList
 
+        transactionService.executeInTransaction {
             val pastRoutineHistory =
                 PastRoutineHistory(
                     id = null,
@@ -56,6 +78,12 @@ class UserService(
                 )
             userRepository.updateOne(ObjectId(userId), updatedUser)
         }
+        // TODO: 트랜잭션 롤백시 이후에 복구 처리 추가 필요
+
+        return todayMissionList
+            .filter { it.finished }
+            .map { it.cost }
+            .reduce(Money::plus)
     }
 
     suspend fun switchTodayMission(
