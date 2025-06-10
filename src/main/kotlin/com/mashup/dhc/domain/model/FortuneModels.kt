@@ -9,20 +9,29 @@ import java.time.DayOfWeek
 // 요청 스키마
 @Serializable
 data class FortuneRequest(
-    val sex: String, // "male" | "female"
+    val gender: String, // "male" | "female"
     @SerialName("birth_date") val birthDate: String, // "YYYY-MM-DD"
-    @SerialName("birth_time") val birthTime: String, // "HH:MM"
-    val year: String, // "YYYY"
-    val month: String // "MM"
+    @SerialName("birth_time") val birthTime: String?, // "HH:MM"
+    val year: Int,
+    val month: Int
 )
 
 // Gemini API 응답 스키마 (header, body 제외)
 @Serializable
 data class GeminiFortuneResponse(
-    val month: String,
-    val fortune: List<GeminiDailyFortune>,
-    val year: String
-)
+    val month: Int,
+    val year: Int,
+    val fortune: List<GeminiDailyFortune>
+) {
+    fun toFortuneCache(userId: String): FortuneCache {
+        return FortuneCache(
+            userId = userId,
+            year = year,
+            month = month,
+            fortune = fortune
+        )
+    }
+}
 
 // Gemini API에서 받는 일일 운세 (header, body 제외)
 @Serializable
@@ -39,12 +48,11 @@ data class GeminiDailyFortune(
     @SerialName("today_menu") val todayMenu: String
 )
 
-// 클라이언트 응답용 스키마 (기존과 동일)
 @Serializable
-data class FortuneResponse(
-    val month: String,
-    val fortune: List<DailyFortune>,
-    val year: String
+data class FortuneResult(
+    val month: Int,
+    val year: Int,
+    val fortune: List<DailyFortune>
 )
 
 // 클라이언트 응답용 일일 운세 (header, body 포함)
@@ -68,13 +76,10 @@ data class DailyFortune(
 @Serializable
 data class FortuneCache(
     @SerialName("_id") val id: String = ObjectId().toString(),
-    val userToken: String,
-    val month: String,
-    val year: String,
-    val sex: String,
-    val birthDate: String,
-    val birthTime: String,
-    val response: GeminiFortuneResponse, // Gemini 응답 저장
+    val userId: String,
+    val month: Int,
+    val year: Int,
+    val fortune: List<GeminiDailyFortune>, // Gemini 응답 저장
     val createdAt: Long = System.currentTimeMillis(),
     val expiresAt: Long = System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000 // 30일 후 만료
 )
