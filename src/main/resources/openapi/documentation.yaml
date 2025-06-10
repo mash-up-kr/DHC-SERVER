@@ -6,18 +6,119 @@ info:
 servers:
   - url: "http://0.0.0.0:8080"
 paths:
-  /:
-    get:
-      description: "Hello World!"
+  /register:
+    post:
+      summary: "Register User"
+      description: "Register a new user with their profile information and mission preferences"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+            example:
+              userToken: "user123token"
+              gender: "MALE"
+              birthDate:
+                date: "2000-01-01"
+                calendarType: "SOLAR"
+              birthTime: "09:30:00"
+              preferredMissionCategoryList: ["FOOD", "TRANSPORTATION"]
       responses:
         "200":
-          description: "OK"
+          description: "User registered successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterUserResponse"
+              example:
+                id: "507f1f77bcf86cd799439011"
+        "500":
+          description: "Failed to register user"
           content:
             text/plain:
               schema:
                 type: "string"
-              examples:
-                Example#1:
-                  value: "Hello World!"
+              example: "Failed to register user"
 components:
-  schemas: { }
+  schemas:
+    RegisterUserRequest:
+      type: object
+      required:
+        - userToken
+        - gender
+        - preferredMissionCategoryList
+      properties:
+        userToken:
+          type: string
+          description: "Unique token for the user"
+          example: "user123token"
+        gender:
+          $ref: "#/components/schemas/Gender"
+        birthDate:
+          $ref: "#/components/schemas/BirthDate"
+        birthTime:
+          type: string
+          format: time
+          description: "Birth time in HH:mm:ss format"
+          example: "09:30:00"
+          nullable: true
+        preferredMissionCategoryList:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissionCategory"
+          description: "List of preferred mission categories"
+          example: ["FOOD", "TRANSPORTATION"]
+    
+    RegisterUserResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: "Generated user ID"
+          example: "507f1f77bcf86cd799439011"
+    
+    Gender:
+      type: string
+      enum:
+        - MALE
+        - FEMALE
+      description: "User gender"
+      example: "MALE"
+    
+    BirthDate:
+      type: object
+      required:
+        - date
+        - calendarType
+      properties:
+        date:
+          type: string
+          format: date
+          description: "Birth date in YYYY-MM-DD format"
+          example: "2000-01-01"
+        calendarType:
+          $ref: "#/components/schemas/CalendarType"
+      nullable: true
+    
+    CalendarType:
+      type: string
+      enum:
+        - SOLAR
+        - LUNAR
+      description: "Calendar type for birth date"
+      example: "SOLAR"
+    
+    MissionCategory:
+      type: string
+      enum:
+        - TRANSPORTATION
+        - FOOD
+        - DIGITAL
+        - SHOPPING
+        - TRAVEL
+        - SOCIAL
+      description: "Mission category"
+      example: "FOOD"

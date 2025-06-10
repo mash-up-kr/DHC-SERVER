@@ -13,6 +13,7 @@ import com.mashup.dhc.domain.model.UserRepository
 import com.mashup.dhc.domain.service.TransactionService
 import com.mashup.dhc.utils.BirthTime
 import kotlinx.datetime.LocalDate
+import org.bson.BsonValue
 import org.bson.types.ObjectId
 
 private const val PEEK_MISSION_SIZE = 3
@@ -32,10 +33,10 @@ class UserService(
     suspend fun registerUser(
         userToken: String,
         gender: Gender,
-        birthDate: BirthDate?,
+        birthDate: BirthDate,
         birthTime: BirthTime?,
         preferredMissionCategoryList: List<MissionCategory>
-    ) {
+    ): BsonValue? =
         userRepository.insertOne(
             User(
                 gender = gender,
@@ -45,7 +46,6 @@ class UserService(
                 preferredMissionCategoryList = preferredMissionCategoryList
             )
         )
-    }
 
     suspend fun summaryTodayMission(
         userId: String,
