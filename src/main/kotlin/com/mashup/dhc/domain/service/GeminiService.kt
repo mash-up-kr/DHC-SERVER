@@ -46,7 +46,7 @@ class GeminiService(
         val startTime = System.currentTimeMillis()
 
         return try {
-            log.info("Gemini API 호출 시작 - 사용자: ${request.sex}, 생년월일: ${request.birthDate}, 월: ${request.month}")
+            log.info("Gemini API 호출 시작 - 사용자: ${request.gender}, 생년월일: ${request.birthDate}, 월: ${request.month}")
 
             val geminiRequest = buildGeminiRequest(buildPrompt(request))
             val response = client.post(baseUrl) {
@@ -112,7 +112,7 @@ class GeminiService(
             $systemInstruction
             
             사용자 정보:
-            - 성별: ${request.sex}
+            - 성별: ${request.gender}
             - 생년월일: ${request.birthDate}
             - 출생시간: ${request.birthTime}
             - 요청 년도: ${request.year}년

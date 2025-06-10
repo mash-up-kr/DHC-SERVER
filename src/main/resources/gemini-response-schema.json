@@ -2,12 +2,12 @@
     "type": "object",
     "properties": {
         "month": {
-            "type": "string",
-            "description": "금전운 측정 월 (MM 형태)"
+            "type": "integer",
+            "description": "금전운 측정 월"
         },
         "year": {
-            "type": "string",
-            "description": "금전운 측정 년도 (YYYY 형태)"
+            "type": "integer",
+            "description": "금전운 측정 년도"
         },
         "fortune": {
             "type": "array",
