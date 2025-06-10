@@ -1,12 +1,14 @@
 [versions]
 kotlin-version = "2.1.10"
 ktor-version = "3.1.2"
-logback-version = "1.4.14"
+logback-version = "1.5.13"
 mongo-version = "5.4.0"
 prometheus-version = "1.6.13"
 ktlint-version = "12.2.0"
 ktlint-engine-version = "1.5.0"
 mockk-version = "1.13.10"
+aws-sdk-kotlin-version = "1.4.101"
+kotlinx-coroutines-version = "1.7.3"
 
 [libraries]
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-version" }
@@ -46,6 +48,11 @@ ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin-version" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk-version" }
+aws-sdk-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-sdk-kotlin-version" }
+aws-sdk-s3-jvm = { module = "aws.sdk.kotlin:s3-jvm", version.ref = "aws-sdk-kotlin-version" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines-version" }
+
+
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }

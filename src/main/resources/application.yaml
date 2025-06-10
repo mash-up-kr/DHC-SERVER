@@ -5,14 +5,17 @@ ktor:
   deployment:
     port: 8080
 
-# MongoDB 설정
 db:
   mongo:
     host: "localhost"
     port: "27017"
     database:
       name: "test"
-    # 아래는 선택사항입니다
-    # user: "mongo사용자"
-    # password: "mongo비밀번호"
     maxPoolSize: 20
+
+ncp:
+  accessKey: $NCP_ACCESS_KEY
+  secretKey: $NCP_SECRET_KEY
+  bucketName: $BUCKET_NAME
+  region: "kr-standard"
+  endpoint: "https://kr.object.ncloudstorage.com"
