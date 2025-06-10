@@ -16,7 +16,7 @@ data class User(
     @BsonId val id: ObjectId? = null,
     val gender: Gender,
     val userToken: String,
-    val birthDate: BirthDate?,
+    val birthDate: BirthDate,
     val birthTime: BirthTime?,
     val preferredMissionCategoryList: List<MissionCategory>,
     val longTermMission: Mission? = null,

@@ -32,7 +32,7 @@ class UserService(
     suspend fun registerUser(
         userToken: String,
         gender: Gender,
-        birthDate: BirthDate?,
+        birthDate: BirthDate,
         birthTime: BirthTime?,
         preferredMissionCategoryList: List<MissionCategory>
     ) {
