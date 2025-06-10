@@ -79,6 +79,10 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.aws.sdk.s3)
+    implementation(libs.aws.sdk.s3.jvm)
+    implementation(libs.kotlinx.coroutines.core)
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.embedded.mongo)
