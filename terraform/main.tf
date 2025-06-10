@@ -88,7 +88,7 @@ module "object_storage" {
   source = "./modules/object_storage"
 
   project_name              = var.project_name
-  bucket_name               = "${var.project_name}-storage-${random_string.bucket_suffix.result}"
+  bucket_name               = "${var.project_name}-object-storage"
   bucket_public_read        = var.object_storage_public_read
   versioning                = var.object_storage_versioning
   enable_container_registry = true
@@ -108,11 +108,4 @@ module "object_storage" {
   providers = {
     ncloud = ncloud
   }
-}
-
-# 버킷 이름을 고유하게 만들기 위한 랜덤 문자열
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
 }
