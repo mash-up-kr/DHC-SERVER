@@ -9,6 +9,8 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import org.slf4j.LoggerFactory
 
@@ -42,7 +44,7 @@ class GeminiService(
 
     private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
 
-    suspend fun generateFortune(request: FortuneRequest): GeminiFortuneResponse {
+    suspend fun generateFortune(request: GeminiFortuneRequest): GeminiFortuneResponse {
         val startTime = System.currentTimeMillis()
 
         return try {
@@ -107,7 +109,7 @@ class GeminiService(
         throw e
     }
 
-    private fun buildPrompt(request: FortuneRequest): String {
+    private fun buildPrompt(request: GeminiFortuneRequest): String {
         return """
             $systemInstruction
             
@@ -155,4 +157,84 @@ class GeminiService(
         log.info("JSON 스키마 로드 완료 - 외부 파일에서 성공적으로 로드됨")
         return schema
     }
-} 
+}
+
+// Gemini API 요청 스키마
+@Serializable
+data class GeminiFortuneRequest(
+    val gender: String, // "male" | "female"
+    @SerialName("birth_date") val birthDate: String, // "YYYY-MM-DD"
+    @SerialName("birth_time") val birthTime: String?, // "HH:MM"
+    val year: Int,
+    val month: Int
+)
+
+// Gemini API 응답 스키마
+@Serializable
+data class GeminiFortuneResponse(
+    val month: Int,
+    val year: Int,
+    val fortune: List<DailyFortune>
+) {
+    fun toMonthlyFortune(): MonthlyFortune {
+        return MonthlyFortune(
+            year = year,
+            month = month,
+            dailyFortuneList = fortune
+        )
+    }
+}
+
+// Gemini API 요청 구조
+@Serializable
+data class GeminiRequest(
+    val contents: List<Content>,
+    val generationConfig: GenerationConfig
+)
+
+@Serializable
+data class Content(
+    val parts: List<Part>
+)
+
+@Serializable
+data class Part(
+    val text: String
+)
+
+@Serializable
+data class GenerationConfig(
+    val responseMimeType: String,
+    val responseSchema: JsonElement
+)
+
+// Gemini API 응답 구조 (오류 처리를 위해 옵셔널로 변경)
+@Serializable
+data class GeminiApiResponse(
+    val candidates: List<Candidate>? = null,
+    val error: ApiError? = null
+)
+
+@Serializable
+data class Candidate(
+    val content: ContentResponse? = null,
+    val finishReason: String? = null
+)
+
+@Serializable
+data class ContentResponse(
+    val parts: List<PartResponse>? = null,
+    val role: String? = null
+)
+
+@Serializable
+data class PartResponse(
+    val text: String? = null
+)
+
+@Serializable
+data class ApiError(
+    val code: Int? = null,
+    val message: String? = null,
+    val status: String? = null
+)
