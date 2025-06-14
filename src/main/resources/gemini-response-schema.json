@@ -1,73 +1,95 @@
 {
-    "type": "object",
-    "properties": {
-        "month": {
-            "type": "integer",
-            "description": "금전운 측정 월"
-        },
-        "year": {
-            "type": "integer",
-            "description": "금전운 측정 년도"
-        },
-        "fortune": {
-            "type": "array",
-            "description": "날짜별 금전운 측정 결과",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "date": {
-                        "type": "string",
-                        "description": "날짜 (YYYY-MM-DD 형태)"
-                    },
-                    "score": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "maximum": 100,
-                        "description": "금전운 점수 (0-100)"
-                    },
-                    "lucky_color": {
-                        "type": "string",
-                        "description": "행운의 색상명"
-                    },
-                    "lucky_color_hex": {
-                        "type": "string",
-                        "description": "행운의 색상 헥스코드"
-                    },
-                    "lucky_number": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 99,
-                        "description": "행운의 숫자"
-                    },
-                    "jinxed_color": {
-                        "type": "string",
-                        "description": "금기 색상명"
-                    },
-                    "jinxed_color_hex": {
-                        "type": "string",
-                        "description": "금기 색상 헥스코드"
-                    },
-                    "jinxed_number": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 99,
-                        "description": "금기 숫자"
-                    },
-                    "today_menu": {
-                        "type": "string",
-                        "description": "추천 음식"
-                    },
-                    "jinxed_menu": {
-                        "type": "string",
-                        "description": "피해야 할 음식"
-                    }
-                },
-                "required": [
-                    "date", "score", "lucky_color", "lucky_color_hex", "lucky_number",
-                    "jinxed_color", "jinxed_color_hex", "jinxed_number", "today_menu", "jinxed_menu"
-                ]
-            }
-        }
+  "type": "object",
+  "properties": {
+    "month": {
+      "type": "integer",
+      "description": "금전운 측정 월"
     },
-    "required": ["month", "year", "fortune"]
-} 
+    "year": {
+      "type": "integer",
+      "description": "금전운 측정 년도"
+    },
+    "fortune": {
+      "type": "array",
+      "description": "날짜별 금전운 측정 결과",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "날짜 (YYYY-MM-DD 형태)"
+          },
+          "score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "금전운 점수 (0-100)"
+          },
+          "lucky_color": {
+            "type": "string",
+            "description": "행운의 색상명"
+          },
+          "lucky_color_hex": {
+            "type": "string",
+            "description": "행운의 색상 헥스코드"
+          },
+          "lucky_number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99,
+            "description": "행운의 숫자"
+          },
+          "jinxed_color": {
+            "type": "string",
+            "description": "금기 색상명"
+          },
+          "jinxed_color_hex": {
+            "type": "string",
+            "description": "금기 색상 헥스코드"
+          },
+          "jinxed_number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 99,
+            "description": "금기 숫자"
+          },
+          "today_menu": {
+            "type": "string",
+            "description": "추천 음식"
+          },
+          "jinxed_menu": {
+            "type": "string",
+            "description": "피해야 할 음식"
+          },
+          "fortune_title": {
+            "type": "string",
+            "description": "금전운세 제목"
+          },
+          "fortune_detail": {
+            "type": "string",
+            "description": "금전운세 상세"
+          }
+        },
+        "required": [
+          "date",
+          "score",
+          "lucky_color",
+          "lucky_color_hex",
+          "lucky_number",
+          "jinxed_color",
+          "jinxed_color_hex",
+          "jinxed_number",
+          "today_menu",
+          "jinxed_menu",
+          "fortune_title",
+          "fortune_detail"
+        ]
+      }
+    }
+  },
+  "required": [
+    "month",
+    "year",
+    "fortune"
+  ]
+}
