@@ -3,7 +3,7 @@ package com.mashup.dhc.domain.service
 import com.mashup.com.mashup.dhc.domain.service.LockRegistry
 import com.mashup.com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.model.DailyFortune
-import com.mashup.dhc.domain.model.FortuneRequest
+import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -28,7 +28,7 @@ class FortuneService(
         fortuneRepository.pushMonthlyFortune(
             userId,
             geminiService.generateFortune(
-                FortuneRequest(
+                GeminiFortuneRequest(
                     user.gender.toString(),
                     user.birthDate.toString(),
                     user.birthTime?.toString()
