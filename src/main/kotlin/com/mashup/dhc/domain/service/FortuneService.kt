@@ -2,11 +2,9 @@ package com.mashup.dhc.domain.service
 
 import com.mashup.com.mashup.dhc.domain.service.LockRegistry
 import com.mashup.com.mashup.dhc.domain.service.UserService
-import com.mashup.com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.domain.model.DailyFortune
-import com.mashup.dhc.domain.model.FortuneCache
 import com.mashup.dhc.domain.model.FortuneRequest
-import com.mashup.dhc.domain.model.FortuneResult
+import com.mashup.dhc.domain.model.MonthlyFortune
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
@@ -17,18 +15,18 @@ class FortuneService(
     private val backgroundScope: CoroutineScope,
     private val userService: UserService,
     private val fortuneRepository: FortuneRepository,
-    private val geminiService: GeminiService,
-    private val headerBodyService: FortuneHeaderBodyService
+    private val geminiService: GeminiService
 ) {
     private val log = LoggerFactory.getLogger(FortuneService::class.java)
 
-    suspend fun executeFortuneGenerationTask(
+    private suspend fun executeFortuneGenerationTask(
         userId: String,
         year: Int,
         month: Int
     ) {
         val user = userService.getUserById(userId)
-        fortuneRepository.saveFortune(
+        fortuneRepository.pushMonthlyFortune(
+            userId,
             geminiService.generateFortune(
                 FortuneRequest(
                     user.gender.toString(),
@@ -38,9 +36,8 @@ class FortuneService(
                     year,
                     month,
                 )
-            ).toFortuneCache(userId)
+            ).toMonthlyFortune()
         )
-
     }
 
     suspend fun addFortuneGenerationTask(userId: String, requestDate: LocalDate) {
@@ -67,30 +64,22 @@ class FortuneService(
         }
     }
 
-    suspend fun checkIfFortuneCached(userId: String, requestDate: LocalDate): Boolean {
-        return fortuneRepository.getFortuneByMonth(userId, requestDate.year, requestDate.monthValue) != null
+    private suspend fun checkIfFortuneCached(userId: String, requestDate: LocalDate): Boolean {
+        return userService.getUserById(userId).monthlyFortuneList.findDailyFortune(requestDate) != null
     }
 
     suspend fun queryDailyFortune(userId: String, requestDate: LocalDate): DailyFortune {
         val user = userService.getUserById(userId)
-        return fortuneRepository.getFortuneByMonth(userId, requestDate.year, requestDate.monthValue)
-            ?.toDailyFortune(requestDate, user.birthDate)
-            ?: throw RuntimeException("Fortune Cache not found")
+        return user.monthlyFortuneList.findDailyFortune(requestDate)
+            ?: throw RuntimeException("Unable to find daily fortune") //TODO 커스텀 예외 붙이기
     }
-
-    /**
-     * 캐시된 데이터를 클라이언트 응답으로 변환 후 특정 날짜 운세 추출
-     */
-    private fun FortuneCache.toDailyFortune(requestDate: LocalDate, birthDate: BirthDate): DailyFortune =
-        headerBodyService.convertToClientResponse(fortune, birthDate, month, year).findDailyFortune(requestDate)
-            ?: throw RuntimeException("DailyFortune not found")
 
 }
 
 
-private fun FortuneResult.findDailyFortune(targetDate: LocalDate): DailyFortune? {
+private fun List<MonthlyFortune>.findDailyFortune(targetDate: LocalDate): DailyFortune? {
     val targetDateStr = targetDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-    return fortune.find { it.date == targetDateStr }
+    return find { it.month == targetDate.monthValue }?.dailyFortuneList?.find { it.date == targetDateStr }
 }
 
 

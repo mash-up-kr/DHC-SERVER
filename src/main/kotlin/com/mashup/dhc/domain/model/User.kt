@@ -22,6 +22,7 @@ data class User(
     val longTermMission: Mission? = null,
     val todayDailyMissionList: List<Mission> = listOf(),
     val pastRoutineHistoryIds: List<ObjectId> = listOf(),
+    val monthlyFortuneList: List<MonthlyFortune> = listOf(),
     val currentAmulet: Amulet? = null
 )
 
