@@ -20,6 +20,10 @@ class GeminiService(
 ) {
     private val log = LoggerFactory.getLogger(GeminiService::class.java)
 
+    companion object {
+        private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
+    }
+
     /**
      * JSON 스키마를 lazy 초기화로 한 번만 로드하고 캐시
      * 처음 접근할 때만 파일을 읽고, 이후에는 캐시된 값을 재사용
@@ -42,8 +46,6 @@ class GeminiService(
         }
     }
 
-    private val baseUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
-
     suspend fun generateFortune(request: GeminiFortuneRequest): GeminiFortuneResponse {
         val startTime = System.currentTimeMillis()
 
@@ -51,7 +53,7 @@ class GeminiService(
             log.info("Gemini API 호출 시작 - 사용자: ${request.gender}, 생년월일: ${request.birthDate}, 월: ${request.month}")
 
             val geminiRequest = buildGeminiRequest(buildPrompt(request))
-            val response = client.post(baseUrl) {
+            val response = client.post(BASE_URL) {
                 parameter("key", apiKey)
                 contentType(ContentType.Application.Json)
                 setBody(geminiRequest)
