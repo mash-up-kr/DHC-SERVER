@@ -52,7 +52,7 @@ class GeminiService(
         return try {
             log.info("Gemini API 호출 시작 - 사용자: ${request.gender}, 생년월일: ${request.birthDate}, 월: ${request.month}")
 
-            val geminiRequest = buildGeminiRequest(buildPrompt(request))
+            val geminiRequest = request.toPrompt().toGeminiRequest()
             val response = client.post(BASE_URL) {
                 parameter("key", apiKey)
                 contentType(ContentType.Application.Json)
@@ -111,27 +111,27 @@ class GeminiService(
         throw e
     }
 
-    private fun buildPrompt(request: GeminiFortuneRequest): String {
+    private fun GeminiFortuneRequest.toPrompt(): String {
         return """
             $systemInstruction
             
             사용자 정보:
-            - 성별: ${request.gender}
-            - 생년월일: ${request.birthDate}
-            - 출생시간: ${request.birthTime}
-            - 요청 년도: ${request.year}년
-            - 요청 월: ${request.month}월
+            - 성별: ${gender}
+            - 생년월일: ${birthDate}
+            - 출생시간: ${birthTime}
+            - 요청 년도: ${year}년
+            - 요청 월: ${month}월
             
-            위 정보를 바탕으로 ${request.year}년 ${request.month}월 한 달간의 금전운을 일별로 분석해주세요.
+            위 정보를 바탕으로 ${year}년 ${month}월 한 달간의 금전운을 일별로 분석해주세요.
             응답은 반드시 지정된 JSON 스키마 형식으로 제공해주세요.
         """.trimIndent()
     }
 
-    private fun buildGeminiRequest(prompt: String): GeminiRequest {
+    private fun String.toGeminiRequest(): GeminiRequest {
         return GeminiRequest(
             contents = listOf(
                 Content(
-                    parts = listOf(Part(prompt))
+                    parts = listOf(Part(this))
                 )
             ),
             generationConfig = GenerationConfig(
