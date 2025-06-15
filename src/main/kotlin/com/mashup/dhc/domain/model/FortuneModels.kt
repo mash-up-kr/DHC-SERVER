@@ -9,10 +9,18 @@ import kotlinx.serialization.Serializable
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
+// MongoDB 캐시 모델
+data class MonthlyFortune(
+    @BsonId val id: String = ObjectId().toString(),
+    val month: Int,
+    val year: Int,
+    val dailyFortuneList: List<DailyFortune>, // Gemini 응답 저장
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
 class FortuneRepository(
     private val database: MongoDatabase
 ) {
-
 
     suspend fun pushMonthlyFortune(userId: String, monthlyFortune: MonthlyFortune) {
         database.getCollection<User>(USER_COLLECTION)
@@ -23,16 +31,6 @@ class FortuneRepository(
     }
 
 }
-
-// MongoDB 캐시 모델
-data class MonthlyFortune(
-    @BsonId val id: String = ObjectId().toString(),
-    val month: Int,
-    val year: Int,
-    val dailyFortuneList: List<DailyFortune>, // Gemini 응답 저장
-    val createdAt: Long = System.currentTimeMillis(),
-    val expiresAt: Long = System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000 // 30일 후 만료
-)
 
 // 일일 운세 객체
 @Serializable
