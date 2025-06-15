@@ -1,8 +1,8 @@
 package com.mashup.dhc.domain.model
 
-import com.mashup.com.mashup.dhc.utils.BirthDate
-import com.mashup.com.mashup.dhc.utils.CalendarType
-import com.mashup.com.mashup.dhc.utils.Money
+import com.mashup.dhc.utils.BirthDate
+import com.mashup.dhc.utils.CalendarType
+import com.mashup.dhc.utils.Money
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull

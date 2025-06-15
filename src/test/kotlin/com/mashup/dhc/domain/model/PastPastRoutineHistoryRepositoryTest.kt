@@ -1,7 +1,5 @@
 package com.mashup.dhc.domain.model
 
-import com.mashup.com.mashup.dhc.domain.model.PastRoutineHistory
-import com.mashup.com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull

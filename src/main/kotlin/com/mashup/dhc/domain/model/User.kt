@@ -1,6 +1,6 @@
 package com.mashup.dhc.domain.model
 
-import com.mashup.com.mashup.dhc.utils.BirthDate
+import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mongodb.MongoException
 import com.mongodb.client.model.Filters
