@@ -1,4 +1,4 @@
-package com.mashup.com.mashup.dhc.utils
+package com.mashup.dhc.utils
 
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable

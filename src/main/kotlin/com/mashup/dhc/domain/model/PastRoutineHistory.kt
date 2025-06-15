@@ -1,6 +1,5 @@
-package com.mashup.com.mashup.dhc.domain.model
+package com.mashup.dhc.domain.model
 
-import com.mashup.dhc.domain.model.Mission
 import com.mongodb.MongoException
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
@@ -9,6 +8,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.LocalDate
 import org.bson.BsonValue
+import org.bson.Document
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
@@ -45,7 +45,7 @@ class PastRoutineHistoryRepository(
         mongoDatabase
             .getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION)
             .find(eq("userId", userId))
-            .sort(org.bson.Document("date", -1)) // 날짜를 기준으로 내림차순 정렬 (최신 날짜가 먼저)
+            .sort(Document("date", -1)) // 날짜를 기준으로 내림차순 정렬 (최신 날짜가 먼저)
             .toList()
 
     suspend fun findByUserIdAndDate(

@@ -1,6 +1,6 @@
 package com.mashup.dhc.domain.model
 
-import com.mashup.com.mashup.dhc.utils.Money
+import com.mashup.dhc.utils.Money
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
