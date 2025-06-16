@@ -1,7 +1,6 @@
 package com.mashup.dhc.domain.service
 
 import com.mashup.com.mashup.dhc.domain.service.LockRegistry
-import com.mashup.com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
