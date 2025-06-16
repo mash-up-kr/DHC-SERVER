@@ -79,6 +79,8 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.ktor.server.host.common)
+    implementation(libs.ktor.server.status.pages)
     implementation(libs.aws.sdk.s3)
     implementation(libs.aws.sdk.s3.jvm)
     implementation(libs.kotlinx.coroutines.core)
