@@ -1,14 +1,13 @@
 package com.mashup.dhc.domain.service
 
-import com.mashup.com.mashup.dhc.domain.service.LockRegistry
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 class FortuneService(
     private val backgroundScope: CoroutineScope,
@@ -26,30 +25,33 @@ class FortuneService(
         val user = userService.getUserById(userId)
         fortuneRepository.pushMonthlyFortune(
             userId,
-            geminiService.generateFortune(
-                GeminiFortuneRequest(
-                    user.gender.toString(),
-                    user.birthDate.toString(),
-                    user.birthTime?.toString()
-                        ?: throw RuntimeException(), //TODO 커스텀 예외 붙이기
-                    year,
-                    month,
-                )
-            ).toMonthlyFortune()
+            geminiService
+                .generateFortune(
+                    GeminiFortuneRequest(
+                        user.gender.toString(),
+                        user.birthDate.toString(),
+                        user.birthTime?.toString()
+                            ?: throw RuntimeException(), // TODO 커스텀 예외 붙이기
+                        year,
+                        month
+                    )
+                ).toMonthlyFortune()
         )
     }
 
-    suspend fun addFortuneGenerationTask(userId: String, requestDate: LocalDate) {
-
+    suspend fun addFortuneGenerationTask(
+        userId: String,
+        requestDate: LocalDate
+    ) {
         log.info("requestDate: $requestDate, userId: $userId")
 
-        val lockKey = "${userId}-${requestDate.year}-${requestDate.monthValue}"
+        val lockKey = "$userId-${requestDate.year}-${requestDate.monthValue}"
         log.info("Lock Key: $lockKey")
-        if (!LockRegistry.tryLock(lockKey)) throw RuntimeException("Lock key is using") //TODO 커스텀 예외 붙이기
+        if (!LockRegistry.tryLock(lockKey)) throw RuntimeException("Lock key is using") // TODO 커스텀 예외 붙이기
         // DB에 이미 금전운이 존재하는지 확인
         if (checkIfFortuneCached(userId, requestDate)) {
             LockRegistry.unlock(lockKey)
-            throw RuntimeException("Fortune Cache already exists") //TODO 커스텀 예외 붙이기
+            throw RuntimeException("Fortune Cache already exists") // TODO 커스텀 예외 붙이기
         }
 
         backgroundScope.launch {
@@ -63,22 +65,22 @@ class FortuneService(
         }
     }
 
-    private suspend fun checkIfFortuneCached(userId: String, requestDate: LocalDate): Boolean {
-        return userService.getUserById(userId).monthlyFortuneList.findDailyFortune(requestDate) != null
-    }
+    private suspend fun checkIfFortuneCached(
+        userId: String,
+        requestDate: LocalDate
+    ): Boolean = userService.getUserById(userId).monthlyFortuneList.findDailyFortune(requestDate) != null
 
-    suspend fun queryDailyFortune(userId: String, requestDate: LocalDate): DailyFortune {
+    suspend fun queryDailyFortune(
+        userId: String,
+        requestDate: LocalDate
+    ): DailyFortune {
         val user = userService.getUserById(userId)
         return user.monthlyFortuneList.findDailyFortune(requestDate)
-            ?: throw RuntimeException("Unable to find daily fortune") //TODO 커스텀 예외 붙이기
+            ?: throw RuntimeException("Unable to find daily fortune") // TODO 커스텀 예외 붙이기
     }
-
 }
-
 
 private fun List<MonthlyFortune>.findDailyFortune(targetDate: LocalDate): DailyFortune? {
     val targetDateStr = targetDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     return find { it.month == targetDate.monthValue }?.dailyFortuneList?.find { it.date == targetDateStr }
 }
-
-

@@ -1,4 +1,4 @@
-package com.mashup.com.mashup.dhc.utils
+package com.mashup.dhc.utils
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -15,7 +15,10 @@ object LocalDateSerializer : KSerializer<LocalDate> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: LocalDate) {
+    override fun serialize(
+        encoder: Encoder,
+        value: LocalDate
+    ) {
         val str = value.format(formatter)
         encoder.encodeString(str)
     }

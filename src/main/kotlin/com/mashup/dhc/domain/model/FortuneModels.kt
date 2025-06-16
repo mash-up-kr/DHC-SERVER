@@ -15,21 +15,23 @@ data class MonthlyFortune(
     val month: Int,
     val year: Int,
     val dailyFortuneList: List<DailyFortune>, // Gemini 응답 저장
-    val createdAt: Long = System.currentTimeMillis(),
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 class FortuneRepository(
     private val database: MongoDatabase
 ) {
-
-    suspend fun pushMonthlyFortune(userId: String, monthlyFortune: MonthlyFortune) {
-        database.getCollection<User>(USER_COLLECTION)
+    suspend fun pushMonthlyFortune(
+        userId: String,
+        monthlyFortune: MonthlyFortune
+    ) {
+        database
+            .getCollection<User>(USER_COLLECTION)
             .updateOne(
                 Filters.eq("_id", userId),
                 Updates.push(User::monthlyFortuneList.name, monthlyFortune)
             )
     }
-
 }
 
 // 일일 운세 객체
@@ -48,4 +50,3 @@ data class DailyFortune(
     val score: Int,
     @SerialName("today_menu") val todayMenu: String
 )
-
