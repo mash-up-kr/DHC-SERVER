@@ -107,7 +107,6 @@ private fun Route.uploadFile(storage: NaverCloudPlatformObjectStorageAgent) {
             return@post
         }
 
-        // displayLogo가 있으면 고정 키 사용, 없으면 랜덤 키 생성
         val key =
             if (!displayLogo.isNullOrBlank()) {
                 val extension = originalFileName?.substringAfterLast('.', "") ?: ""

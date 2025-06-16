@@ -8,7 +8,6 @@ import io.ktor.server.routing.routing
 
 fun Application.configureRouting(dependencies: Dependencies) {
     routing {
-        // 헬스체크
         probeRoute()
         userRoutes(dependencies.userService)
         storageRoutes(dependencies.storage)
