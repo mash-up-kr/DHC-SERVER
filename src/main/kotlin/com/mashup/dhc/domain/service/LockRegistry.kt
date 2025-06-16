@@ -1,9 +1,9 @@
-package com.mashup.com.mashup.dhc.domain.service
+package com.mashup.dhc.domain.service
 
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.sync.Mutex
 
-//TODO Guava + ReentrantLock 조합으로 변경하기 (Lock 만료)
+// TODO Guava + ReentrantLock 조합으로 변경하기 (Lock 만료)
 object LockRegistry {
     private val locks = ConcurrentHashMap<String, Mutex>()
 
@@ -16,7 +16,10 @@ object LockRegistry {
         locks[lockKey]?.unlock()
     }
 
-    suspend fun finallyUnlock(lockKey: String, operations: suspend () -> Unit) {
+    suspend fun finallyUnlock(
+        lockKey: String,
+        operations: suspend () -> Unit
+    ) {
         try {
             operations()
         } finally {

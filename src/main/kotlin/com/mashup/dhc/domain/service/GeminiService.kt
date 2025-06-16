@@ -1,17 +1,26 @@
 package com.mashup.dhc.domain.service
 
-import com.mashup.dhc.domain.model.*
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import com.mashup.dhc.domain.model.DailyFortune
+import com.mashup.dhc.domain.model.MonthlyFortune
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.ServerResponseException
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.timeout
+import io.ktor.client.request.parameter
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import org.slf4j.LoggerFactory
 
 class GeminiService(
@@ -21,7 +30,8 @@ class GeminiService(
     private val log = LoggerFactory.getLogger(GeminiService::class.java)
 
     companion object {
-        private const val BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
+        private const val BASE_URL =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
     }
 
     /**
@@ -30,21 +40,24 @@ class GeminiService(
      */
     private val responseSchema: JsonElement by lazy { loadResponseSchema() }
 
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-            })
-        }
+    private val client =
+        HttpClient(CIO) {
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        isLenient = true
+                    }
+                )
+            }
 
-        // 타임아웃 설정 추가
-        install(HttpTimeout) {
-            requestTimeoutMillis = 120_000  // 2분
-            connectTimeoutMillis = 30_000   // 30초
-            socketTimeoutMillis = 120_000   // 2분
+            // 타임아웃 설정 추가
+            install(HttpTimeout) {
+                requestTimeoutMillis = 120_000 // 2분
+                connectTimeoutMillis = 30_000 // 30초
+                socketTimeoutMillis = 120_000 // 2분
+            }
         }
-    }
 
     suspend fun generateFortune(request: GeminiFortuneRequest): GeminiFortuneResponse {
         val startTime = System.currentTimeMillis()
@@ -53,12 +66,13 @@ class GeminiService(
             log.info("Gemini API 호출 시작 - 사용자: ${request.gender}, 생년월일: ${request.birthDate}, 월: ${request.month}")
 
             val geminiRequest = request.toPrompt().toGeminiRequest()
-            val response = client.post(BASE_URL) {
-                parameter("key", apiKey)
-                contentType(ContentType.Application.Json)
-                setBody(geminiRequest)
-                timeout { requestTimeoutMillis = 120_000 }
-            }
+            val response =
+                client.post(BASE_URL) {
+                    parameter("key", apiKey)
+                    contentType(ContentType.Application.Json)
+                    setBody(geminiRequest)
+                    timeout { requestTimeoutMillis = 120_000 }
+                }
 
             val geminiResponse: GeminiApiResponse = response.body()
             val responseTime = System.currentTimeMillis() - startTime
@@ -68,7 +82,6 @@ class GeminiService(
 
             log.info("Gemini API 호출 성공 - 응답 시간: {}ms, 운세 데이터 수: {}개", responseTime, result.fortune.size)
             result
-
         } catch (e: Exception) {
             handleApiError(e, System.currentTimeMillis() - startTime)
         }
@@ -86,8 +99,11 @@ class GeminiService(
 
         // 응답 체인 검증
         return candidates
-            ?.firstOrNull()?.content
-            ?.parts?.firstOrNull()?.text
+            ?.firstOrNull()
+            ?.content
+            ?.parts
+            ?.firstOrNull()
+            ?.text
             ?.takeIf { it.isNotBlank() }
             ?: run {
                 log.error("Gemini API 응답 구조 오류 - 응답시간: {}ms", responseTime)
@@ -98,48 +114,64 @@ class GeminiService(
     /**
      * API 오류 처리 및 로깅
      */
-    private fun handleApiError(e: Exception, responseTime: Long): Nothing {
+    private fun handleApiError(
+        e: Exception,
+        responseTime: Long
+    ): Nothing {
         when (e) {
             is HttpRequestTimeoutException -> log.error("Gemini API 타임아웃 - 응답시간: {}ms", responseTime)
-            is ClientRequestException -> log.error("Gemini API 클라이언트 오류 - HTTP {}, 응답시간: {}ms", e.response.status, responseTime)
-            is ServerResponseException -> log.error("Gemini API 서버 오류 - HTTP {}, 응답시간: {}ms", e.response.status, responseTime)
+            is ClientRequestException ->
+                log.error(
+                    "Gemini API 클라이언트 오류 - HTTP {}, 응답시간: {}ms",
+                    e.response.status,
+                    responseTime
+                )
+
+            is ServerResponseException ->
+                log.error(
+                    "Gemini API 서버 오류 - HTTP {}, 응답시간: {}ms",
+                    e.response.status,
+                    responseTime
+                )
+
             else -> {
-                if (e.message?.contains("Gemini API") != true)
+                if (e.message?.contains("Gemini API") != true) {
                     log.error("예상치 못한 오류 - {}: {}, 응답시간: {}ms", e::class.simpleName, e.message, responseTime)
+                }
             }
         }
         throw e
     }
 
-    private fun GeminiFortuneRequest.toPrompt(): String {
-        return """
-            $systemInstruction
-            
-            사용자 정보:
-            - 성별: ${gender}
-            - 생년월일: ${birthDate}
-            - 출생시간: ${birthTime}
-            - 요청 년도: ${year}년
-            - 요청 월: ${month}월
-            
-            위 정보를 바탕으로 ${year}년 ${month}월 한 달간의 금전운을 일별로 분석해주세요.
-            응답은 반드시 지정된 JSON 스키마 형식으로 제공해주세요.
+    private fun GeminiFortuneRequest.toPrompt(): String =
+        """
+        $systemInstruction
+        
+        사용자 정보:
+        - 성별: $gender
+        - 생년월일: $birthDate
+        - 출생시간: $birthTime
+        - 요청 년도: ${year}년
+        - 요청 월: ${month}월
+        
+        위 정보를 바탕으로 ${year}년 ${month}월 한 달간의 금전운을 일별로 분석해주세요.
+        응답은 반드시 지정된 JSON 스키마 형식으로 제공해주세요.
         """.trimIndent()
-    }
 
-    private fun String.toGeminiRequest(): GeminiRequest {
-        return GeminiRequest(
-            contents = listOf(
-                Content(
-                    parts = listOf(Part(this))
+    private fun String.toGeminiRequest(): GeminiRequest =
+        GeminiRequest(
+            contents =
+                listOf(
+                    Content(
+                        parts = listOf(Part(this))
+                    )
+                ),
+            generationConfig =
+                GenerationConfig(
+                    responseMimeType = "application/json",
+                    responseSchema = responseSchema // 캐시된 스키마 사용
                 )
-            ),
-            generationConfig = GenerationConfig(
-                responseMimeType = "application/json",
-                responseSchema = responseSchema // 캐시된 스키마 사용
-            )
         )
-    }
 
     /**
      * JSON 스키마 로드 - 한 번만 실행되고 이후에는 캐시된 값 사용
@@ -149,9 +181,10 @@ class GeminiService(
     private fun loadResponseSchema(): JsonElement {
         log.info("JSON 스키마 로드 시작")
 
-        val schemaResource = this::class.java.classLoader
-            .getResourceAsStream("gemini-response-schema.json")
-            ?: throw IllegalStateException("필수 리소스 파일 'gemini-response-schema.json'을 찾을 수 없습니다. 애플리케이션을 종료합니다.")
+        val schemaResource =
+            this::class.java.classLoader
+                .getResourceAsStream("gemini-response-schema.json")
+                ?: throw IllegalStateException("필수 리소스 파일 'gemini-response-schema.json'을 찾을 수 없습니다. 애플리케이션을 종료합니다.")
 
         val schemaText = schemaResource.bufferedReader().use { it.readText() }
         val schema = Json.parseToJsonElement(schemaText)
@@ -178,13 +211,12 @@ data class GeminiFortuneResponse(
     val year: Int,
     val fortune: List<DailyFortune>
 ) {
-    fun toMonthlyFortune(): MonthlyFortune {
-        return MonthlyFortune(
+    fun toMonthlyFortune(): MonthlyFortune =
+        MonthlyFortune(
             year = year,
             month = month,
             dailyFortuneList = fortune
         )
-    }
 }
 
 // Gemini API 요청 구조
