@@ -40,6 +40,134 @@ paths:
               schema:
                 type: "string"
               example: "Failed to register user"
+  
+  /api/users/{userId}/missions/{missionId}:
+    put:
+      summary: "Change Mission Status"
+      description: "Change the completion status of a specific mission for a user"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+        - name: missionId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Mission ID"
+          example: "507f1f77bcf86cd799439022"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ToggleMissionRequest"
+            example:
+              finished: true
+      responses:
+        "200":
+          description: "Mission status updated successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ToggleMissionResponse"
+              example:
+                mission:
+                  id: "507f1f77bcf86cd799439022"
+                  category: "FOOD"
+                  difficulty: 3
+                  type: "DAILY"
+                  finished: true
+                  cost: "10.00"
+  
+  /api/users/{userId}/done:
+    post:
+      summary: "End Today's Missions"
+      description: "Complete today's missions and calculate total saved money"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EndTodayMissionRequest"
+            example:
+              date: "2024-01-15"
+      responses:
+        "200":
+          description: "Today's missions completed successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EndTodayMissionResponse"
+              example:
+                todaySavedMoney: "25.50"
+  
+  /view/users/{userId}/home:
+    get:
+      summary: "Get Home View"
+      description: "Get user's home view with long-term mission, today's daily missions, and today's fortune"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "Home view data retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HomeViewResponse"
+              example:
+                longTermMission:
+                  id: "507f1f77bcf86cd799439033"
+                  category: "TRAVEL"
+                  difficulty: 5
+                  type: "LONG_TERM"
+                  finished: false
+                  cost: "100.00"
+                todayDailyMissionList:
+                  - id: "507f1f77bcf86cd799439044"
+                    category: "FOOD"
+                    difficulty: 2
+                    type: "DAILY"
+                    finished: false
+                    cost: "15.00"
+                  - id: "507f1f77bcf86cd799439055"
+                    category: "TRANSPORTATION"
+                    difficulty: 1
+                    type: "DAILY"
+                    finished: true
+                    cost: "5.00"
+                todayDailyFortune:
+                  date: "2024-01-15"
+                  fortuneTitle: "좋은 하루"
+                  fortuneDetail: "오늘은 좋은 일이 생길 것입니다"
+                  jinxedColor: "빨간색"
+                  jinxedColorHex: "#FF0000"
+                  jinxedMenu: "매운 음식"
+                  jinxedNumber: 4
+                  luckyColor: "파란색"
+                  luckyColorHex: "#0000FF"
+                  luckyNumber: 7
+                  score: 85
+                  todayMenu: "샐러드"
+
 components:
   schemas:
     RegisterUserRequest:
@@ -79,6 +207,160 @@ components:
           type: string
           description: "Generated user ID"
           example: "507f1f77bcf86cd799439011"
+    
+    ToggleMissionRequest:
+      type: object
+      required:
+        - finished
+      properties:
+        finished:
+          type: boolean
+          description: "Whether the mission is completed"
+          example: true
+    
+    ToggleMissionResponse:
+      type: object
+      required:
+        - mission
+      properties:
+        mission:
+          $ref: "#/components/schemas/Mission"
+    
+    EndTodayMissionRequest:
+      type: object
+      required:
+        - date
+      properties:
+        date:
+          type: string
+          format: date
+          description: "Date in YYYY-MM-DD format"
+          example: "2024-01-15"
+    
+    EndTodayMissionResponse:
+      type: object
+      required:
+        - todaySavedMoney
+      properties:
+        todaySavedMoney:
+          type: string
+          description: "Total money saved today"
+          example: "25.50"
+    
+    HomeViewResponse:
+      type: object
+      properties:
+        longTermMission:
+          $ref: "#/components/schemas/Mission"
+          nullable: true
+        todayDailyMissionList:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mission"
+          description: "List of today's daily missions"
+        todayDailyFortune:
+          $ref: "#/components/schemas/DailyFortune"
+          nullable: true
+    
+    Mission:
+      type: object
+      required:
+        - category
+        - difficulty
+        - type
+        - finished
+        - cost
+      properties:
+        id:
+          type: string
+          description: "Mission ID"
+          example: "507f1f77bcf86cd799439022"
+          nullable: true
+        category:
+          $ref: "#/components/schemas/MissionCategory"
+        difficulty:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: "Mission difficulty level"
+          example: 3
+        type:
+          $ref: "#/components/schemas/MissionType"
+        finished:
+          type: boolean
+          description: "Whether the mission is completed"
+          example: false
+        cost:
+          type: string
+          description: "Mission cost/reward amount"
+          example: "10.00"
+    
+    DailyFortune:
+      type: object
+      required:
+        - date
+        - fortuneTitle
+        - fortuneDetail
+        - jinxedColor
+        - jinxedColorHex
+        - jinxedMenu
+        - jinxedNumber
+        - luckyColor
+        - luckyColorHex
+        - luckyNumber
+        - score
+        - todayMenu
+      properties:
+        date:
+          type: string
+          description: "Fortune date in YYYY-MM-DD format"
+          example: "2024-01-15"
+        fortuneTitle:
+          type: string
+          description: "Fortune title"
+          example: "좋은 하루"
+        fortuneDetail:
+          type: string
+          description: "Detailed fortune description"
+          example: "오늘은 좋은 일이 생길 것입니다"
+        jinxedColor:
+          type: string
+          description: "Unlucky color name"
+          example: "빨간색"
+        jinxedColorHex:
+          type: string
+          description: "Unlucky color hex code"
+          example: "#FF0000"
+        jinxedMenu:
+          type: string
+          description: "Food to avoid today"
+          example: "매운 음식"
+        jinxedNumber:
+          type: integer
+          description: "Unlucky number"
+          example: 4
+        luckyColor:
+          type: string
+          description: "Lucky color name"
+          example: "파란색"
+        luckyColorHex:
+          type: string
+          description: "Lucky color hex code"
+          example: "#0000FF"
+        luckyNumber:
+          type: integer
+          description: "Lucky number"
+          example: 7
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: "Fortune score"
+          example: 85
+        todayMenu:
+          type: string
+          description: "Recommended food for today"
+          example: "샐러드"
     
     Gender:
       type: string
@@ -122,3 +404,11 @@ components:
         - SOCIAL
       description: "Mission category"
       example: "FOOD"
+    
+    MissionType:
+      type: string
+      enum:
+        - LONG_TERM
+        - DAILY
+      description: "Mission type"
+      example: "DAILY"

@@ -18,6 +18,8 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.slot
 import io.mockk.verify
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
@@ -129,6 +131,178 @@ class UserServiceTest {
             assertEquals(randomMission.difficulty, updatedMission.difficulty)
             assertEquals(randomMission.type, updatedMission.type)
             assertEquals(randomMission.cost, updatedMission.cost)
+        }
+
+    @Test
+    fun `updateTodayMission updates longTermMission when missionId matches longTermMission`() =
+        runBlocking {
+            // Given
+            val userId = "507f1f77bcf86cd799439011"
+            val longTermMissionId = "507f1f77bcf86cd799439044"
+            val finished = true
+
+            val longTermMission =
+                Mission(
+                    id = ObjectId(longTermMissionId),
+                    category = MissionCategory.TRAVEL,
+                    difficulty = 5,
+                    type = MissionType.LONG_TERM,
+                    finished = false,
+                    cost = Money(500)
+                )
+
+            val dailyMission1 =
+                Mission(
+                    id = ObjectId("507f1f77bcf86cd799439055"),
+                    category = MissionCategory.FOOD,
+                    difficulty = 2,
+                    type = MissionType.DAILY,
+                    finished = false,
+                    cost = Money(100)
+                )
+
+            val dailyMission2 =
+                Mission(
+                    id = ObjectId("507f1f77bcf86cd799439066"),
+                    category = MissionCategory.TRANSPORTATION,
+                    difficulty = 1,
+                    type = MissionType.DAILY,
+                    finished = false,
+                    cost = Money(50)
+                )
+
+            val dailyMission3 =
+                Mission(
+                    id = ObjectId("507f1f77bcf86cd799439077"),
+                    category = MissionCategory.SHOPPING,
+                    difficulty = 3,
+                    type = MissionType.DAILY,
+                    finished = false,
+                    cost = Money(200)
+                )
+
+            val user =
+                User(
+                    id = ObjectId(userId),
+                    gender = Gender.MALE,
+                    userToken = "test-token",
+                    birthDate = BirthDate(now(), CalendarType.SOLAR),
+                    birthTime = null,
+                    longTermMission = longTermMission,
+                    todayDailyMissionList = listOf(dailyMission1, dailyMission2, dailyMission3),
+                    pastRoutineHistoryIds = listOf(),
+                    preferredMissionCategoryList = listOf(MissionCategory.TRAVEL),
+                    currentAmulet =
+                        Amulet(
+                            totalPiece = 0,
+                            remainPiece = 0
+                        )
+                )
+
+            // Mock repository calls
+            every { runBlocking { userRepository.findById(ObjectId(userId)) } } returns user
+            every { runBlocking { userRepository.updateOne(ObjectId(userId), any()) } } returns 1
+
+            // When
+            val result = userService.updateTodayMission(userId, longTermMissionId, finished)
+
+            // Then
+            // Verify longTermMission is updated
+            assertTrue(result.longTermMission!!.finished)
+            assertEquals(longTermMissionId, result.longTermMission!!.id.toString())
+
+            // Verify dailyMissionList remains unchanged
+            assertEquals(3, result.todayDailyMissionList.size)
+            assertFalse(result.todayDailyMissionList[0].finished)
+            assertFalse(result.todayDailyMissionList[1].finished)
+            assertFalse(result.todayDailyMissionList[2].finished)
+        }
+
+    @Test
+    fun `updateTodayMission updates second element of todayDailyMissionList when missionId matches`() =
+        runBlocking {
+            // Given
+            val userId = "507f1f77bcf86cd799439011"
+            val secondMissionId = "507f1f77bcf86cd799439066"
+            val finished = true
+
+            val longTermMission =
+                Mission(
+                    id = ObjectId("507f1f77bcf86cd799439044"),
+                    category = MissionCategory.TRAVEL,
+                    difficulty = 5,
+                    type = MissionType.LONG_TERM,
+                    finished = false,
+                    cost = Money(500)
+                )
+
+            val dailyMission1 =
+                Mission(
+                    id = ObjectId("507f1f77bcf86cd799439055"),
+                    category = MissionCategory.FOOD,
+                    difficulty = 2,
+                    type = MissionType.DAILY,
+                    finished = false,
+                    cost = Money(100)
+                )
+
+            val dailyMission2 =
+                Mission(
+                    id = ObjectId(secondMissionId),
+                    category = MissionCategory.TRANSPORTATION,
+                    difficulty = 1,
+                    type = MissionType.DAILY,
+                    finished = false,
+                    cost = Money(50)
+                )
+
+            val dailyMission3 =
+                Mission(
+                    id = ObjectId("507f1f77bcf86cd799439077"),
+                    category = MissionCategory.SHOPPING,
+                    difficulty = 3,
+                    type = MissionType.DAILY,
+                    finished = false,
+                    cost = Money(200)
+                )
+
+            val user =
+                User(
+                    id = ObjectId(userId),
+                    gender = Gender.MALE,
+                    userToken = "test-token",
+                    birthDate = BirthDate(now(), CalendarType.SOLAR),
+                    birthTime = null,
+                    longTermMission = longTermMission,
+                    todayDailyMissionList = listOf(dailyMission1, dailyMission2, dailyMission3),
+                    pastRoutineHistoryIds = listOf(),
+                    preferredMissionCategoryList = listOf(MissionCategory.TRANSPORTATION),
+                    currentAmulet =
+                        Amulet(
+                            totalPiece = 0,
+                            remainPiece = 0
+                        )
+                )
+
+            // Mock repository calls
+            every { runBlocking { userRepository.findById(ObjectId(userId)) } } returns user
+            every { runBlocking { userRepository.updateOne(ObjectId(userId), any()) } } returns 1
+
+            // When
+            val result = userService.updateTodayMission(userId, secondMissionId, finished)
+
+            // Then
+            // Verify longTermMission remains unchanged
+            assertFalse(result.longTermMission!!.finished)
+
+            // Verify only the second daily mission is updated
+            assertEquals(3, result.todayDailyMissionList.size)
+            assertFalse(result.todayDailyMissionList[0].finished) // First mission unchanged
+            assertTrue(result.todayDailyMissionList[1].finished) // Second mission updated
+            assertFalse(result.todayDailyMissionList[2].finished) // Third mission unchanged
+
+            // Verify the updated mission details
+            assertEquals(secondMissionId, result.todayDailyMissionList[1].id.toString())
         }
 
     private fun now() =
