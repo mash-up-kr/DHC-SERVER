@@ -10,7 +10,7 @@ db:
     host: "localhost"
     port: "27017"
     database:
-      name: "test"
+      name: "dhc"
     maxPoolSize: 20
 
 ncp:

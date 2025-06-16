@@ -3,7 +3,7 @@ services:
     image: mongo:latest
     container_name: mashup-mongodb
     environment:
-      MONGO_INITDB_DATABASE: test
+      MONGO_INITDB_DATABASE: dhc
     ports:
       - "27017:27017"
     volumes:

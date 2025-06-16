@@ -10,6 +10,7 @@ import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.config.tryGetString
 
 data class Dependencies(
@@ -50,6 +51,10 @@ fun Application.configureDependencies(): Dependencies {
             bucketName = environment.config.property("ncp.bucketName").getString()
         )
 
+    monitor.subscribe(ApplicationStopped) {
+        mongoClient.close()
+    }
+
     return Dependencies(
         userService = userService,
         storage = storage,
@@ -64,20 +69,9 @@ private data class MongoConfig(
 )
 
 private fun Application.getMongoConfig(): MongoConfig {
-    val user = environment.config.tryGetString("db.mongo.user")
-    val password = environment.config.tryGetString("db.mongo.password")
-    val host = environment.config.tryGetString("db.mongo.host") ?: "127.0.0.1"
+    val host = environment.config.tryGetString("db.mongo.host") ?: "localhost"
     val port = environment.config.tryGetString("db.mongo.port") ?: "27017"
-    val maxPoolSize = environment.config.tryGetString("db.mongo.maxPoolSize")?.toInt() ?: 20
-    val databaseName = environment.config.tryGetString("db.mongo.database.name") ?: "myDatabase"
+    val databaseName = environment.config.tryGetString("db.mongo.database.name") ?: "dhc"
 
-    val credentials =
-        user
-            ?.let { userVal ->
-                password?.let { passwordVal -> "$userVal:$passwordVal@" }
-            }.orEmpty()
-
-    val uri = "mongodb://$credentials$host:$port/?maxPoolSize=$maxPoolSize&w=majority"
-
-    return MongoConfig(uri, databaseName)
+    return MongoConfig("mongodb://$host:$port", databaseName)
 }
