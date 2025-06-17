@@ -46,6 +46,53 @@ class UserService(
             )
         )
 
+    suspend fun updateTodayMission(
+        userId: String,
+        missionId: String,
+        finished: Boolean
+    ): User {
+        val user = getUserById(userId)
+
+        val mission =
+            (user.todayDailyMissionList + user.longTermMission)
+                .filterNotNull()
+                .find { it.id.toString() == missionId }
+
+        if (mission == null) {
+            throw IllegalArgumentException("Mission $missionId doesn't exist")
+        }
+
+        val toUpdateMission = mission.copy(finished = finished)
+
+        val updated =
+            user.copy(
+                longTermMission =
+                    if (user.longTermMission?.id ==
+                        toUpdateMission.id
+                    ) {
+                        toUpdateMission
+                    } else {
+                        user.longTermMission
+                    },
+                todayDailyMissionList =
+                    user.todayDailyMissionList.map {
+                        if (it.id ==
+                            toUpdateMission.id
+                        ) {
+                            toUpdateMission
+                        } else {
+                            it
+                        }
+                    }
+            )
+
+        if (userRepository.updateOne(user.id!!, updated) < 1L) {
+            throw IllegalArgumentException("Mission $missionId fails to update.")
+        }
+
+        return updated
+    }
+
     suspend fun summaryTodayMission(
         userId: String,
         date: LocalDate

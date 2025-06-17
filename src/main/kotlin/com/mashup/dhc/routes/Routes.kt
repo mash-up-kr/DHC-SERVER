@@ -1,11 +1,15 @@
 package com.mashup.dhc.routes
 
+import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.Gender
+import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
+import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
+import com.mashup.dhc.utils.Money
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
@@ -17,15 +21,25 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.utils.io.readRemaining
 import java.util.UUID
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.readByteArray
 import kotlinx.serialization.Serializable
 
 fun Route.userRoutes(userService: UserService) {
     route("/api/users") {
         register(userService)
+        changeMissionStatus(userService)
+        endToday(userService)
+    }
+    route("/view/users/{userId}") {
+        home(userService)
     }
 }
 
@@ -65,6 +79,110 @@ data class RegisterUserRequest(
 @Serializable
 data class RegisterUserResponse(
     val id: String
+)
+
+private fun Route.home(userService: UserService) {
+    get("/home") {
+        val userId = call.pathParameters["userId"]!!
+        val user = userService.getUserById(userId)
+        val now =
+            Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+        call.respond(
+            HttpStatusCode.OK,
+            HomeViewResponse(
+                longTermMission = user.longTermMission?.toMissionResponse(),
+                todayDailyMissionList = user.todayDailyMissionList.map { it.toMissionResponse() },
+                todayDailyFortune =
+                    user.monthlyFortuneList
+                        .lastOrNull()
+                        ?.dailyFortuneList
+                        ?.find { it.date == now.toString() } // toString == "yyyy-MM-dd"
+            )
+        )
+    }
+}
+
+private fun Mission.toMissionResponse() =
+    MissionResponse(
+        missionId = this.id.toString(),
+        category = this.category,
+        difficulty = this.difficulty,
+        type = this.type,
+        finished = this.finished,
+        cost = this.cost
+    )
+
+@Serializable
+data class MissionResponse(
+    val missionId: String,
+    val category: MissionCategory,
+    val difficulty: Int,
+    val type: MissionType,
+    val finished: Boolean = false,
+    val cost: Money
+)
+
+@Serializable
+data class HomeViewResponse(
+    val longTermMission: MissionResponse?,
+    val todayDailyMissionList: List<MissionResponse>,
+    val todayDailyFortune: DailyFortune?
+)
+
+private fun Route.endToday(userService: UserService) {
+    post("/{userId}/done") {
+        val userId = call.pathParameters["userId"]!!
+        val request = call.receive<EndTodayMissionRequest>()
+
+        val todaySavedMoney =
+            userService.summaryTodayMission(
+                userId,
+                request.date
+            )
+
+        call.respond(HttpStatusCode.OK, EndTodayMissionResponse(todaySavedMoney))
+    }
+}
+
+@Serializable
+data class EndTodayMissionRequest(
+    val date: LocalDate
+)
+
+@Serializable
+data class EndTodayMissionResponse(
+    val todaySavedMoney: Money
+)
+
+private fun Route.changeMissionStatus(userService: UserService) {
+    put("/{userId}/missions/{missionId}") {
+        val userId = call.pathParameters["userId"]!!
+        val missionId = call.pathParameters["missionId"]!!
+
+        val request = call.receive<ToggleMissionRequest>()
+
+        val updated = userService.updateTodayMission(userId, missionId, request.finished)
+
+        val response =
+            (updated.todayDailyMissionList + updated.longTermMission)
+                .filterNotNull()
+                .find { it.id.toString() == missionId }!!
+                .let { ToggleMissionResponse(it.toMissionResponse()) }
+
+        call.respond(HttpStatusCode.OK, response)
+    }
+}
+
+data class ToggleMissionRequest(
+    val finished: Boolean
+)
+
+@Serializable
+data class ToggleMissionResponse(
+    val mission: MissionResponse
 )
 
 fun Route.storageRoutes(storage: NaverCloudPlatformObjectStorageAgent) {
