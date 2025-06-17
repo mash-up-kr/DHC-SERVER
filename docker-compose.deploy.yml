@@ -27,6 +27,8 @@ services:
       - NCP_SECRET_KEY=${NCP_SECRET_KEY}
       - BUCKET_NAME=${BUCKET_NAME}
       - MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING:-mongodb://mongodb:27017/dhc}
+    volumes:
+      - ./logs:/app/logs
     depends_on:
       mongodb:
         condition: service_healthy

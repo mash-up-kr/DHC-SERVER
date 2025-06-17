@@ -7,8 +7,7 @@ ktor:
 
 db:
   mongo:
-    host: "localhost"
-    port: "27017"
+    connectionString: ${MONGO_CONNECTION_STRING:-mongodb://localhost:27017/dhc}
     database:
       name: "dhc"
     maxPoolSize: 20
