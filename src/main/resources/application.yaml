@@ -7,7 +7,7 @@ ktor:
 
 db:
   mongo:
-    connectionString: ${MONGO_CONNECTION_STRING:-mongodb://localhost:27017/dhc}
+    connectionString: $MONGO_CONNECTION_STRING
     database:
       name: "dhc"
     maxPoolSize: 20
