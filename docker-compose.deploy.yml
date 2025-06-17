@@ -4,8 +4,7 @@ services:
   mongodb:
     image: mongo:latest
     container_name: mongodb
-    ports:
-      - "27017:27017"
+    network_mode: host
     volumes:
       - mongodb_data:/data/db
     healthcheck:
@@ -14,31 +13,22 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    networks:
-      - dhc-network
 
   dhc-app:
     image: ${REGISTRY}/dhc-ktor-app:${IMAGE_TAG}
     container_name: dhc-app
-    ports:
-      - "8080:8080"
+    network_mode: host
     environment:
       - NCP_ACCESS_KEY=${NCP_ACCESS_KEY}
       - NCP_SECRET_KEY=${NCP_SECRET_KEY}
       - BUCKET_NAME=${BUCKET_NAME}
-      - MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING}
+      - MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc
     volumes:
       - ./logs:/app/logs
     depends_on:
       mongodb:
         condition: service_healthy
     restart: unless-stopped
-    networks:
-      - dhc-network
 
 volumes:
   mongodb_data:
-
-networks:
-  dhc-network:
-    driver: bridge
