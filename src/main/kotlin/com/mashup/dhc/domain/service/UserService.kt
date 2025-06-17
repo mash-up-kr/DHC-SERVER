@@ -108,6 +108,11 @@ class UserService(
         val user = userRepository.findById(ObjectId(userId))!!
         val todayMissionList = user.todayDailyMissionList
 
+        val todaySavedMoney = todayMissionList
+            .filter { it.finished }
+            .map { it.cost }
+            .reduce(Money::plus)
+
         transactionService.executeInTransaction {
             val pastRoutineHistory =
                 PastRoutineHistory(
@@ -127,16 +132,14 @@ class UserService(
                     pastRoutineHistoryIds = (
                         missionUpdatedUser.pastRoutineHistoryIds +
                             pastRoutineHistory.id!!
-                    )
+                    ),
+                    totalSavedMoney = user.totalSavedMoney + todaySavedMoney
                 )
             )
         }
         // TODO: 트랜잭션 롤백시 이후에 복구 처리 추가 필요
 
-        return todayMissionList
-            .filter { it.finished }
-            .map { it.cost }
-            .reduce(Money::plus)
+        return todaySavedMoney
     }
 
     private suspend fun updateUserMissions(user: User): User {

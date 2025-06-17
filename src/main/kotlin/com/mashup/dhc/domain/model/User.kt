@@ -2,11 +2,13 @@ package com.mashup.dhc.domain.model
 
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
+import com.mashup.dhc.utils.Money
 import com.mongodb.MongoException
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.UpdateOptions
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import java.math.BigDecimal
 import kotlinx.coroutines.flow.firstOrNull
 import org.bson.BsonValue
 import org.bson.codecs.pojo.annotations.BsonId
@@ -23,7 +25,8 @@ data class User(
     val todayDailyMissionList: List<Mission> = listOf(),
     val pastRoutineHistoryIds: List<ObjectId> = listOf(),
     val monthlyFortuneList: List<MonthlyFortune> = listOf(),
-    val currentAmulet: Amulet? = null
+    val currentAmulet: Amulet? = null,
+    val totalSavedMoney: Money = Money(BigDecimal.ZERO)
 )
 
 data class Amulet(
