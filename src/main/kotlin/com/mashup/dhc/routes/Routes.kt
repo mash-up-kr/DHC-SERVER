@@ -5,6 +5,7 @@ import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
+import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
 import com.mashup.dhc.utils.BirthDate
@@ -27,6 +28,7 @@ import io.ktor.utils.io.readRemaining
 import java.util.UUID
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.readByteArray
@@ -37,9 +39,11 @@ fun Route.userRoutes(userService: UserService) {
         register(userService)
         changeMissionStatus(userService)
         endToday(userService)
+        logout(userService)
     }
     route("/view/users/{userId}") {
         home(userService)
+        myPage(userService)
     }
 }
 
@@ -186,6 +190,87 @@ data class ToggleMissionRequest(
 @Serializable
 data class ToggleMissionResponse(
     val mission: MissionResponse
+)
+
+private fun Route.myPage(userService: UserService) {
+    get("/{userId}/myPage") {
+        val userId = call.pathParameters["userId"]!!
+        val user = userService.getUserById(userId)
+
+        call.respond(
+            HttpStatusCode.OK,
+            MyPageResponse(
+                user.resolveAnimalCard(),
+                user.birthDate,
+                user.birthTime,
+                user.preferredMissionCategoryList,
+                true // TODO: alarm
+            )
+        )
+    }
+}
+
+private fun User.resolveAnimalCard(): AnimalCard {
+    val first = when (this.birthDate.date.month) {
+        Month.DECEMBER, Month.JANUARY, Month.FEBRUARY -> SEASON.SPRING
+        Month.MARCH, Month.APRIL, Month.MAY -> SEASON.SUMMER
+        Month.JUNE, Month.JULY, Month.AUGUST -> SEASON.AUTUMN
+        Month.SEPTEMBER, Month.OCTOBER, Month.NOVEMBER -> SEASON.WINTER
+    }
+
+    val middle = COLOLR.WHITE
+
+    val last = ANIMAL.HORSE
+
+
+    return AnimalCard(
+        name = "${first.description}의 ${middle.description} ${last.description}",
+        cardImageUrl = ""
+    )
+}
+
+private fun Route.logout(userService: UserService){
+    delete("/{userId}"){
+        val userId = call.pathParameters["userId"]!!
+        val user = userService.getUserById(userId)
+
+        // TODO: 아예 지우기?
+    }
+}
+
+enum class SEASON(val description: String) {
+    SPRING("봄의"),
+    SUMMER("여름의"),
+    AUTUMN("가을의"),
+    WINTER("겨울의"),
+}
+
+enum class COLOLR(val description: String) {
+    BLUE("푸른"),
+    RED("붉은"),
+    YELLOW("노란"),
+    WHITE("흰"),
+    BLACK("검정"),
+}
+
+enum class ANIMAL(val description: String) {
+    HORSE("말"),
+}
+
+@Serializable
+data class MyPageResponse(
+    val animalCard: AnimalCard,
+    val birthDate: BirthDate,
+    val birthTime: BirthTime?,
+    val preferredMissionCategoryList: List<MissionCategory>,
+    val alarm: Boolean
+)
+
+
+@Serializable
+data class AnimalCard(
+    val name: String,
+    val cardImageUrl: String?,
 )
 
 fun Route.storageRoutes(storage: NaverCloudPlatformObjectStorageAgent) {
