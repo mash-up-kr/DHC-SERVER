@@ -6,7 +6,9 @@ import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.domain.model.User
+import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.service.UserService
+import com.mashup.dhc.domain.service.now
 import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
@@ -44,6 +46,7 @@ fun Route.userRoutes(userService: UserService) {
     route("/view/users/{userId}") {
         home(userService)
         myPage(userService)
+        analysisView(userService)
     }
 }
 
@@ -211,17 +214,17 @@ private fun Route.myPage(userService: UserService) {
 }
 
 private fun User.resolveAnimalCard(): AnimalCard {
-    val first = when (this.birthDate.date.month) {
-        Month.DECEMBER, Month.JANUARY, Month.FEBRUARY -> SEASON.SPRING
-        Month.MARCH, Month.APRIL, Month.MAY -> SEASON.SUMMER
-        Month.JUNE, Month.JULY, Month.AUGUST -> SEASON.AUTUMN
-        Month.SEPTEMBER, Month.OCTOBER, Month.NOVEMBER -> SEASON.WINTER
-    }
+    val first =
+        when (this.birthDate.date.month) {
+            Month.DECEMBER, Month.JANUARY, Month.FEBRUARY -> SEASON.SPRING
+            Month.MARCH, Month.APRIL, Month.MAY -> SEASON.SUMMER
+            Month.JUNE, Month.JULY, Month.AUGUST -> SEASON.AUTUMN
+            Month.SEPTEMBER, Month.OCTOBER, Month.NOVEMBER -> SEASON.WINTER
+        }
 
     val middle = COLOLR.WHITE
 
     val last = ANIMAL.HORSE
-
 
     return AnimalCard(
         name = "${first.description}의 ${middle.description} ${last.description}",
@@ -229,8 +232,8 @@ private fun User.resolveAnimalCard(): AnimalCard {
     )
 }
 
-private fun Route.logout(userService: UserService){
-    delete("/{userId}"){
+private fun Route.logout(userService: UserService) {
+    delete("/{userId}") {
         val userId = call.pathParameters["userId"]!!
         val user = userService.getUserById(userId)
 
@@ -238,23 +241,29 @@ private fun Route.logout(userService: UserService){
     }
 }
 
-enum class SEASON(val description: String) {
+enum class SEASON(
+    val description: String
+) {
     SPRING("봄의"),
     SUMMER("여름의"),
     AUTUMN("가을의"),
-    WINTER("겨울의"),
+    WINTER("겨울의")
 }
 
-enum class COLOLR(val description: String) {
+enum class COLOLR(
+    val description: String
+) {
     BLUE("푸른"),
     RED("붉은"),
     YELLOW("노란"),
     WHITE("흰"),
-    BLACK("검정"),
+    BLACK("검정")
 }
 
-enum class ANIMAL(val description: String) {
-    HORSE("말"),
+enum class ANIMAL(
+    val description: String
+) {
+    HORSE("말")
 }
 
 @Serializable
@@ -266,11 +275,69 @@ data class MyPageResponse(
     val alarm: Boolean
 )
 
-
 @Serializable
 data class AnimalCard(
     val name: String,
-    val cardImageUrl: String?,
+    val cardImageUrl: String?
+)
+
+private fun Route.analysisView(userService: UserService) {
+    get("/{userId}/analysis") {
+        val userId = call.pathParameters["userId"]!!
+
+        val user = userService.getUserById(userId)
+        val now = now()
+
+        val monthlyPastRoutines = userService.getMonthlyPastRoutines(userId = userId, date = now)
+        val weeklyPastRoutines = userService.getWeekPastRoutines(userId = userId, date = now)
+
+        val weeklySavedMoney =
+            weeklyPastRoutines
+                .map { it.missions.calculateSavedMoney() }
+                .reduce(Money::plus)
+
+        val monthlyFinishedPercentage =
+            monthlyPastRoutines.sumOf {
+                100 * it.missions.filter { mission -> mission.finished }.size /
+                    (it.missions.size)
+            }
+
+        val monthlyTotalPercentage = (1..now.dayOfMonth).sum() * 100
+
+        call.respond(
+            HttpStatusCode.OK,
+            AnalysisViewResponse(
+                totalSavedMoney = user.totalSavedMoney,
+                weeklySavedMoney = weeklySavedMoney,
+                averageSucceedProbability = monthlyFinishedPercentage / monthlyTotalPercentage,
+                calendarDayMissionViews =
+                    monthlyPastRoutines.map {
+                        CalendarDayMissionView(
+                            day = it.date.dayOfMonth,
+                            date = it.date,
+                            finishedMissionCount = it.missions.filter { mission -> mission.finished }.size,
+                            totalMissionCount = it.missions.size
+                        )
+                    }
+            )
+        )
+    }
+}
+
+@Serializable
+data class AnalysisViewResponse(
+    val totalSavedMoney: Money,
+    val weeklySavedMoney: Money,
+    val averageSucceedProbability: Int,
+    val calendarDayMissionViews: List<CalendarDayMissionView>
+)
+
+@Serializable
+data class CalendarDayMissionView(
+    val day: Int,
+    val date: LocalDate,
+    val finishedMissionCount: Int,
+    val totalMissionCount: Int
 )
 
 fun Route.storageRoutes(storage: NaverCloudPlatformObjectStorageAgent) {

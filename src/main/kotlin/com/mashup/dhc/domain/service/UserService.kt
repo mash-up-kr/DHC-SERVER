@@ -8,13 +8,16 @@ import com.mashup.dhc.domain.model.PastRoutineHistory
 import com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.UserRepository
+import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.bson.BsonValue
@@ -41,13 +44,14 @@ class UserService(
         birthTime: BirthTime?,
         preferredMissionCategoryList: List<MissionCategory>
     ): BsonValue? {
-        val user = User(
-            gender = gender,
-            userToken = userToken,
-            birthDate = birthDate,
-            birthTime = birthTime,
-            preferredMissionCategoryList = preferredMissionCategoryList
-        )
+        val user =
+            User(
+                gender = gender,
+                userToken = userToken,
+                birthDate = birthDate,
+                birthTime = birthTime,
+                preferredMissionCategoryList = preferredMissionCategoryList
+            )
 
         return userRepository.insertOne(updateUserMissions(user))
     }
@@ -68,11 +72,7 @@ class UserService(
             throw IllegalArgumentException("Mission $missionId doesn't exist")
         }
 
-        val today =
-            Clock.System
-                .now()
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-                .date
+        val today = now()
 
         val toUpdateMission = mission.copy(finished = finished, endDate = today)
 
@@ -108,10 +108,7 @@ class UserService(
         val user = userRepository.findById(ObjectId(userId))!!
         val todayMissionList = user.todayDailyMissionList
 
-        val todaySavedMoney = todayMissionList
-            .filter { it.finished }
-            .map { it.cost }
-            .reduce(Money::plus)
+        val todaySavedMoney = todayMissionList.calculateSavedMoney()
 
         transactionService.executeInTransaction {
             val pastRoutineHistory =
@@ -149,10 +146,7 @@ class UserService(
         val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory)
 
         val today =
-            Clock.System
-                .now()
-                .toLocalDateTime(TimeZone.currentSystemDefault())
-                .date
+            now()
 
         val updatedUser =
             user.copy(
@@ -193,10 +187,40 @@ class UserService(
         return userRepository.updateOne(ObjectId(userId), updatedUser)
     }
 
-    suspend fun getPasRoutineMissionHistoriesWhen(
+    suspend fun getWeekPastRoutines(
         userId: String,
         date: LocalDate
-    ): PastRoutineHistory = pastRoutineHistoryRepository.findByUserIdAndDate(ObjectId(userId), date)!!
+    ): List<PastRoutineHistory> {
+        val dayOfWeek = date.dayOfWeek
+
+        val daysFromMonday = dayOfWeek.ordinal
+        val daysToSunday = DayOfWeek.SUNDAY.ordinal - dayOfWeek.ordinal
+
+        val startOfWeek = date.minus(daysFromMonday.toLong(), DateTimeUnit.DAY)
+        val endOfWeek = date.plus(daysToSunday.toLong(), DateTimeUnit.DAY)
+
+        return getPastRoutineMissionHistoriesBetween(userId, startOfWeek, endOfWeek)
+    }
+
+    suspend fun getMonthlyPastRoutines(
+        userId: String,
+        date: LocalDate
+    ): List<PastRoutineHistory> {
+        val startOfMonth = LocalDate(date.year, date.month, 1)
+        val isLeap = date.isLeapYear()
+        val endOfMonth = LocalDate(date.year, date.month, date.month.length(isLeap))
+
+        return getPastRoutineMissionHistoriesBetween(userId, startOfMonth, endOfMonth)
+    }
+
+    fun LocalDate.isLeapYear(): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+
+    private suspend fun getPastRoutineMissionHistoriesBetween(
+        userId: String,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): List<PastRoutineHistory> =
+        pastRoutineHistoryRepository.findByUserIdAndDateBetween(ObjectId(userId), startDate, endDate)!!
 
     private fun User.resolveTodayMissionCategory() = this.preferredMissionCategoryList.random()
 }
@@ -212,3 +236,9 @@ class MissionPicker(
         return randomPeekMission
     }
 }
+
+fun now() =
+    Clock.System
+        .now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .date

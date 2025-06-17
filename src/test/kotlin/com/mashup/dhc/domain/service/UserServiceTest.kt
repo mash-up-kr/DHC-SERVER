@@ -74,7 +74,7 @@ class UserServiceTest {
                     difficulty = 1,
                     type = MissionType.DAILY,
                     cost = Money(100),
-                    endDate = null,
+                    endDate = null
                 )
 
             val randomMission =
@@ -84,7 +84,7 @@ class UserServiceTest {
                     difficulty = 2,
                     type = MissionType.DAILY,
                     cost = Money(200),
-                    endDate = null,
+                    endDate = null
                 )
 
             val user =
@@ -101,7 +101,7 @@ class UserServiceTest {
                             difficulty = 3,
                             type = MissionType.DAILY,
                             cost = Money(300),
-                            endDate = null,
+                            endDate = null
                         ),
                     todayDailyMissionList = listOf(missionToReplace),
                     pastRoutineHistoryIds = listOf(),
@@ -116,7 +116,7 @@ class UserServiceTest {
             // Mock repository calls
             every { runBlocking { userRepository.findById(ObjectId(userId)) } } returns user
             every { runBlocking { missionRepository.findDailyByCategory(missionCategory) } } returns
-                    listOf(randomMission)
+                listOf(randomMission)
             every { runBlocking { userRepository.updateOne(ObjectId(userId), any()) } } returns 1
 
             // When
@@ -152,7 +152,7 @@ class UserServiceTest {
                     type = MissionType.LONG_TERM,
                     finished = false,
                     cost = Money(500),
-                    endDate = null,
+                    endDate = null
                 )
 
             val dailyMission1 =
@@ -163,7 +163,7 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(100),
-                    endDate = null,
+                    endDate = null
                 )
 
             val dailyMission2 =
@@ -174,7 +174,7 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(50),
-                    endDate = null,
+                    endDate = null
                 )
 
             val dailyMission3 =
@@ -185,7 +185,7 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(200),
-                    endDate = null,
+                    endDate = null
                 )
 
             val user =
@@ -241,7 +241,7 @@ class UserServiceTest {
                     type = MissionType.LONG_TERM,
                     finished = false,
                     cost = Money(500),
-                    endDate = null,
+                    endDate = null
                 )
 
             val dailyMission1 =
@@ -252,7 +252,7 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(100),
-                    endDate = null,
+                    endDate = null
                 )
 
             val dailyMission2 =
@@ -263,7 +263,7 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(50),
-                    endDate = null,
+                    endDate = null
                 )
 
             val dailyMission3 =
@@ -274,7 +274,7 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(200),
-                    endDate = null,
+                    endDate = null
                 )
 
             val user =

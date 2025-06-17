@@ -40,7 +40,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             category = MissionCategory.FOOD,
                             difficulty = 3,
                             type = MissionType.DAILY,
-                            cost = Money("10.00")
+                            cost = Money("10.00"),
+                            endDate = null
                         ),
                     todayDailyMissionList =
                         listOf(
@@ -49,7 +50,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 category = MissionCategory.FOOD,
                                 difficulty = 3,
                                 type = MissionType.DAILY,
-                                cost = Money("10.00")
+                                cost = Money("10.00"),
+                                endDate = null
                             )
                         ),
                     pastRoutineHistoryIds = emptyList(),
@@ -73,7 +75,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
             assertEquals(Gender.MALE, foundUser.gender)
             assertEquals("test-token", foundUser.userToken)
             assertEquals(LocalDate(2000, 1, 1), foundUser.birthDate!!.date)
-            assertEquals(CalendarType.SOLAR, foundUser.birthDate!!.calendarType)
+            assertEquals(CalendarType.SOLAR, foundUser.birthDate.calendarType)
             assertEquals(MissionCategory.FOOD, foundUser.longTermMission!!.category)
             assertEquals(1, foundUser.todayDailyMissionList.size)
             assertEquals(MissionCategory.FOOD, foundUser.todayDailyMissionList[0].category)
@@ -96,7 +98,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             category = MissionCategory.FOOD,
                             difficulty = 3,
                             type = MissionType.DAILY,
-                            cost = Money("10.00")
+                            cost = Money("10.00"),
+                            endDate = null
                         ),
                     todayDailyMissionList =
                         listOf(
@@ -105,7 +108,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 category = MissionCategory.FOOD,
                                 difficulty = 3,
                                 type = MissionType.DAILY,
-                                cost = Money("10.00")
+                                cost = Money("10.00"),
+                                endDate = null
                             )
                         ),
                     pastRoutineHistoryIds = emptyList(),
@@ -135,7 +139,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             category = MissionCategory.FOOD,
                             difficulty = 3,
                             type = MissionType.DAILY,
-                            cost = Money("10.00")
+                            cost = Money("10.00"),
+                            endDate = null
                         ),
                     todayDailyMissionList =
                         listOf(
@@ -144,7 +149,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 category = MissionCategory.TRANSPORTATION, // Changed category
                                 difficulty = 5, // Changed difficulty
                                 type = MissionType.DAILY,
-                                cost = Money("15.00") // Changed cost
+                                cost = Money("15.00"), // Changed cost
+                                endDate = null
                             )
                         ),
                     pastRoutineHistoryIds = listOf(ObjectId()), // Added mission history
@@ -185,7 +191,8 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             category = MissionCategory.FOOD,
                             difficulty = 3,
                             type = MissionType.DAILY,
-                            cost = Money("10.00")
+                            cost = Money("10.00"),
+                            endDate = null
                         ),
                     todayDailyMissionList = emptyList(),
                     pastRoutineHistoryIds = emptyList(),

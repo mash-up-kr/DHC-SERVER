@@ -65,3 +65,9 @@ class MissionRepository(
         const val MISSION_COLLECTION = "mission"
     }
 }
+
+fun List<Mission>.calculateSavedMoney() =
+    this
+        .filter { it.finished }
+        .map { it.cost }
+        .reduce(Money::plus)
