@@ -1,105 +1,155 @@
 #!/bin/bash
-set -euo pipefail
 
-ENV_FILE="/etc/dhc-app/.env"
+# 색상 정의
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-# 로깅 함수
-log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"; }
-error() { echo "[ERROR] $1" >&2; exit 1; }
+echo -e "${BLUE}=== DHC 애플리케이션 Docker Compose 배포 ===${NC}"
 
-# 환경변수 파일 로드
-if [ -f "$ENV_FILE" ]; then
-    log "Loading environment from $ENV_FILE"
-    set -a
-    source "$ENV_FILE"
-    set +a
-else
-    log "$ENV_FILE not found, using environment variables"
-fi
+# 스크립트 디렉토리 확인
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-# 필수 환경변수 설정
-REGISTRY="${REGISTRY:-$NCP_CONTAINER_REGISTRY}"
-IMAGE_NAME="${IMAGE_NAME:-dhc-ktor-app}"
-VERSION="${TAG:-${VERSION:-latest}}"
-CONTAINER_NAME="dhc-app"
-
-# 필수 환경변수 검증
-[ -z "${REGISTRY:-}" ] && error "REGISTRY not set"
-[ -z "${NCP_ACCESS_KEY:-}" ] && error "NCP_ACCESS_KEY not set"
-[ -z "${NCP_SECRET_KEY:-}" ] && error "NCP_SECRET_KEY not set"
-[ -z "${BUCKET_NAME:-}" ] && error "BUCKET_NAME not set"
-
-# MongoDB 설정
-MONGO_HOST="${MONGO_HOST:-mongo}"
-MONGO_PORT="${MONGO_PORT:-27017}"
-MONGO_DATABASE="${MONGO_DATABASE:-dhc}"
-
-# Docker 레지스트리 로그인
-log "Logging in to registry..."
-echo "${NCP_SECRET_KEY}" | docker login -u "${NCP_ACCESS_KEY}" --password-stdin "${REGISTRY}"
-
-# 이미지 풀
-IMAGE="${REGISTRY}/${IMAGE_NAME}:${VERSION}"
-log "Pulling image: ${IMAGE}"
-docker pull "${IMAGE}"
-
-# 기존 컨테이너 백업
-if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
-    log "Backing up existing container..."
-    docker stop "${CONTAINER_NAME}" 2>/dev/null || true
-    docker rename "${CONTAINER_NAME}" "${CONTAINER_NAME}-backup-$(date +%Y%m%d-%H%M%S)" 2>/dev/null || true
-fi
-
-# 새 컨테이너 시작
-log "Starting new container..."
-docker run -d \
-    --name "${CONTAINER_NAME}" \
-    --restart unless-stopped \
-    -p 8080:8080 \
-    -e NCP_ACCESS_KEY="${NCP_ACCESS_KEY}" \
-    -e NCP_SECRET_KEY="${NCP_SECRET_KEY}" \
-    -e BUCKET_NAME="${BUCKET_NAME}" \
-    -e MONGO_HOST="${MONGO_HOST}" \
-    -e MONGO_PORT="${MONGO_PORT}" \
-    -e MONGO_DATABASE="${MONGO_DATABASE}" \
-    -e MONGO_CONNECTION_STRING="${MONGO_CONNECTION_STRING:-mongodb://${MONGO_HOST}:${MONGO_PORT}/${MONGO_DATABASE}}" \
-    -e APP_VERSION="${VERSION}" \
-    "${IMAGE}"
-
-# 헬스체크
-log "Performing health check..."
-HEALTH_CHECK_URL="http://localhost:8080/health"
-MAX_RETRIES=30
-RETRY_COUNT=0
-
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if curl -f -s "${HEALTH_CHECK_URL}" >/dev/null 2>&1; then
-        log "Health check passed!"
-
-        # 백업 컨테이너 정리
-        docker rm $(docker ps -aq -f name="${CONTAINER_NAME}-backup-*") 2>/dev/null || true
-
-        log "Deployment completed successfully!"
-        docker image prune -f
-        exit 0
+# Docker 설치 확인 및 설치
+if ! command -v docker &> /dev/null; then
+    echo -e "${YELLOW} Docker가 설치되어 있지 않습니다. 설치를 시작합니다...${NC}"
+    
+    # OS 확인
+    if [ -f /etc/rocky-release ]; then
+        echo -e "${GREEN}Rocky Linux 감지됨. Docker 설치 시작...${NC}"
+        chmod +x "$SCRIPT_DIR/install-docker-rocky8.sh"
+        "$SCRIPT_DIR/install-docker-rocky8.sh"
+        
+        # Docker 설치 후 서비스 확인
+        if ! systemctl is-active --quiet docker; then
+            echo -e "${RED}Docker 서비스가 실행되지 않습니다${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${RED}지원하지 않는 OS입니다. 수동으로 Docker를 설치해주세요.${NC}"
+        exit 1
     fi
+fi
 
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    log "Health check retry ${RETRY_COUNT}/${MAX_RETRIES}"
-    sleep 2
+# Docker Compose 명령어 확인
+if command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+    echo -e "${YELLOW}Docker Compose를 사용합니다${NC}"
+elif docker compose version &> /dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+    echo -e "${YELLOW}Docker Compose (플러그인)를 사용합니다${NC}"
+else
+    echo -e "${RED}Docker Compose가 설치되지 않았습니다${NC}"
+    exit 1
+fi
+
+# 배포 디렉토리로 이동
+cd "$PROJECT_ROOT"
+
+# 환경 파일 확인
+if [ ! -f ".env.production" ]; then
+    echo -e "${RED}.env.production 파일을 찾을 수 없습니다${NC}"
+    exit 1
+fi
+
+# docker-compose 파일 확인
+if [ ! -f "docker-compose.deploy.yml" ]; then
+    echo -e "${RED}docker-compose.deploy.yml 파일을 찾을 수 없습니다${NC}"
+    exit 1
+fi
+
+# 환경 변수 로드 및 확인
+set -a
+source .env.production
+set +a
+
+if [ -z "$NCP_ACCESS_KEY" ] || [ -z "$NCP_SECRET_KEY" ]; then
+    echo -e "${RED}NCP 인증 정보가 설정되지 않았습니다${NC}"
+    exit 1
+fi
+
+if [ -z "$REGISTRY" ] || [ -z "$IMAGE_TAG" ]; then
+    echo -e "${RED}레지스트리 또는 이미지 태그가 설정되지 않았습니다${NC}"
+    exit 1
+fi
+
+# 1. 레지스트리 로그인
+echo -e "${GREEN}레지스트리 로그인 중...${NC}"
+echo "$NCP_SECRET_KEY" | docker login -u "$NCP_ACCESS_KEY" --password-stdin "$REGISTRY"
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}레지스트리 로그인 실패${NC}"
+    exit 1
+fi
+
+# 2. 현재 상태 확인
+echo -e "${BLUE}현재 컨테이너 상태:${NC}"
+$COMPOSE_CMD -f docker-compose.deploy.yml --env-file .env.production ps
+
+# 3. 기존 컨테이너 중지 (graceful shutdown)
+echo -e "${YELLOW}기존 컨테이너 중지 중...${NC}"
+$COMPOSE_CMD -f docker-compose.deploy.yml --env-file .env.production down
+
+# 4. 새 이미지 pull
+echo -e "${GREEN}최신 이미지 다운로드 중...${NC}"
+$COMPOSE_CMD -f docker-compose.deploy.yml --env-file .env.production pull
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}이미지 다운로드 실패${NC}"
+    exit 1
+fi
+
+# 5. 컨테이너 시작
+echo -e "${GREEN}새 컨테이너 시작 중...${NC}"
+$COMPOSE_CMD -f docker-compose.deploy.yml --env-file .env.production up -d
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}컨테이너 시작 실패${NC}"
+    exit 1
+fi
+
+# 6. 시작 대기
+echo -e "${YELLOW}서비스 시작 대기 중...${NC}"
+sleep 10
+
+# 7. 상태 확인
+echo -e "${BLUE}배포 후 컨테이너 상태:${NC}"
+$COMPOSE_CMD -f docker-compose.deploy.yml --env-file .env.production ps
+
+# 8. 헬스체크
+echo -e "${GREEN}헬스체크 수행 중...${NC}"
+max_retries=10
+retry_count=0
+
+while [ $retry_count -lt $max_retries ]; do
+    if curl -f -s -X GET http://localhost:8080/health > /dev/null; then
+        echo -e "${GREEN}헬스체크 성공!${NC}"
+        break
+    fi
+    
+    retry_count=$((retry_count + 1))
+    echo -e "${YELLOW}헬스체크 재시도 $retry_count/$max_retries${NC}"
+    sleep 3
 done
 
-# 헬스체크 실패 시 롤백
-error "Health check failed! Rolling back..."
-docker stop "${CONTAINER_NAME}" 2>/dev/null || true
-docker rm "${CONTAINER_NAME}" 2>/dev/null || true
-
-# 가장 최근 백업 복원
-LATEST_BACKUP=$(docker ps -a --format '{{.Names}}' | grep "${CONTAINER_NAME}-backup-" | sort -r | head -1)
-if [ -n "${LATEST_BACKUP}" ]; then
-    docker rename "${LATEST_BACKUP}" "${CONTAINER_NAME}"
-    docker start "${CONTAINER_NAME}"
-    log "Rolled back to ${LATEST_BACKUP}"
+if [ $retry_count -eq $max_retries ]; then
+    echo -e "${RED}헬스체크 실패${NC}"
+    echo -e "${RED}애플리케이션 로그:${NC}"
+    $COMPOSE_CMD -f docker-compose.deploy.yml --env-file .env.production logs dhc-app --tail=50
+    exit 1
 fi
 
-exit 1
+# 9. 로그 확인
+echo -e "${BLUE}최근 로그:${NC}"
+$COMPOSE_CMD -f docker-compose.deploy.yml --env-file .env.production logs --tail=20
+
+# 10. 이전 이미지 정리
+echo -e "${YELLOW}사용하지 않는 이미지 정리 중...${NC}"
+docker image prune -f
+
+echo -e "${GREEN}배포 완료${NC}"
+echo -e "${BLUE}서비스 상태 확인: ${COMPOSE_CMD} -f docker-compose.deploy.yml --env-file .env.production ps${NC}"
+echo -e "${BLUE}로그 확인: ${COMPOSE_CMD} -f docker-compose.deploy.yml --env-file .env.production logs -f${NC}"
