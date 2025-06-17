@@ -11,7 +11,12 @@ import com.mashup.dhc.domain.model.UserRepository
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Money
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import org.bson.BsonValue
 import org.bson.types.ObjectId
 
@@ -35,16 +40,17 @@ class UserService(
         birthDate: BirthDate,
         birthTime: BirthTime?,
         preferredMissionCategoryList: List<MissionCategory>
-    ): BsonValue? =
-        userRepository.insertOne(
-            User(
-                gender = gender,
-                userToken = userToken,
-                birthDate = birthDate,
-                birthTime = birthTime,
-                preferredMissionCategoryList = preferredMissionCategoryList
-            )
+    ): BsonValue? {
+        val user = User(
+            gender = gender,
+            userToken = userToken,
+            birthDate = birthDate,
+            birthTime = birthTime,
+            preferredMissionCategoryList = preferredMissionCategoryList
         )
+
+        return userRepository.insertOne(updateUserMissions(user))
+    }
 
     suspend fun updateTodayMission(
         userId: String,
@@ -62,23 +68,25 @@ class UserService(
             throw IllegalArgumentException("Mission $missionId doesn't exist")
         }
 
-        val toUpdateMission = mission.copy(finished = finished)
+        val today =
+            Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+
+        val toUpdateMission = mission.copy(finished = finished, endDate = today)
 
         val updated =
             user.copy(
                 longTermMission =
-                    if (user.longTermMission?.id ==
-                        toUpdateMission.id
-                    ) {
+                    if (user.longTermMission?.id == toUpdateMission.id) {
                         toUpdateMission
                     } else {
                         user.longTermMission
                     },
                 todayDailyMissionList =
                     user.todayDailyMissionList.map {
-                        if (it.id ==
-                            toUpdateMission.id
-                        ) {
+                        if (it.id == toUpdateMission.id) {
                             toUpdateMission
                         } else {
                             it
@@ -111,18 +119,17 @@ class UserService(
 
             pastRoutineHistoryRepository.insertOne(pastRoutineHistory)
 
-            val resolvedCategory = user.resolveTodayMissionCategory()
+            val missionUpdatedUser = updateUserMissions(user)
 
-            val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory)
-            val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory)
-
-            val updatedUser =
-                user.copy(
-                    longTermMission = longTermCategoryMissions.random(),
-                    todayDailyMissionList = dailyCategoryMissions.shuffled().take(PEEK_MISSION_SIZE),
-                    pastRoutineHistoryIds = user.pastRoutineHistoryIds + pastRoutineHistory.id!!
+            userRepository.updateOne(
+                missionUpdatedUser.id!!,
+                missionUpdatedUser.copy(
+                    pastRoutineHistoryIds = (
+                        missionUpdatedUser.pastRoutineHistoryIds +
+                            pastRoutineHistory.id!!
+                    )
                 )
-            userRepository.updateOne(ObjectId(userId), updatedUser)
+            )
         }
         // TODO: 트랜잭션 롤백시 이후에 복구 처리 추가 필요
 
@@ -130,6 +137,38 @@ class UserService(
             .filter { it.finished }
             .map { it.cost }
             .reduce(Money::plus)
+    }
+
+    private suspend fun updateUserMissions(user: User): User {
+        val resolvedCategory = user.resolveTodayMissionCategory()
+
+        val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory)
+        val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory)
+
+        val today =
+            Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+
+        val updatedUser =
+            user.copy(
+                longTermMission =
+                    if (user.longTermMission == null || user.longTermMission.finished) {
+                        longTermCategoryMissions
+                            .random()
+                            .copy(endDate = today.plus(14, DateTimeUnit.DAY))
+                    } else {
+                        user.longTermMission
+                    },
+                todayDailyMissionList =
+                    dailyCategoryMissions
+                        .shuffled()
+                        .take(PEEK_MISSION_SIZE)
+                        .map { it.copy(endDate = today.plus(1, DateTimeUnit.DAY)) }
+            )
+        userRepository.updateOne(user.id!!, updatedUser)
+        return updatedUser
     }
 
     suspend fun switchTodayMission(

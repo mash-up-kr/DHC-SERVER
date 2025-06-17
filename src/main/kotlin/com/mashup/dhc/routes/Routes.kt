@@ -90,6 +90,7 @@ private fun Route.home(userService: UserService) {
                 .now()
                 .toLocalDateTime(TimeZone.currentSystemDefault())
                 .date
+
         call.respond(
             HttpStatusCode.OK,
             HomeViewResponse(
@@ -112,7 +113,8 @@ private fun Mission.toMissionResponse() =
         difficulty = this.difficulty,
         type = this.type,
         finished = this.finished,
-        cost = this.cost
+        cost = this.cost,
+        endDate = this.endDate!!
     )
 
 @Serializable
@@ -122,7 +124,8 @@ data class MissionResponse(
     val difficulty: Int,
     val type: MissionType,
     val finished: Boolean = false,
-    val cost: Money
+    val cost: Money,
+    val endDate: LocalDate
 )
 
 @Serializable
