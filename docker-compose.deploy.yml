@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mashup-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - dhc-network
+
+  dhc-app:
+    image: ${REGISTRY}/dhc-ktor-app:${IMAGE_TAG}
+    container_name: dhc-app
+    ports:
+      - "8080:8080"
+    environment:
+      - NCP_ACCESS_KEY=${NCP_ACCESS_KEY}
+      - NCP_SECRET_KEY=${NCP_SECRET_KEY}
+      - BUCKET_NAME=${BUCKET_NAME}
+      - MONGO_CONNECTION_STRING=${MONGO_CONNECTION_STRING:-mongodb://mongodb:27017/dhc}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - dhc-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  dhc-network:
+    driver: bridge
