@@ -17,6 +17,7 @@ data class Mission(
     val difficulty: Int,
     val type: MissionType,
     val finished: Boolean = false,
+    val title: String,
     val cost: Money,
     val endDate: LocalDate?
 )

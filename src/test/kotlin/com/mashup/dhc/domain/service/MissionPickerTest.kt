@@ -40,7 +40,8 @@ class MissionPickerTest {
                     difficulty = 2,
                     type = MissionType.DAILY,
                     cost = Money(150),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD) } } returns
@@ -66,7 +67,8 @@ class MissionPickerTest {
                     difficulty = 1,
                     type = MissionType.DAILY,
                     cost = Money(100),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
             val shoppingMission =
                 Mission(
@@ -75,7 +77,8 @@ class MissionPickerTest {
                     difficulty = 2,
                     type = MissionType.DAILY,
                     cost = Money(200),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.TRAVEL) } } returns
@@ -107,7 +110,8 @@ class MissionPickerTest {
                     difficulty = 1,
                     type = MissionType.DAILY,
                     cost = Money(100),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
             val digitalMission =
                 Mission(
@@ -116,7 +120,8 @@ class MissionPickerTest {
                     difficulty = 2,
                     type = MissionType.DAILY,
                     cost = Money(200),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
             val shoppingMission =
                 Mission(
@@ -125,7 +130,8 @@ class MissionPickerTest {
                     difficulty = 3,
                     type = MissionType.DAILY,
                     cost = Money(300),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             // Mock all possible category calls

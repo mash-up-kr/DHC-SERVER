@@ -74,7 +74,8 @@ class UserServiceTest {
                     difficulty = 1,
                     type = MissionType.DAILY,
                     cost = Money(100),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val randomMission =
@@ -84,7 +85,8 @@ class UserServiceTest {
                     difficulty = 2,
                     type = MissionType.DAILY,
                     cost = Money(200),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val user =
@@ -101,7 +103,8 @@ class UserServiceTest {
                             difficulty = 3,
                             type = MissionType.DAILY,
                             cost = Money(300),
-                            endDate = null
+                            endDate = null,
+                            title = "밥 먹기",
                         ),
                     todayDailyMissionList = listOf(missionToReplace),
                     pastRoutineHistoryIds = listOf(),
@@ -152,7 +155,8 @@ class UserServiceTest {
                     type = MissionType.LONG_TERM,
                     finished = false,
                     cost = Money(500),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val dailyMission1 =
@@ -163,7 +167,8 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(100),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val dailyMission2 =
@@ -174,7 +179,8 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(50),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val dailyMission3 =
@@ -185,7 +191,8 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(200),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val user =
@@ -241,7 +248,8 @@ class UserServiceTest {
                     type = MissionType.LONG_TERM,
                     finished = false,
                     cost = Money(500),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val dailyMission1 =
@@ -252,7 +260,8 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(100),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val dailyMission2 =
@@ -263,7 +272,8 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(50),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val dailyMission3 =
@@ -274,7 +284,8 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     finished = false,
                     cost = Money(200),
-                    endDate = null
+                    endDate = null,
+                    title = "밥 먹기",
                 )
 
             val user =

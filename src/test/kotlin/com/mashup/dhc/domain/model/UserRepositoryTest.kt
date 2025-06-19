@@ -39,6 +39,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             id = null,
                             category = MissionCategory.FOOD,
                             difficulty = 3,
+                            title = "밥 먹기",
                             type = MissionType.DAILY,
                             cost = Money("10.00"),
                             endDate = null
@@ -49,6 +50,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 id = null,
                                 category = MissionCategory.FOOD,
                                 difficulty = 3,
+                                title = "밥 먹기",
                                 type = MissionType.DAILY,
                                 cost = Money("10.00"),
                                 endDate = null
@@ -74,7 +76,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
             assertNotNull(foundUser)
             assertEquals(Gender.MALE, foundUser.gender)
             assertEquals("test-token", foundUser.userToken)
-            assertEquals(LocalDate(2000, 1, 1), foundUser.birthDate!!.date)
+            assertEquals(LocalDate(2000, 1, 1), foundUser.birthDate.date)
             assertEquals(CalendarType.SOLAR, foundUser.birthDate.calendarType)
             assertEquals(MissionCategory.FOOD, foundUser.longTermMission!!.category)
             assertEquals(1, foundUser.todayDailyMissionList.size)
@@ -99,6 +101,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             difficulty = 3,
                             type = MissionType.DAILY,
                             cost = Money("10.00"),
+                            title = "밥 먹기",
                             endDate = null
                         ),
                     todayDailyMissionList =
@@ -109,6 +112,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 difficulty = 3,
                                 type = MissionType.DAILY,
                                 cost = Money("10.00"),
+                                title = "밥 먹기",
                                 endDate = null
                             )
                         ),
@@ -140,6 +144,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             difficulty = 3,
                             type = MissionType.DAILY,
                             cost = Money("10.00"),
+                            title = "밥 먹기",
                             endDate = null
                         ),
                     todayDailyMissionList =
@@ -150,6 +155,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
                                 difficulty = 5, // Changed difficulty
                                 type = MissionType.DAILY,
                                 cost = Money("15.00"), // Changed cost
+                                title = "밥 먹기",
                                 endDate = null
                             )
                         ),
@@ -192,6 +198,7 @@ class UserRepositoryTest : BaseMongoDBTest() {
                             difficulty = 3,
                             type = MissionType.DAILY,
                             cost = Money("10.00"),
+                            title = "밥 먹기",
                             endDate = null
                         ),
                     todayDailyMissionList = emptyList(),
