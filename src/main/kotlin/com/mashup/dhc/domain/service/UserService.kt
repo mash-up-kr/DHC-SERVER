@@ -123,7 +123,7 @@ class UserService(
                 throw IllegalArgumentException("Past routine history for date $date already exists.")
             }
 
-            pastRoutineHistoryRepository.insertOne(pastRoutineHistory)
+            val insertedPastRoutineHistoryId = pastRoutineHistoryRepository.insertOne(pastRoutineHistory)!!
 
             val missionUpdatedUser = updateUserMissions(user)
 
@@ -131,8 +131,7 @@ class UserService(
                 missionUpdatedUser.id!!,
                 missionUpdatedUser.copy(
                     pastRoutineHistoryIds = (
-                        missionUpdatedUser.pastRoutineHistoryIds +
-                            pastRoutineHistory.id!!
+                        missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
                     ),
                     totalSavedMoney = user.totalSavedMoney + todaySavedMoney
                 )
@@ -168,7 +167,7 @@ class UserService(
                         .take(PEEK_MISSION_SIZE)
                         .map { it.copy(endDate = today.plus(1, DateTimeUnit.DAY)) }
             )
-        if(user.id != null) {
+        if (user.id != null) {
             userRepository.updateOne(user.id, updatedUser)
         }
         return updatedUser
