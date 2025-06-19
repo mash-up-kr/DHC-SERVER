@@ -19,6 +19,7 @@ data class Mission(
     val finished: Boolean = false,
     val title: String,
     val cost: Money,
+    val switchCount: Int = 0,
     val endDate: LocalDate?
 )
 

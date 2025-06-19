@@ -22,6 +22,12 @@ enum class ErrorCode(
     UNAUTHORIZED(2001, "Unauthorized access", HttpStatusCode.Unauthorized),
     FORBIDDEN(2002, "Forbidden", HttpStatusCode.Forbidden),
     NOT_FOUND(3001, "Resource not found", HttpStatusCode.NotFound),
+    CONFLICT(3002, "Conflict", HttpStatusCode.Conflict),
+    MAXIMUM_SWITCH_COUNT_EXCEEDED(
+        3003,
+        "Maximum switch count exceeded",
+        HttpStatusCode.BadRequest
+    ),
 
     // Server Errors
     INTERNAL_SERVER_ERROR(5000, "Internal server error", HttpStatusCode.InternalServerError),

@@ -75,12 +75,15 @@ paths:
                 $ref: "#/components/schemas/ToggleMissionResponse"
               example:
                 mission:
-                  id: "507f1f77bcf86cd799439022"
+                  missionId: "507f1f77bcf86cd799439022"
                   category: "FOOD"
                   difficulty: 3
                   type: "DAILY"
                   finished: true
                   cost: "10.00"
+                  endDate: "2024-01-15"
+                  title: "오늘 점심은 집에서 해먹기"
+                  switchCount: 0
   
   /api/users/{userId}/done:
     post:
@@ -162,25 +165,34 @@ paths:
                 $ref: "#/components/schemas/HomeViewResponse"
               example:
                 longTermMission:
-                  id: "507f1f77bcf86cd799439033"
+                  missionId: "507f1f77bcf86cd799439033"
                   category: "TRAVEL"
                   difficulty: 5
                   type: "LONG_TERM"
                   finished: false
                   cost: "100.00"
+                  endDate: "2024-12-31"
+                  title: "여행 가기 위해 돈 모으기"
+                  switchCount: 0
                 todayDailyMissionList:
-                  - id: "507f1f77bcf86cd799439044"
+                  - missionId: "507f1f77bcf86cd799439044"
                     category: "FOOD"
                     difficulty: 2
                     type: "DAILY"
                     finished: false
                     cost: "15.00"
-                  - id: "507f1f77bcf86cd799439055"
+                    endDate: "2024-01-15"
+                    title: "점심 도시락 싸가기"
+                    switchCount: 1
+                  - missionId: "507f1f77bcf86cd799439055"
                     category: "TRANSPORTATION"
                     difficulty: 1
                     type: "DAILY"
                     finished: true
                     cost: "5.00"
+                    endDate: "2024-01-15"
+                    title: "대중교통 이용하기"
+                    switchCount: 0
                 todayDailyFortune:
                   date: "2024-01-15"
                   fortuneTitle: "좋은 하루"
@@ -198,7 +210,7 @@ paths:
   /view/users/{userId}/myPage:
     get:
       summary: "Get My Page View"
-      description: "Get user's profile information and accumulated statistics"
+      description: "Get user's profile information with animal card"
       parameters:
         - name: userId
           in: path
@@ -213,20 +225,17 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/MyPageViewResponse"
+                $ref: "#/components/schemas/MyPageResponse"
               example:
-                userProfile:
-                  id: "507f1f77bcf86cd799439011"
-                  userToken: "user123token"
-                  gender: "MALE"
-                  birthDate:
-                    date: "2000-01-01"
-                    calendarType: "SOLAR"
-                  birthTime: "09:30:00"
-                  preferredMissionCategoryList: ["FOOD", "TRANSPORTATION"]
-                totalSavedMoney: "1250.00"
-                completedMissionCount: 42
-                streak: 7
+                animalCard:
+                  name: "봄의 흰 말"
+                  cardImageUrl: ""
+                birthDate:
+                  date: "2000-01-01"
+                  calendarType: "SOLAR"
+                birthTime: "09:30:00"
+                preferredMissionCategoryList: ["FOOD", "TRANSPORTATION"]
+                alarm: true
         "404":
           description: "User not found"
           content:
@@ -255,23 +264,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/AnalysisViewResponse"
               example:
-                monthlySavings:
-                  - month: "2024-01"
-                    savedAmount: "325.50"
-                  - month: "2024-02"
-                    savedAmount: "278.30"
-                categoryBreakdown:
-                  - category: "FOOD"
-                    savedAmount: "150.00"
-                    completedCount: 15
-                  - category: "TRANSPORTATION"
-                    savedAmount: "75.00"
-                    completedCount: 8
-                weeklyProgress:
-                  - week: "2024-W06"
-                    completionRate: 85.7
-                  - week: "2024-W07"
-                    completionRate: 92.3
+                totalSavedMoney: "1250.00"
+                weeklySavedMoney: "85.50"
+                averageSucceedProbability: 75
+                calendarDayMissionViews:
+                  - day: 15
+                    date: "2024-01-15"
+                    finishedMissionCount: 2
+                    totalMissionCount: 3
+                  - day: 16
+                    date: "2024-01-16"
+                    finishedMissionCount: 3
+                    totalMissionCount: 3
         "404":
           description: "User not found"
           content:
@@ -279,6 +283,97 @@ paths:
               schema:
                 type: "string"
               example: "User not found"
+
+  /api/storage/upload:
+    post:
+      summary: "Upload File"
+      description: "Upload a file to storage"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: "File to upload"
+                displayLogo:
+                  type: string
+                  description: "Display logo identifier"
+                  example: "company-logo"
+      responses:
+        "200":
+          description: "File uploaded successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+              example:
+                url: "https://storage.example.com/uploads/file.jpg"
+        "400":
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "파일이 없습니다"
+
+  /api/storage/{key}:
+    delete:
+      summary: "Delete File"
+      description: "Delete a file from storage"
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "File key to delete"
+          example: "uploads/file.jpg"
+      responses:
+        "204":
+          description: "File deleted successfully"
+        "400":
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "키가 필요합니다"
+
+  /api/storage/url/{key}:
+    get:
+      summary: "Get File URL"
+      description: "Get the URL of a file in storage"
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "File key"
+          example: "uploads/file.jpg"
+      responses:
+        "200":
+          description: "File URL retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+              example:
+                url: "https://storage.example.com/uploads/file.jpg"
+        "400":
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "키가 필요합니다"
 
 components:
   schemas:
@@ -322,13 +417,17 @@ components:
     
     ToggleMissionRequest:
       type: object
-      required:
-        - finished
       properties:
         finished:
           type: boolean
           description: "Whether the mission is completed"
           example: true
+          nullable: true
+        switch:
+          type: boolean
+          description: "Whether to switch the mission"
+          example: false
+          nullable: true
     
     ToggleMissionResponse:
       type: object
@@ -384,51 +483,59 @@ components:
           description: "Logout confirmation message"
           example: "Successfully logged out"
     
-    MyPageViewResponse:
+    MyPageResponse:
       type: object
       required:
-        - userProfile
-        - totalSavedMoney
-        - completedMissionCount
-        - streak
+        - animalCard
+        - birthDate
+        - preferredMissionCategoryList
+        - alarm
       properties:
-        userProfile:
-          $ref: "#/components/schemas/UserProfile"
-        totalSavedMoney:
+        animalCard:
+          $ref: "#/components/schemas/AnimalCard"
+        birthDate:
+          $ref: "#/components/schemas/BirthDate"
+        birthTime:
           type: string
-          description: "Total amount of money saved"
-          example: "1250.00"
-        completedMissionCount:
-          type: integer
-          description: "Total number of completed missions"
-          example: 42
-        streak:
-          type: integer
-          description: "Current streak of consecutive days with completed missions"
-          example: 7
+          format: time
+          description: "Birth time in HH:mm:ss format"
+          example: "09:30:00"
+          nullable: true
+        preferredMissionCategoryList:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissionCategory"
+          description: "List of preferred mission categories"
+        alarm:
+          type: boolean
+          description: "Whether alarm is enabled"
+          example: true
     
     AnalysisViewResponse:
       type: object
       required:
-        - monthlySavings
-        - categoryBreakdown
-        - weeklyProgress
+        - totalSavedMoney
+        - weeklySavedMoney
+        - averageSucceedProbability
+        - calendarDayMissionViews
       properties:
-        monthlySavings:
+        totalSavedMoney:
+          type: string
+          description: "Total amount of money saved"
+          example: "1250.00"
+        weeklySavedMoney:
+          type: string
+          description: "Amount of money saved this week"
+          example: "85.50"
+        averageSucceedProbability:
+          type: integer
+          description: "Average success probability as percentage"
+          example: 75
+        calendarDayMissionViews:
           type: array
           items:
-            $ref: "#/components/schemas/MonthlySaving"
-          description: "Monthly savings breakdown"
-        categoryBreakdown:
-          type: array
-          items:
-            $ref: "#/components/schemas/CategoryBreakdown"
-          description: "Savings breakdown by mission category"
-        weeklyProgress:
-          type: array
-          items:
-            $ref: "#/components/schemas/WeeklyProgress"
-          description: "Weekly mission completion progress"
+            $ref: "#/components/schemas/CalendarDayMissionView"
+          description: "Calendar view of daily missions"
     
     UserProfile:
       type: object
@@ -462,69 +569,38 @@ components:
             $ref: "#/components/schemas/MissionCategory"
           description: "List of preferred mission categories"
     
-    MonthlySaving:
+    AnimalCard:
       type: object
       required:
-        - month
-        - savedAmount
+        - name
       properties:
-        month:
+        name:
           type: string
-          description: "Month in YYYY-MM format"
-          example: "2024-01"
-        savedAmount:
+          description: "Animal card name"
+          example: "봄의 흰 말"
+        cardImageUrl:
           type: string
-          description: "Amount saved in the month"
-          example: "325.50"
-    
-    CategoryBreakdown:
-      type: object
-      required:
-        - category
-        - savedAmount
-        - completedCount
-      properties:
-        category:
-          $ref: "#/components/schemas/MissionCategory"
-        savedAmount:
-          type: string
-          description: "Amount saved in this category"
-          example: "150.00"
-        completedCount:
-          type: integer
-          description: "Number of completed missions in this category"
-          example: 15
-    
-    WeeklyProgress:
-      type: object
-      required:
-        - week
-        - completionRate
-      properties:
-        week:
-          type: string
-          description: "Week in YYYY-WNN format"
-          example: "2024-W06"
-        completionRate:
-          type: number
-          format: double
-          description: "Mission completion rate as percentage"
-          example: 85.7
+          description: "URL of the animal card image"
+          example: ""
+          nullable: true
     
     Mission:
       type: object
       required:
+        - missionId
         - category
         - difficulty
         - type
         - finished
         - cost
+        - endDate
+        - title
+        - switchCount
       properties:
-        id:
+        missionId:
           type: string
           description: "Mission ID"
           example: "507f1f77bcf86cd799439022"
-          nullable: true
         category:
           $ref: "#/components/schemas/MissionCategory"
         difficulty:
@@ -543,6 +619,19 @@ components:
           type: string
           description: "Mission cost/reward amount"
           example: "10.00"
+        endDate:
+          type: string
+          format: date
+          description: "Mission end date in YYYY-MM-DD format"
+          example: "2024-12-31"
+        title:
+          type: string
+          description: "Mission title"
+          example: "오늘 점심은 집에서 해먹기"
+        switchCount:
+          type: integer
+          description: "Number of times mission has been switched"
+          example: 0
     
     DailyFortune:
       type: object
@@ -661,3 +750,23 @@ components:
         - DAILY
       description: "Mission type"
       example: "DAILY"
+    
+    UploadResponse:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: "URL of the uploaded file"
+          example: "https://storage.example.com/uploads/file.jpg"
+    
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: "Error message"
+          example: "파일이 없습니다"

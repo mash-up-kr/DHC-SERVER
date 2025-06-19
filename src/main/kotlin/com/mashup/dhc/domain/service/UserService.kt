@@ -9,6 +9,8 @@ import com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.UserRepository
 import com.mashup.dhc.domain.model.calculateSavedMoney
+import com.mashup.dhc.routes.BusinessException
+import com.mashup.dhc.routes.ErrorCode
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Money
@@ -37,6 +39,8 @@ class UserService(
     suspend fun getPastRoutineHistories(userId: String): List<PastRoutineHistory> =
         pastRoutineHistoryRepository.findSortedByUserId(ObjectId(userId))
 
+    suspend fun deleteById(userId: String): Long = userRepository.deleteById(ObjectId(userId))
+
     suspend fun registerUser(
         userToken: String,
         gender: Gender,
@@ -44,6 +48,10 @@ class UserService(
         birthTime: BirthTime?,
         preferredMissionCategoryList: List<MissionCategory>
     ): BsonValue? {
+        if (userRepository.findByUserToken(userToken) != null) {
+            throw BusinessException(ErrorCode.CONFLICT)
+        }
+
         val user =
             User(
                 gender = gender,
@@ -120,7 +128,7 @@ class UserService(
                 )
 
             if (pastRoutineHistoryRepository.findByDate(date) != null) {
-                throw IllegalArgumentException("Past routine history for date $date already exists.")
+                throw BusinessException(ErrorCode.CONFLICT)
             }
 
             val insertedPastRoutineHistoryId = pastRoutineHistoryRepository.insertOne(pastRoutineHistory)!!
@@ -176,20 +184,26 @@ class UserService(
     suspend fun switchTodayMission(
         userId: String,
         missionId: String
-    ): Long {
+    ): User {
         val user = userRepository.findById(ObjectId(userId))!!
 
         val reRolledTodayMissionList =
             user.todayDailyMissionList.map { todayMission ->
                 if (todayMission.id == ObjectId(missionId)) {
-                    missionPicker.pickMission(user.preferredMissionCategoryList)
+                    if (todayMission.switchCount >= MAX_SWITCH_COUNT) {
+                        throw BusinessException(ErrorCode.MAXIMUM_SWITCH_COUNT_EXCEEDED)
+                    }
+                    missionPicker
+                        .pickMission(user.preferredMissionCategoryList)
+                        .copy(switchCount = todayMission.switchCount + 1)
                 } else {
                     todayMission
                 }
             }
 
         val updatedUser = user.copy(todayDailyMissionList = reRolledTodayMissionList)
-        return userRepository.updateOne(ObjectId(userId), updatedUser)
+        userRepository.updateOne(ObjectId(userId), updatedUser)
+        return updatedUser
     }
 
     suspend fun getWeekPastRoutines(
@@ -228,6 +242,10 @@ class UserService(
         pastRoutineHistoryRepository.findByUserIdAndDateBetween(ObjectId(userId), startDate, endDate)!!
 
     private fun User.resolveTodayMissionCategory() = this.preferredMissionCategoryList.random()
+
+    companion object {
+        const val MAX_SWITCH_COUNT = 1
+    }
 }
 
 class MissionPicker(

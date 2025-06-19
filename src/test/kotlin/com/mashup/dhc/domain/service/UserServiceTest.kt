@@ -75,7 +75,7 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     cost = Money(100),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val randomMission =
@@ -86,7 +86,7 @@ class UserServiceTest {
                     type = MissionType.DAILY,
                     cost = Money(200),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val user =
@@ -104,7 +104,7 @@ class UserServiceTest {
                             type = MissionType.DAILY,
                             cost = Money(300),
                             endDate = null,
-                            title = "밥 먹기",
+                            title = "밥 먹기"
                         ),
                     todayDailyMissionList = listOf(missionToReplace),
                     pastRoutineHistoryIds = listOf(),
@@ -124,9 +124,6 @@ class UserServiceTest {
 
             // When
             val result = userService.switchTodayMission(userId, missionIdToReplace)
-
-            // Then
-            assertEquals(1, result)
 
             // Verify the updated user has the correct missions
             val userSlot = slot<User>()
@@ -156,7 +153,7 @@ class UserServiceTest {
                     finished = false,
                     cost = Money(500),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val dailyMission1 =
@@ -168,7 +165,7 @@ class UserServiceTest {
                     finished = false,
                     cost = Money(100),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val dailyMission2 =
@@ -180,7 +177,7 @@ class UserServiceTest {
                     finished = false,
                     cost = Money(50),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val dailyMission3 =
@@ -192,7 +189,7 @@ class UserServiceTest {
                     finished = false,
                     cost = Money(200),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val user =
@@ -249,7 +246,7 @@ class UserServiceTest {
                     finished = false,
                     cost = Money(500),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val dailyMission1 =
@@ -261,7 +258,7 @@ class UserServiceTest {
                     finished = false,
                     cost = Money(100),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val dailyMission2 =
@@ -273,7 +270,7 @@ class UserServiceTest {
                     finished = false,
                     cost = Money(50),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val dailyMission3 =
@@ -285,7 +282,7 @@ class UserServiceTest {
                     finished = false,
                     cost = Money(200),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             val user =
