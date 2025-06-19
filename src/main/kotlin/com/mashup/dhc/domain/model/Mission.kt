@@ -4,6 +4,7 @@ import com.mashup.dhc.utils.Money
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import java.math.BigDecimal
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.LocalDate
@@ -70,4 +71,4 @@ fun List<Mission>.calculateSavedMoney() =
     this
         .filter { it.finished }
         .map { it.cost }
-        .reduce(Money::plus)
+        .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)

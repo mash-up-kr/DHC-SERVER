@@ -27,6 +27,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.utils.io.readRemaining
+import java.math.BigDecimal
 import java.util.UUID
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -294,7 +295,7 @@ private fun Route.analysisView(userService: UserService) {
         val weeklySavedMoney =
             weeklyPastRoutines
                 .map { it.missions.calculateSavedMoney() }
-                .reduce(Money::plus)
+                .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
 
         val monthlyFinishedPercentage =
             monthlyPastRoutines.sumOf {
