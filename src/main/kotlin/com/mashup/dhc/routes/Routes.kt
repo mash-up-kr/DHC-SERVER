@@ -144,7 +144,7 @@ data class HomeViewResponse(
 )
 
 private fun Route.endToday(userService: UserService) {
-    post("/done") {
+    post("/{userId}/done") {
         val userId = call.pathParameters["userId"]!!
         val request = call.receive<EndTodayMissionRequest>()
 

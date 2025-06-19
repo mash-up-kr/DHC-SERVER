@@ -119,6 +119,10 @@ class UserService(
                     missions = todayMissionList
                 )
 
+            if (pastRoutineHistoryRepository.findByDate(date) != null) {
+                throw IllegalArgumentException("Past routine history for date $date already exists.")
+            }
+
             pastRoutineHistoryRepository.insertOne(pastRoutineHistory)
 
             val missionUpdatedUser = updateUserMissions(user)
