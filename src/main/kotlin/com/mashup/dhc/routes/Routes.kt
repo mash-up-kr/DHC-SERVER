@@ -298,10 +298,12 @@ private fun Route.analysisView(userService: UserService) {
                 .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
 
         val monthlyFinishedPercentage =
-            monthlyPastRoutines.sumOf {
-                100 * it.missions.filter { mission -> mission.finished }.size /
-                    (it.missions.size)
-            }
+            monthlyPastRoutines
+                .filter { it.missions.isNotEmpty() }
+                .sumOf {
+                    100 * it.missions.filter { mission -> mission.finished }.size /
+                            (it.missions.size)
+                }
 
         val monthlyTotalPercentage = (1..now.dayOfMonth).sum() * 100
 
