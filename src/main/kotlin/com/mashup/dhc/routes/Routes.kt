@@ -122,7 +122,9 @@ private fun Mission.toMissionResponse() =
         type = this.type,
         finished = this.finished,
         cost = this.cost,
-        endDate = this.endDate!!
+        endDate = this.endDate!!,
+        title = this.title,
+        switchCount = this.switchCount
     )
 
 @Serializable
@@ -133,7 +135,9 @@ data class MissionResponse(
     val type: MissionType,
     val finished: Boolean = false,
     val cost: Money,
-    val endDate: LocalDate
+    val endDate: LocalDate,
+    val title: String,
+    val switchCount: Int,
 )
 
 @Serializable
@@ -175,7 +179,20 @@ private fun Route.changeMissionStatus(userService: UserService) {
 
         val request = call.receive<ToggleMissionRequest>()
 
-        val updated = userService.updateTodayMission(userId, missionId, request.finished)
+        if (request.finished == null && request.switch == null) {
+            call.respond(
+                HttpStatusCode.BadRequest,
+                ErrorResponse("Either 'finished' or 'switch' must be provided")
+            )
+            return@put
+        }
+
+        val updated =
+            if (request.finished != null) {
+                userService.updateTodayMission(userId, missionId, request.finished)
+            } else {
+                userService.switchTodayMission(userId, missionId)
+            }
 
         val response =
             (updated.todayDailyMissionList + updated.longTermMission)
@@ -188,7 +205,8 @@ private fun Route.changeMissionStatus(userService: UserService) {
 }
 
 data class ToggleMissionRequest(
-    val finished: Boolean
+    val finished: Boolean? = null,
+    val switch: Boolean? = null
 )
 
 @Serializable
@@ -236,9 +254,9 @@ private fun User.resolveAnimalCard(): AnimalCard {
 private fun Route.logout(userService: UserService) {
     delete("/{userId}") {
         val userId = call.pathParameters["userId"]!!
-        val user = userService.getUserById(userId)
+        userService.deleteById(userId)
 
-        // TODO: 아예 지우기?
+        call.respond(HttpStatusCode.OK)
     }
 }
 
@@ -302,7 +320,7 @@ private fun Route.analysisView(userService: UserService) {
                 .filter { it.missions.isNotEmpty() }
                 .sumOf {
                     100 * it.missions.filter { mission -> mission.finished }.size /
-                            (it.missions.size)
+                        (it.missions.size)
                 }
 
         val monthlyTotalPercentage = (1..now.dayOfMonth).sum() * 100

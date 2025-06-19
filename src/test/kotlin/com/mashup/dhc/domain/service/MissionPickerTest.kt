@@ -41,7 +41,7 @@ class MissionPickerTest {
                     type = MissionType.DAILY,
                     cost = Money(150),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD) } } returns
@@ -68,7 +68,7 @@ class MissionPickerTest {
                     type = MissionType.DAILY,
                     cost = Money(100),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
             val shoppingMission =
                 Mission(
@@ -78,7 +78,7 @@ class MissionPickerTest {
                     type = MissionType.DAILY,
                     cost = Money(200),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.TRAVEL) } } returns
@@ -111,7 +111,7 @@ class MissionPickerTest {
                     type = MissionType.DAILY,
                     cost = Money(100),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
             val digitalMission =
                 Mission(
@@ -121,7 +121,7 @@ class MissionPickerTest {
                     type = MissionType.DAILY,
                     cost = Money(200),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
             val shoppingMission =
                 Mission(
@@ -131,7 +131,7 @@ class MissionPickerTest {
                     type = MissionType.DAILY,
                     cost = Money(300),
                     endDate = null,
-                    title = "밥 먹기",
+                    title = "밥 먹기"
                 )
 
             // Mock all possible category calls

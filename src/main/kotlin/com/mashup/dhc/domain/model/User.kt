@@ -10,6 +10,7 @@ import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import java.math.BigDecimal
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.serialization.Transient
 import org.bson.BsonValue
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
@@ -26,7 +27,8 @@ data class User(
     val pastRoutineHistoryIds: List<ObjectId> = listOf(),
     val monthlyFortuneList: List<MonthlyFortune> = listOf(),
     val currentAmulet: Amulet? = null,
-    val totalSavedMoney: Money = Money(BigDecimal.ZERO)
+    val totalSavedMoney: Money = Money(BigDecimal.ZERO),
+    @Transient val deleted: Boolean = false
 )
 
 data class Amulet(
@@ -52,8 +54,11 @@ class UserRepository(
 
     suspend fun deleteById(objectId: ObjectId): Long {
         try {
-            val result = mongoDatabase.getCollection<User>(USER_COLLECTION).deleteOne(Filters.eq("_id", objectId))
-            return result.deletedCount
+            val result =
+                mongoDatabase
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(Filters.eq("_id", objectId), Updates.set(User::deleted.name, true))
+            return result.modifiedCount
         } catch (e: MongoException) {
             System.err.println("Unable to delete due to an error: $e")
         }
@@ -63,7 +68,13 @@ class UserRepository(
     suspend fun findById(objectId: ObjectId): User? =
         mongoDatabase
             .getCollection<User>(USER_COLLECTION)
-            .find(Filters.eq("_id", objectId))
+            .find(Filters.and(Filters.eq("_id", objectId), Filters.eq("deleted", false)))
+            .firstOrNull()
+
+    suspend fun findByUserToken(userToken: String): User? =
+        mongoDatabase
+            .getCollection<User>(USER_COLLECTION)
+            .find(Filters.and(Filters.eq("userToken", userToken), Filters.eq("deleted", false)))
             .firstOrNull()
 
     suspend fun updateOne(
