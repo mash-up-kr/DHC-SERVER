@@ -164,7 +164,9 @@ class UserService(
                         .take(PEEK_MISSION_SIZE)
                         .map { it.copy(endDate = today.plus(1, DateTimeUnit.DAY)) }
             )
-        userRepository.updateOne(user.id!!, updatedUser)
+        if(user.id != null) {
+            userRepository.updateOne(user.id, updatedUser)
+        }
         return updatedUser
     }
 
