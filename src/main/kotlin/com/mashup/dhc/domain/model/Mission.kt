@@ -6,6 +6,7 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
+import kotlinx.datetime.LocalDate
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
@@ -15,7 +16,8 @@ data class Mission(
     val difficulty: Int,
     val type: MissionType,
     val finished: Boolean = false,
-    val cost: Money
+    val cost: Money,
+    val endDate: LocalDate?
 )
 
 enum class MissionCategory {
@@ -63,3 +65,9 @@ class MissionRepository(
         const val MISSION_COLLECTION = "mission"
     }
 }
+
+fun List<Mission>.calculateSavedMoney() =
+    this
+        .filter { it.finished }
+        .map { it.cost }
+        .reduce(Money::plus)

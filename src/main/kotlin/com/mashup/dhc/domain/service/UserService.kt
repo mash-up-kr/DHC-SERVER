@@ -8,10 +8,18 @@ import com.mashup.dhc.domain.model.PastRoutineHistory
 import com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.UserRepository
+import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Money
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 import org.bson.BsonValue
 import org.bson.types.ObjectId
 
@@ -35,8 +43,8 @@ class UserService(
         birthDate: BirthDate,
         birthTime: BirthTime?,
         preferredMissionCategoryList: List<MissionCategory>
-    ): BsonValue? =
-        userRepository.insertOne(
+    ): BsonValue? {
+        val user =
             User(
                 gender = gender,
                 userToken = userToken,
@@ -44,7 +52,9 @@ class UserService(
                 birthTime = birthTime,
                 preferredMissionCategoryList = preferredMissionCategoryList
             )
-        )
+
+        return userRepository.insertOne(updateUserMissions(user))
+    }
 
     suspend fun updateTodayMission(
         userId: String,
@@ -62,23 +72,21 @@ class UserService(
             throw IllegalArgumentException("Mission $missionId doesn't exist")
         }
 
-        val toUpdateMission = mission.copy(finished = finished)
+        val today = now()
+
+        val toUpdateMission = mission.copy(finished = finished, endDate = today)
 
         val updated =
             user.copy(
                 longTermMission =
-                    if (user.longTermMission?.id ==
-                        toUpdateMission.id
-                    ) {
+                    if (user.longTermMission?.id == toUpdateMission.id) {
                         toUpdateMission
                     } else {
                         user.longTermMission
                     },
                 todayDailyMissionList =
                     user.todayDailyMissionList.map {
-                        if (it.id ==
-                            toUpdateMission.id
-                        ) {
+                        if (it.id == toUpdateMission.id) {
                             toUpdateMission
                         } else {
                             it
@@ -100,6 +108,8 @@ class UserService(
         val user = userRepository.findById(ObjectId(userId))!!
         val todayMissionList = user.todayDailyMissionList
 
+        val todaySavedMoney = todayMissionList.calculateSavedMoney()
+
         transactionService.executeInTransaction {
             val pastRoutineHistory =
                 PastRoutineHistory(
@@ -111,25 +121,51 @@ class UserService(
 
             pastRoutineHistoryRepository.insertOne(pastRoutineHistory)
 
-            val resolvedCategory = user.resolveTodayMissionCategory()
+            val missionUpdatedUser = updateUserMissions(user)
 
-            val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory)
-            val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory)
-
-            val updatedUser =
-                user.copy(
-                    longTermMission = longTermCategoryMissions.random(),
-                    todayDailyMissionList = dailyCategoryMissions.shuffled().take(PEEK_MISSION_SIZE),
-                    pastRoutineHistoryIds = user.pastRoutineHistoryIds + pastRoutineHistory.id!!
+            userRepository.updateOne(
+                missionUpdatedUser.id!!,
+                missionUpdatedUser.copy(
+                    pastRoutineHistoryIds = (
+                        missionUpdatedUser.pastRoutineHistoryIds +
+                            pastRoutineHistory.id!!
+                    ),
+                    totalSavedMoney = user.totalSavedMoney + todaySavedMoney
                 )
-            userRepository.updateOne(ObjectId(userId), updatedUser)
+            )
         }
         // TODO: 트랜잭션 롤백시 이후에 복구 처리 추가 필요
 
-        return todayMissionList
-            .filter { it.finished }
-            .map { it.cost }
-            .reduce(Money::plus)
+        return todaySavedMoney
+    }
+
+    private suspend fun updateUserMissions(user: User): User {
+        val resolvedCategory = user.resolveTodayMissionCategory()
+
+        val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory)
+        val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory)
+
+        val today =
+            now()
+
+        val updatedUser =
+            user.copy(
+                longTermMission =
+                    if (user.longTermMission == null || user.longTermMission.finished) {
+                        longTermCategoryMissions
+                            .random()
+                            .copy(endDate = today.plus(14, DateTimeUnit.DAY))
+                    } else {
+                        user.longTermMission
+                    },
+                todayDailyMissionList =
+                    dailyCategoryMissions
+                        .shuffled()
+                        .take(PEEK_MISSION_SIZE)
+                        .map { it.copy(endDate = today.plus(1, DateTimeUnit.DAY)) }
+            )
+        userRepository.updateOne(user.id!!, updatedUser)
+        return updatedUser
     }
 
     suspend fun switchTodayMission(
@@ -151,10 +187,40 @@ class UserService(
         return userRepository.updateOne(ObjectId(userId), updatedUser)
     }
 
-    suspend fun getPasRoutineMissionHistoriesWhen(
+    suspend fun getWeekPastRoutines(
         userId: String,
         date: LocalDate
-    ): PastRoutineHistory = pastRoutineHistoryRepository.findByUserIdAndDate(ObjectId(userId), date)!!
+    ): List<PastRoutineHistory> {
+        val dayOfWeek = date.dayOfWeek
+
+        val daysFromMonday = dayOfWeek.ordinal
+        val daysToSunday = DayOfWeek.SUNDAY.ordinal - dayOfWeek.ordinal
+
+        val startOfWeek = date.minus(daysFromMonday.toLong(), DateTimeUnit.DAY)
+        val endOfWeek = date.plus(daysToSunday.toLong(), DateTimeUnit.DAY)
+
+        return getPastRoutineMissionHistoriesBetween(userId, startOfWeek, endOfWeek)
+    }
+
+    suspend fun getMonthlyPastRoutines(
+        userId: String,
+        date: LocalDate
+    ): List<PastRoutineHistory> {
+        val startOfMonth = LocalDate(date.year, date.month, 1)
+        val isLeap = date.isLeapYear()
+        val endOfMonth = LocalDate(date.year, date.month, date.month.length(isLeap))
+
+        return getPastRoutineMissionHistoriesBetween(userId, startOfMonth, endOfMonth)
+    }
+
+    fun LocalDate.isLeapYear(): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+
+    private suspend fun getPastRoutineMissionHistoriesBetween(
+        userId: String,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): List<PastRoutineHistory> =
+        pastRoutineHistoryRepository.findByUserIdAndDateBetween(ObjectId(userId), startDate, endDate)!!
 
     private fun User.resolveTodayMissionCategory() = this.preferredMissionCategoryList.random()
 }
@@ -170,3 +236,9 @@ class MissionPicker(
         return randomPeekMission
     }
 }
+
+fun now() =
+    Clock.System
+        .now()
+        .toLocalDateTime(TimeZone.currentSystemDefault())
+        .date

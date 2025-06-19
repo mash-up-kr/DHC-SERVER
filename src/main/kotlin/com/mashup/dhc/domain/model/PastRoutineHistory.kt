@@ -3,6 +3,8 @@ package com.mashup.dhc.domain.model
 import com.mongodb.MongoException
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Filters.gte
+import com.mongodb.client.model.Filters.lte
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
@@ -56,6 +58,17 @@ class PastRoutineHistoryRepository(
             .getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION)
             .find(and(eq("userId", userId), eq("date", date)))
             .firstOrNull()
+
+    suspend fun findByUserIdAndDateBetween(
+        userId: ObjectId,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): List<PastRoutineHistory> =
+        mongoDatabase
+            .getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION)
+            .find(and(eq("userId", userId), gte("date", startDate), lte("date", endDate)))
+            .sort(Document("date", 1)) // 날짜를 기준으로 오름차순 정렬 (최신 날짜가 마지막)
+            .toList()
 
     companion object {
         const val PAST_ROUTINE_HISTORY_COLLECTION = "past_routine_history"

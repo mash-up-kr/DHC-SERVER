@@ -39,7 +39,8 @@ class MissionPickerTest {
                     category = MissionCategory.FOOD,
                     difficulty = 2,
                     type = MissionType.DAILY,
-                    cost = Money(150)
+                    cost = Money(150),
+                    endDate = null
                 )
 
             every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD) } } returns
@@ -64,7 +65,8 @@ class MissionPickerTest {
                     category = MissionCategory.TRAVEL,
                     difficulty = 1,
                     type = MissionType.DAILY,
-                    cost = Money(100)
+                    cost = Money(100),
+                    endDate = null
                 )
             val shoppingMission =
                 Mission(
@@ -72,7 +74,8 @@ class MissionPickerTest {
                     category = MissionCategory.SHOPPING,
                     difficulty = 2,
                     type = MissionType.DAILY,
-                    cost = Money(200)
+                    cost = Money(200),
+                    endDate = null
                 )
 
             every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.TRAVEL) } } returns
@@ -103,7 +106,8 @@ class MissionPickerTest {
                     category = MissionCategory.FOOD,
                     difficulty = 1,
                     type = MissionType.DAILY,
-                    cost = Money(100)
+                    cost = Money(100),
+                    endDate = null
                 )
             val digitalMission =
                 Mission(
@@ -111,7 +115,8 @@ class MissionPickerTest {
                     category = MissionCategory.DIGITAL,
                     difficulty = 2,
                     type = MissionType.DAILY,
-                    cost = Money(200)
+                    cost = Money(200),
+                    endDate = null
                 )
             val shoppingMission =
                 Mission(
@@ -119,7 +124,8 @@ class MissionPickerTest {
                     category = MissionCategory.SHOPPING,
                     difficulty = 3,
                     type = MissionType.DAILY,
-                    cost = Money(300)
+                    cost = Money(300),
+                    endDate = null
                 )
 
             // Mock all possible category calls

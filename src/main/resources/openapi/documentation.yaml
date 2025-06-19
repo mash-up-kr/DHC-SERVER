@@ -3,10 +3,8 @@ info:
   title: "Application API"
   description: "Application API"
   version: "1.0.0"
-servers:
-  - url: "http://0.0.0.0:8080"
 paths:
-  /register:
+  /api/users/register:
     post:
       summary: "Register User"
       description: "Register a new user with their profile information and mission preferences"
@@ -114,6 +112,35 @@ paths:
               example:
                 todaySavedMoney: "25.50"
   
+  /api/users/{userId}/logout:
+    post:
+      summary: "Logout User"
+      description: "Logout user and clear session"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "User logged out successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+              example:
+                message: "Successfully logged out"
+        "404":
+          description: "User not found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              example: "User not found"
+
   /view/users/{userId}/home:
     get:
       summary: "Get Home View"
@@ -167,6 +194,91 @@ paths:
                   luckyNumber: 7
                   score: 85
                   todayMenu: "샐러드"
+
+  /view/users/{userId}/mypage:
+    get:
+      summary: "Get My Page View"
+      description: "Get user's profile information and accumulated statistics"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "My page data retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyPageViewResponse"
+              example:
+                userProfile:
+                  id: "507f1f77bcf86cd799439011"
+                  userToken: "user123token"
+                  gender: "MALE"
+                  birthDate:
+                    date: "2000-01-01"
+                    calendarType: "SOLAR"
+                  birthTime: "09:30:00"
+                  preferredMissionCategoryList: ["FOOD", "TRANSPORTATION"]
+                totalSavedMoney: "1250.00"
+                completedMissionCount: 42
+                streak: 7
+        "404":
+          description: "User not found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              example: "User not found"
+
+  /view/users/{userId}/analysis:
+    get:
+      summary: "Get Analysis View"
+      description: "Get user's spending analysis and mission completion statistics"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "Analysis data retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisViewResponse"
+              example:
+                monthlySavings:
+                  - month: "2024-01"
+                    savedAmount: "325.50"
+                  - month: "2024-02"
+                    savedAmount: "278.30"
+                categoryBreakdown:
+                  - category: "FOOD"
+                    savedAmount: "150.00"
+                    completedCount: 15
+                  - category: "TRANSPORTATION"
+                    savedAmount: "75.00"
+                    completedCount: 8
+                weeklyProgress:
+                  - week: "2024-W06"
+                    completionRate: 85.7
+                  - week: "2024-W07"
+                    completionRate: 92.3
+        "404":
+          description: "User not found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              example: "User not found"
 
 components:
   schemas:
@@ -261,6 +373,143 @@ components:
         todayDailyFortune:
           $ref: "#/components/schemas/DailyFortune"
           nullable: true
+    
+    LogoutResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: "Logout confirmation message"
+          example: "Successfully logged out"
+    
+    MyPageViewResponse:
+      type: object
+      required:
+        - userProfile
+        - totalSavedMoney
+        - completedMissionCount
+        - streak
+      properties:
+        userProfile:
+          $ref: "#/components/schemas/UserProfile"
+        totalSavedMoney:
+          type: string
+          description: "Total amount of money saved"
+          example: "1250.00"
+        completedMissionCount:
+          type: integer
+          description: "Total number of completed missions"
+          example: 42
+        streak:
+          type: integer
+          description: "Current streak of consecutive days with completed missions"
+          example: 7
+    
+    AnalysisViewResponse:
+      type: object
+      required:
+        - monthlySavings
+        - categoryBreakdown
+        - weeklyProgress
+      properties:
+        monthlySavings:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlySaving"
+          description: "Monthly savings breakdown"
+        categoryBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryBreakdown"
+          description: "Savings breakdown by mission category"
+        weeklyProgress:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeeklyProgress"
+          description: "Weekly mission completion progress"
+    
+    UserProfile:
+      type: object
+      required:
+        - id
+        - userToken
+        - gender
+        - preferredMissionCategoryList
+      properties:
+        id:
+          type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+        userToken:
+          type: string
+          description: "User token"
+          example: "user123token"
+        gender:
+          $ref: "#/components/schemas/Gender"
+        birthDate:
+          $ref: "#/components/schemas/BirthDate"
+        birthTime:
+          type: string
+          format: time
+          description: "Birth time in HH:mm:ss format"
+          example: "09:30:00"
+          nullable: true
+        preferredMissionCategoryList:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissionCategory"
+          description: "List of preferred mission categories"
+    
+    MonthlySaving:
+      type: object
+      required:
+        - month
+        - savedAmount
+      properties:
+        month:
+          type: string
+          description: "Month in YYYY-MM format"
+          example: "2024-01"
+        savedAmount:
+          type: string
+          description: "Amount saved in the month"
+          example: "325.50"
+    
+    CategoryBreakdown:
+      type: object
+      required:
+        - category
+        - savedAmount
+        - completedCount
+      properties:
+        category:
+          $ref: "#/components/schemas/MissionCategory"
+        savedAmount:
+          type: string
+          description: "Amount saved in this category"
+          example: "150.00"
+        completedCount:
+          type: integer
+          description: "Number of completed missions in this category"
+          example: 15
+    
+    WeeklyProgress:
+      type: object
+      required:
+        - week
+        - completionRate
+      properties:
+        week:
+          type: string
+          description: "Week in YYYY-WNN format"
+          example: "2024-W06"
+        completionRate:
+          type: number
+          format: double
+          description: "Mission completion rate as percentage"
+          example: 85.7
     
     Mission:
       type: object
