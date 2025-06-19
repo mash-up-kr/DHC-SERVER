@@ -143,7 +143,7 @@ data class HomeViewResponse(
 )
 
 private fun Route.endToday(userService: UserService) {
-    post("/{userId}/done") {
+    post("/done") {
         val userId = call.pathParameters["userId"]!!
         val request = call.receive<EndTodayMissionRequest>()
 
@@ -196,7 +196,7 @@ data class ToggleMissionResponse(
 )
 
 private fun Route.myPage(userService: UserService) {
-    get("/{userId}/myPage") {
+    get("/myPage") {
         val userId = call.pathParameters["userId"]!!
         val user = userService.getUserById(userId)
 
@@ -282,7 +282,7 @@ data class AnimalCard(
 )
 
 private fun Route.analysisView(userService: UserService) {
-    get("/{userId}/analysis") {
+    get("/analysis") {
         val userId = call.pathParameters["userId"]!!
 
         val user = userService.getUserById(userId)

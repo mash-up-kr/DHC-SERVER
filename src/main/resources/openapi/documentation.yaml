@@ -195,7 +195,7 @@ paths:
                   score: 85
                   todayMenu: "샐러드"
 
-  /view/users/{userId}/mypage:
+  /view/users/{userId}/myPage:
     get:
       summary: "Get My Page View"
       description: "Get user's profile information and accumulated statistics"
