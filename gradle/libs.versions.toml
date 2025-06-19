@@ -51,6 +51,7 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor-ve
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor-version" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor-version" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
+ktor-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor-version" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin-version" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk-version" }
 aws-sdk-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws-sdk-kotlin-version" }
