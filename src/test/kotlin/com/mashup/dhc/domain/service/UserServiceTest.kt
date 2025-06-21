@@ -12,7 +12,9 @@ import com.mashup.dhc.domain.model.UserRepository
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.CalendarType
 import com.mashup.dhc.utils.Money
+import com.mongodb.kotlin.client.coroutine.ClientSession
 import io.mockk.MockKAnnotations
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.slot
@@ -40,6 +42,9 @@ class UserServiceTest {
 
     @MockK
     private lateinit var pastRoutineHistoryRepository: PastRoutineHistoryRepository
+
+    @MockK
+    private lateinit var session: ClientSession
 
     private lateinit var missionPicker: MissionPicker
 
@@ -116,24 +121,31 @@ class UserServiceTest {
                         )
                 )
 
+            // Mock transaction service to execute the block directly
+            coEvery { transactionService.executeInTransaction<User>(any()) } coAnswers {
+                val block = arg<suspend (ClientSession) -> User>(0)
+                block(session)
+            }
+
             // Mock repository calls
-            every { runBlocking { userRepository.findById(ObjectId(userId)) } } returns user
-            every { runBlocking { missionRepository.findDailyByCategory(missionCategory) } } returns
+            every { runBlocking { userRepository.findById(ObjectId(userId), session) } } returns user
+            every { runBlocking { missionRepository.findDailyByCategory(missionCategory, session) } } returns
                 listOf(randomMission)
-            every { runBlocking { userRepository.updateOne(ObjectId(userId), any()) } } returns 1
+            every { runBlocking { userRepository.updateOne(ObjectId(userId), any(), session) } } returns 1
 
             // When
             val result = userService.switchTodayMission(userId, missionIdToReplace)
 
             // Verify the updated user has the correct missions
             val userSlot = slot<User>()
-            verify { runBlocking { userRepository.updateOne(ObjectId(userId), capture(userSlot)) } }
+            verify { runBlocking { userRepository.updateOne(ObjectId(userId), capture(userSlot), session) } }
 
             val updatedMission = userSlot.captured.todayDailyMissionList[0]
             assertEquals(randomMission.id, updatedMission.id)
             assertEquals(randomMission.difficulty, updatedMission.difficulty)
             assertEquals(randomMission.type, updatedMission.type)
             assertEquals(randomMission.cost, updatedMission.cost)
+            assertEquals(1, updatedMission.switchCount)
         }
 
     @Test
@@ -210,9 +222,15 @@ class UserServiceTest {
                         )
                 )
 
+            // Mock transaction service to execute the block directly
+            coEvery { transactionService.executeInTransaction<User>(any()) } coAnswers {
+                val block = arg<suspend (ClientSession) -> User>(0)
+                block(session)
+            }
+
             // Mock repository calls
-            every { runBlocking { userRepository.findById(ObjectId(userId)) } } returns user
-            every { runBlocking { userRepository.updateOne(ObjectId(userId), any()) } } returns 1
+            every { runBlocking { userRepository.findById(ObjectId(userId), session) } } returns user
+            every { runBlocking { userRepository.updateOne(ObjectId(userId), any(), session) } } returns 1
 
             // When
             val result = userService.updateTodayMission(userId, longTermMissionId, finished)
@@ -220,7 +238,7 @@ class UserServiceTest {
             // Then
             // Verify longTermMission is updated
             assertTrue(result.longTermMission!!.finished)
-            assertEquals(longTermMissionId, result.longTermMission!!.id.toString())
+            assertEquals(longTermMissionId, result.longTermMission.id.toString())
 
             // Verify dailyMissionList remains unchanged
             assertEquals(3, result.todayDailyMissionList.size)
@@ -303,9 +321,15 @@ class UserServiceTest {
                         )
                 )
 
+            // Mock transaction service to execute the block directly
+            coEvery { transactionService.executeInTransaction<User>(any()) } coAnswers {
+                val block = arg<suspend (ClientSession) -> User>(0)
+                block(session)
+            }
+
             // Mock repository calls
-            every { runBlocking { userRepository.findById(ObjectId(userId)) } } returns user
-            every { runBlocking { userRepository.updateOne(ObjectId(userId), any()) } } returns 1
+            every { runBlocking { userRepository.findById(ObjectId(userId), session) } } returns user
+            every { runBlocking { userRepository.updateOne(ObjectId(userId), any(), session) } } returns 1
 
             // When
             val result = userService.updateTodayMission(userId, secondMissionId, finished)
