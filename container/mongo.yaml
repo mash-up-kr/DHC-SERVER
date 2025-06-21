@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:latest
@@ -9,8 +11,8 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongodb-data:/data/db
-      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./data/mongodb:/data/db
+      - ./data/mongodb-config:/data/configdb
     command: mongod --replSet rs0 --bind_ip_all
     healthcheck:
       test: |
@@ -34,6 +36,3 @@ services:
         reservations:
           cpus: '1'
           memory: 1G
-
-volumes:
-  mongodb-data:

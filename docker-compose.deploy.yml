@@ -5,14 +5,29 @@ services:
     image: mongo:latest
     container_name: mongodb
     network_mode: host
+    environment:
+      MONGO_INITDB_DATABASE: dhc
+      MONGO_REPLICA_SET_MODE: primary
+      MONGO_REPLICA_SET_NAME: rs0
     volumes:
       - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    command: mongod --replSet rs0 --bind_ip_all
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 40s
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
 
   dhc-app:
     image: ${REGISTRY}/dhc-ktor-app:${IMAGE_TAG}
@@ -22,7 +37,7 @@ services:
       - NCP_ACCESS_KEY=${NCP_ACCESS_KEY}
       - NCP_SECRET_KEY=${NCP_SECRET_KEY}
       - BUCKET_NAME=${BUCKET_NAME}
-      - MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc
+      - MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc?replicaSet=rs0
     volumes:
       - ./logs:/app/logs
     depends_on:
@@ -32,3 +47,4 @@ services:
 
 volumes:
   mongodb_data:
+  mongodb_config:
