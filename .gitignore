@@ -1,3 +1,5 @@
+container/data/*
+
 # Terraform 상태 파일
 *.tfstate
 *.tfstate.*

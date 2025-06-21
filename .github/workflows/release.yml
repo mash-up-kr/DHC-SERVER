@@ -2,7 +2,7 @@ name: Release Build and Deploy
 
 on:
   release:
-    types: [published]
+    types: [ published ]
   workflow_dispatch:
     inputs:
       version:
@@ -148,7 +148,7 @@ jobs:
           BUCKET_NAME=${{ secrets.BUCKET_NAME }}
           
           # MongoDB Settings
-          MONGO_CONNECTION_STRING=${{ secrets.MONGO_CONNECTION_STRING }}
+          MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc?replicaSet=rs0
           EOF
 
       - name: 배포 파일 복사
@@ -174,9 +174,21 @@ jobs:
             # 실행 권한 부여
             chmod +x scripts/deploy.sh
             chmod +x scripts/install-docker-rocky8.sh
+            chmod +x scripts/init-replica-set.sh
             
             # 배포 스크립트 실행
             ./scripts/deploy.sh
+
+      - name: MongoDB Replica Set 상태 확인
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.NCP_SERVER_HOST }}
+          username: ${{ secrets.NCP_SERVER_USER }}
+          password: ${{ secrets.NCP_SERVER_PASSWORD }}
+          key: ${{ secrets.NCP_SERVER_SSH_KEY }}
+          script: |
+            echo "MongoDB Replica Set 상태 확인 중..."
+            docker exec mongodb mongosh --quiet --eval "rs.status().members.forEach(m => print(m.name + ': ' + m.stateStr))"
 
       - name: 헬스 체크
         run: |
