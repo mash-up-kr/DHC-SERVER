@@ -6,18 +6,19 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 class TransactionService(
     private val mongoClient: MongoClient
 ) {
-    suspend fun executeInTransaction(operations: suspend (ClientSession) -> Unit) {
+    suspend fun <T> executeInTransaction(operations: suspend (ClientSession) -> T): T {
         val session = mongoClient.startSession()
 
-        try {
-            session.startTransaction()
-            operations(session)
-            session.commitTransaction()
+        return try {
+            session.use { activeSession ->
+                activeSession.startTransaction()
+                val result = operations(activeSession)
+                activeSession.commitTransaction()
+                result
+            }
         } catch (e: Exception) {
             session.abortTransaction()
             throw e
-        } finally {
-            session.close()
         }
     }
 }

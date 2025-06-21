@@ -7,6 +7,7 @@ import com.mongodb.MongoException
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.UpdateOptions
 import com.mongodb.client.model.Updates
+import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import java.math.BigDecimal
 import kotlinx.coroutines.flow.firstOrNull
@@ -39,10 +40,14 @@ data class Amulet(
 class UserRepository(
     private val mongoDatabase: MongoDatabase
 ) {
-    suspend fun insertOne(user: User): BsonValue? {
+    suspend fun insertOne(
+        user: User,
+        session: ClientSession
+    ): BsonValue? {
         try {
             val result =
                 mongoDatabase.getCollection<User>(USER_COLLECTION).insertOne(
+                    session,
                     user
                 )
             return result.insertedId
@@ -52,12 +57,15 @@ class UserRepository(
         return null
     }
 
-    suspend fun deleteById(objectId: ObjectId): Long {
+    suspend fun deleteById(
+        objectId: ObjectId,
+        session: ClientSession
+    ): Long {
         try {
             val result =
                 mongoDatabase
                     .getCollection<User>(USER_COLLECTION)
-                    .updateOne(Filters.eq("_id", objectId), Updates.set(User::deleted.name, true))
+                    .updateOne(session, Filters.eq("_id", objectId), Updates.set(User::deleted.name, true))
             return result.modifiedCount
         } catch (e: MongoException) {
             System.err.println("Unable to delete due to an error: $e")
@@ -71,15 +79,28 @@ class UserRepository(
             .find(Filters.and(Filters.eq("_id", objectId), Filters.eq("deleted", false)))
             .firstOrNull()
 
-    suspend fun findByUserToken(userToken: String): User? =
+    suspend fun findById(
+        objectId: ObjectId,
+        session: ClientSession
+    ): User? =
         mongoDatabase
             .getCollection<User>(USER_COLLECTION)
-            .find(Filters.and(Filters.eq("userToken", userToken), Filters.eq("deleted", false)))
+            .find(session, Filters.and(Filters.eq("_id", objectId), Filters.eq("deleted", false)))
+            .firstOrNull()
+
+    suspend fun findByUserToken(
+        userToken: String,
+        session: ClientSession
+    ): User? =
+        mongoDatabase
+            .getCollection<User>(USER_COLLECTION)
+            .find(session, Filters.and(Filters.eq("userToken", userToken), Filters.eq("deleted", false)))
             .firstOrNull()
 
     suspend fun updateOne(
         objectId: ObjectId,
-        user: User
+        user: User,
+        session: ClientSession
     ): Long {
         try {
             val query = Filters.eq("_id", objectId)
@@ -87,12 +108,13 @@ class UserRepository(
                 Updates.combine(
                     Updates.set(User::longTermMission.name, user.longTermMission),
                     Updates.set(User::todayDailyMissionList.name, user.todayDailyMissionList),
-                    Updates.set(User::pastRoutineHistoryIds.name, user.pastRoutineHistoryIds)
+                    Updates.set(User::pastRoutineHistoryIds.name, user.pastRoutineHistoryIds),
+                    Updates.set(User::totalSavedMoney.name, user.totalSavedMoney)
                 )
             val result =
                 mongoDatabase
                     .getCollection<User>(USER_COLLECTION)
-                    .updateOne(query, updates, UpdateOptions().upsert(false))
+                    .updateOne(session, query, updates, UpdateOptions().upsert(false))
             return result.modifiedCount
         } catch (e: MongoException) {
             System.err.println("Unable to update due to an error: $e")

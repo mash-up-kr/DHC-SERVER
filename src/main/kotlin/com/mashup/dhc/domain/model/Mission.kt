@@ -3,6 +3,7 @@ package com.mashup.dhc.domain.model
 import com.mashup.dhc.utils.Money
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
+import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import java.math.BigDecimal
 import kotlinx.coroutines.flow.firstOrNull
@@ -40,10 +41,13 @@ enum class MissionType {
 class MissionRepository(
     private val mongoDatabase: MongoDatabase
 ) {
-    suspend fun findById(missionId: ObjectId): Mission? =
+    suspend fun findById(
+        missionId: ObjectId,
+        session: ClientSession
+    ): Mission? =
         mongoDatabase
             .getCollection<Mission>(MISSION_COLLECTION)
-            .find(org.bson.Document("_id", missionId))
+            .find(session, org.bson.Document("_id", missionId))
             .firstOrNull()
 
     suspend fun findLongTermByCategory(category: MissionCategory): List<Mission> =
@@ -52,10 +56,28 @@ class MissionRepository(
             .find(and(eq("category", category), eq("type", MissionType.LONG_TERM)))
             .toList()
 
+    suspend fun findLongTermByCategory(
+        category: MissionCategory,
+        session: ClientSession
+    ): List<Mission> =
+        mongoDatabase
+            .getCollection<Mission>(MISSION_COLLECTION)
+            .find(session, and(eq("category", category), eq("type", MissionType.LONG_TERM)))
+            .toList()
+
     suspend fun findDailyByCategory(category: MissionCategory): List<Mission> =
         mongoDatabase
             .getCollection<Mission>(MISSION_COLLECTION)
             .find(and(eq("category", category), eq("type", MissionType.DAILY)))
+            .toList()
+
+    suspend fun findDailyByCategory(
+        category: MissionCategory,
+        session: ClientSession
+    ): List<Mission> =
+        mongoDatabase
+            .getCollection<Mission>(MISSION_COLLECTION)
+            .find(session, and(eq("category", category), eq("type", MissionType.DAILY)))
             .toList()
 
     suspend fun findAll(): List<Mission> =
