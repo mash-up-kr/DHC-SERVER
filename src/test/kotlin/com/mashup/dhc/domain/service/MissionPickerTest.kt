@@ -5,6 +5,7 @@ import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionRepository
 import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.utils.Money
+import com.mongodb.kotlin.client.coroutine.ClientSession
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -19,6 +20,9 @@ import org.junit.Test
 class MissionPickerTest {
     @MockK
     private lateinit var missionRepository: MissionRepository
+
+    @MockK
+    private lateinit var session: ClientSession
 
     private lateinit var missionPicker: MissionPicker
 
@@ -44,15 +48,15 @@ class MissionPickerTest {
                     title = "밥 먹기"
                 )
 
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD) } } returns
+            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD, session) } } returns
                 listOf(expectedMission)
 
             // When
-            val result = missionPicker.pickMission(preferredCategories)
+            val result = missionPicker.pickMission(preferredCategories, session)
 
             // Then
             assertEquals(expectedMission, result)
-            verify { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD) } }
+            verify { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD, session) } }
         }
 
     @Test
@@ -81,16 +85,16 @@ class MissionPickerTest {
                     title = "밥 먹기"
                 )
 
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.TRAVEL) } } returns
+            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.TRAVEL, session) } } returns
                 listOf(travelMission)
 
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.SHOPPING) } } returns
+            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.SHOPPING, session) } } returns
                 listOf(shoppingMission)
 
             // When
             val actual =
                 (0..10)
-                    .map { missionPicker.pickMission(preferredCategories).category }
+                    .map { missionPicker.pickMission(preferredCategories, session).category }
                     .toSet()
 
             // Then
@@ -135,15 +139,15 @@ class MissionPickerTest {
                 )
 
             // Mock all possible category calls
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD) } } returns
+            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD, session) } } returns
                 listOf(foodMission)
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.DIGITAL) } } returns
+            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.DIGITAL, session) } } returns
                 listOf(digitalMission)
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.SHOPPING) } } returns
+            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.SHOPPING, session) } } returns
                 listOf(shoppingMission)
 
             // When
-            val result = missionPicker.pickMission(preferredCategories)
+            val result = missionPicker.pickMission(preferredCategories, session)
 
             // Then
             assertTrue(
@@ -154,7 +158,7 @@ class MissionPickerTest {
             // Verify that one of the repository methods was called
             verify(atLeast = 1) {
                 runBlocking {
-                    missionRepository.findDailyByCategory(any())
+                    missionRepository.findDailyByCategory(any(), session)
                 }
             }
         }

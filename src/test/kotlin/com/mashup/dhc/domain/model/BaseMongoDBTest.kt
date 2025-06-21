@@ -1,5 +1,6 @@
 package com.mashup.dhc.domain.model
 
+import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import org.junit.After
 import org.junit.Before
@@ -11,6 +12,7 @@ import org.junit.Before
 abstract class BaseMongoDBTest {
     private lateinit var mongoExtension: EmbeddedMongoDBExtension
     protected lateinit var database: MongoDatabase
+    protected lateinit var mongoClient: MongoClient
 
     @Before
     fun setUpMongoDB() {
@@ -18,8 +20,9 @@ abstract class BaseMongoDBTest {
         mongoExtension = EmbeddedMongoDBExtension()
         mongoExtension.start()
 
-        // Get database
+        // Get database and client
         database = mongoExtension.getDatabase()
+        mongoClient = mongoExtension.getClient()
 
         // Setup repositories and other test-specific components
         setUp()
