@@ -14,6 +14,7 @@ import com.mashup.dhc.routes.ErrorCode
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Money
+import com.mongodb.kotlin.client.coroutine.ClientSession
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -39,7 +40,10 @@ class UserService(
     suspend fun getPastRoutineHistories(userId: String): List<PastRoutineHistory> =
         pastRoutineHistoryRepository.findSortedByUserId(ObjectId(userId))
 
-    suspend fun deleteById(userId: String): Long = userRepository.deleteById(ObjectId(userId))
+    suspend fun deleteById(userId: String): Long =
+        transactionService.executeInTransaction { session ->
+            userRepository.deleteById(ObjectId(userId), session)
+        }
 
     suspend fun registerUser(
         userToken: String,
@@ -47,78 +51,81 @@ class UserService(
         birthDate: BirthDate,
         birthTime: BirthTime?,
         preferredMissionCategoryList: List<MissionCategory>
-    ): BsonValue? {
-        if (userRepository.findByUserToken(userToken) != null) {
-            throw BusinessException(ErrorCode.CONFLICT)
+    ): BsonValue? =
+        transactionService.executeInTransaction { session ->
+            if (userRepository.findByUserToken(userToken, session) != null) {
+                throw BusinessException(ErrorCode.CONFLICT)
+            }
+
+            val user =
+                User(
+                    gender = gender,
+                    userToken = userToken,
+                    birthDate = birthDate,
+                    birthTime = birthTime,
+                    preferredMissionCategoryList = preferredMissionCategoryList
+                )
+
+            val updatedUser = updateUserMissions(user, session)
+            userRepository.insertOne(updatedUser, session)
         }
-
-        val user =
-            User(
-                gender = gender,
-                userToken = userToken,
-                birthDate = birthDate,
-                birthTime = birthTime,
-                preferredMissionCategoryList = preferredMissionCategoryList
-            )
-
-        return userRepository.insertOne(updateUserMissions(user))
-    }
 
     suspend fun updateTodayMission(
         userId: String,
         missionId: String,
         finished: Boolean
-    ): User {
-        val user = getUserById(userId)
+    ): User =
+        transactionService.executeInTransaction { session ->
+            val user = userRepository.findById(ObjectId(userId), session)!!
 
-        val mission =
-            (user.todayDailyMissionList + user.longTermMission)
-                .filterNotNull()
-                .find { it.id.toString() == missionId }
+            val mission =
+                (user.todayDailyMissionList + user.longTermMission)
+                    .filterNotNull()
+                    .find { it.id.toString() == missionId }
 
-        if (mission == null) {
-            throw IllegalArgumentException("Mission $missionId doesn't exist")
-        }
+            if (mission == null) {
+                throw IllegalArgumentException("Mission $missionId doesn't exist")
+            }
 
-        val today = now()
+            val today = now()
 
-        val toUpdateMission = mission.copy(finished = finished, endDate = today)
+            val toUpdateMission = mission.copy(finished = finished, endDate = today)
 
-        val updated =
-            user.copy(
-                longTermMission =
-                    if (user.longTermMission?.id == toUpdateMission.id) {
-                        toUpdateMission
-                    } else {
-                        user.longTermMission
-                    },
-                todayDailyMissionList =
-                    user.todayDailyMissionList.map {
-                        if (it.id == toUpdateMission.id) {
+            val updated =
+                user.copy(
+                    longTermMission =
+                        if (user.longTermMission?.id == toUpdateMission.id) {
                             toUpdateMission
                         } else {
-                            it
+                            user.longTermMission
+                        },
+                    todayDailyMissionList =
+                        user.todayDailyMissionList.map {
+                            if (it.id == toUpdateMission.id) {
+                                toUpdateMission
+                            } else {
+                                it
+                            }
                         }
-                    }
-            )
+                )
 
-        if (userRepository.updateOne(user.id!!, updated) < 1L) {
-            throw IllegalArgumentException("Mission $missionId fails to update.")
+            if (userRepository.updateOne(user.id!!, updated, session) < 1L) {
+                throw IllegalArgumentException("Mission $missionId fails to update.")
+            }
+
+            updated
         }
-
-        return updated
-    }
 
     suspend fun summaryTodayMission(
         userId: String,
         date: LocalDate
-    ): Money {
-        val user = userRepository.findById(ObjectId(userId))!!
-        val todayMissionList = user.todayDailyMissionList
+    ): Money =
+        transactionService.executeInTransaction { session ->
+            val user = userRepository.findById(ObjectId(userId), session)!!
+            val todayMissionList = user.todayDailyMissionList
 
-        val todaySavedMoney = todayMissionList.calculateSavedMoney()
+            val todaySavedMoney = todayMissionList.calculateSavedMoney()
 
-        transactionService.executeInTransaction {
             val pastRoutineHistory =
                 PastRoutineHistory(
                     id = null,
@@ -127,13 +134,13 @@ class UserService(
                     missions = todayMissionList
                 )
 
-            if (pastRoutineHistoryRepository.findByDate(date) != null) {
+            if (pastRoutineHistoryRepository.findByDate(date, session) != null) {
                 throw BusinessException(ErrorCode.CONFLICT)
             }
 
-            val insertedPastRoutineHistoryId = pastRoutineHistoryRepository.insertOne(pastRoutineHistory)!!
+            val insertedPastRoutineHistoryId = pastRoutineHistoryRepository.insertOne(pastRoutineHistory, session)!!
 
-            val missionUpdatedUser = updateUserMissions(user)
+            val missionUpdatedUser = updateUserMissions(user, session)
 
             userRepository.updateOne(
                 missionUpdatedUser.id!!,
@@ -142,22 +149,23 @@ class UserService(
                         missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
                     ),
                     totalSavedMoney = user.totalSavedMoney + todaySavedMoney
-                )
+                ),
+                session
             )
+
+            todaySavedMoney
         }
-        // TODO: 트랜잭션 롤백시 이후에 복구 처리 추가 필요
 
-        return todaySavedMoney
-    }
-
-    private suspend fun updateUserMissions(user: User): User {
+    private suspend fun updateUserMissions(
+        user: User,
+        session: ClientSession
+    ): User {
         val resolvedCategory = user.resolveTodayMissionCategory()
 
-        val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory)
-        val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory)
+        val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory, session)
+        val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory, session)
 
-        val today =
-            now()
+        val today = now()
 
         val updatedUser =
             user.copy(
@@ -176,7 +184,7 @@ class UserService(
                         .map { it.copy(endDate = today.plus(1, DateTimeUnit.DAY)) }
             )
         if (user.id != null) {
-            userRepository.updateOne(user.id, updatedUser)
+            userRepository.updateOne(user.id, updatedUser, session)
         }
         return updatedUser
     }
@@ -184,27 +192,28 @@ class UserService(
     suspend fun switchTodayMission(
         userId: String,
         missionId: String
-    ): User {
-        val user = userRepository.findById(ObjectId(userId))!!
+    ): User =
+        transactionService.executeInTransaction { session ->
+            val user = userRepository.findById(ObjectId(userId), session)!!
 
-        val reRolledTodayMissionList =
-            user.todayDailyMissionList.map { todayMission ->
-                if (todayMission.id == ObjectId(missionId)) {
-                    if (todayMission.switchCount >= MAX_SWITCH_COUNT) {
-                        throw BusinessException(ErrorCode.MAXIMUM_SWITCH_COUNT_EXCEEDED)
+            val reRolledTodayMissionList =
+                user.todayDailyMissionList.map { todayMission ->
+                    if (todayMission.id == ObjectId(missionId)) {
+                        if (todayMission.switchCount >= MAX_SWITCH_COUNT) {
+                            throw BusinessException(ErrorCode.MAXIMUM_SWITCH_COUNT_EXCEEDED)
+                        }
+                        missionPicker
+                            .pickMission(user.preferredMissionCategoryList, session)
+                            .copy(switchCount = todayMission.switchCount + 1)
+                    } else {
+                        todayMission
                     }
-                    missionPicker
-                        .pickMission(user.preferredMissionCategoryList)
-                        .copy(switchCount = todayMission.switchCount + 1)
-                } else {
-                    todayMission
                 }
-            }
 
-        val updatedUser = user.copy(todayDailyMissionList = reRolledTodayMissionList)
-        userRepository.updateOne(ObjectId(userId), updatedUser)
-        return updatedUser
-    }
+            val updatedUser = user.copy(todayDailyMissionList = reRolledTodayMissionList)
+            userRepository.updateOne(ObjectId(userId), updatedUser, session)
+            updatedUser
+        }
 
     suspend fun getWeekPastRoutines(
         userId: String,
@@ -239,7 +248,7 @@ class UserService(
         startDate: LocalDate,
         endDate: LocalDate
     ): List<PastRoutineHistory> =
-        pastRoutineHistoryRepository.findByUserIdAndDateBetween(ObjectId(userId), startDate, endDate)!!
+        pastRoutineHistoryRepository.findByUserIdAndDateBetween(ObjectId(userId), startDate, endDate)
 
     private fun User.resolveTodayMissionCategory() = this.preferredMissionCategoryList.random()
 
@@ -251,10 +260,12 @@ class UserService(
 class MissionPicker(
     private val missionRepository: MissionRepository
 ) {
-    suspend fun pickMission(preferredMissionCategoryList: List<MissionCategory>): Mission {
+    suspend fun pickMission(
+        preferredMissionCategoryList: List<MissionCategory>,
+        session: ClientSession
+    ): Mission {
         val peekMissionCategory = preferredMissionCategoryList.random()
-        val randomPeekMission =
-            missionRepository.findDailyByCategory(peekMissionCategory).random()
+        val randomPeekMission = missionRepository.findDailyByCategory(peekMissionCategory, session).random()
 
         return randomPeekMission
     }

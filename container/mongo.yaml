@@ -4,15 +4,27 @@ services:
     container_name: mongodb
     environment:
       MONGO_INITDB_DATABASE: dhc
+      MONGO_REPLICA_SET_MODE: primary
+      MONGO_REPLICA_SET_NAME: rs0
     ports:
       - "27017:27017"
     volumes:
       - mongodb-data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    command: mongod --replSet rs0 --bind_ip_all
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: |
+        mongosh --eval "
+        try {
+          rs.status();
+        } catch (e) {
+          rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]});
+        }
+        " --quiet
       interval: 10s
-      timeout: 5s
+      timeout: 10s
       retries: 5
+      start_period: 40s
     restart: unless-stopped
     deploy:
       resources:

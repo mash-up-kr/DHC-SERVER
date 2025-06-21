@@ -5,6 +5,7 @@ import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.client.model.Filters.gte
 import com.mongodb.client.model.Filters.lte
+import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
@@ -24,10 +25,14 @@ data class PastRoutineHistory(
 class PastRoutineHistoryRepository(
     private val mongoDatabase: MongoDatabase
 ) {
-    suspend fun insertOne(pastRoutineHistory: PastRoutineHistory): BsonValue? {
+    suspend fun insertOne(
+        pastRoutineHistory: PastRoutineHistory,
+        session: ClientSession
+    ): BsonValue? {
         try {
             val result =
                 mongoDatabase.getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION).insertOne(
+                    session,
                     pastRoutineHistory
                 )
             return result.insertedId
@@ -37,10 +42,13 @@ class PastRoutineHistoryRepository(
         return null
     }
 
-    suspend fun findByDate(date: LocalDate): PastRoutineHistory? =
+    suspend fun findByDate(
+        date: LocalDate,
+        session: ClientSession
+    ): PastRoutineHistory? =
         mongoDatabase
             .getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION)
-            .find(eq("date", date))
+            .find(session, eq("date", date))
             .firstOrNull()
 
     suspend fun findById(objectId: ObjectId): PastRoutineHistory? =
@@ -58,11 +66,12 @@ class PastRoutineHistoryRepository(
 
     suspend fun findByUserIdAndDate(
         userId: ObjectId,
-        date: LocalDate
+        date: LocalDate,
+        session: ClientSession
     ): PastRoutineHistory? =
         mongoDatabase
             .getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION)
-            .find(and(eq("userId", userId), eq("date", date)))
+            .find(session, and(eq("userId", userId), eq("date", date)))
             .firstOrNull()
 
     suspend fun findByUserIdAndDateBetween(
