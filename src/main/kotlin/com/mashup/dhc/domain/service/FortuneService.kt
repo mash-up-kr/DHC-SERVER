@@ -23,7 +23,7 @@ class FortuneService(
         month: Int
     ) {
         val user = userService.getUserById(userId)
-        fortuneRepository.pushMonthlyFortune(
+        fortuneRepository.upsertMonthlyFortune(
             userId,
             geminiService
                 .generateFortune(
@@ -68,19 +68,19 @@ class FortuneService(
     private suspend fun checkIfFortuneCached(
         userId: String,
         requestDate: LocalDate
-    ): Boolean = userService.getUserById(userId).monthlyFortuneList.findDailyFortune(requestDate) != null
+    ): Boolean = userService.getUserById(userId).monthlyFortune?.findDailyFortune(requestDate) != null
 
     suspend fun queryDailyFortune(
         userId: String,
         requestDate: LocalDate
     ): DailyFortune {
         val user = userService.getUserById(userId)
-        return user.monthlyFortuneList.findDailyFortune(requestDate)
+        return user.monthlyFortune?.findDailyFortune(requestDate)
             ?: throw RuntimeException("Unable to find daily fortune") // TODO 커스텀 예외 붙이기
     }
 }
 
-private fun List<MonthlyFortune>.findDailyFortune(targetDate: LocalDate): DailyFortune? {
+private fun MonthlyFortune.findDailyFortune(targetDate: LocalDate): DailyFortune? {
     val targetDateStr = targetDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-    return find { it.month == targetDate.monthValue }?.dailyFortuneList?.find { it.date == targetDateStr }
+    return dailyFortuneList.find { it.date == targetDateStr }
 }

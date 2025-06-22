@@ -2,7 +2,8 @@ package com.mashup.dhc.domain.model
 
 import com.mashup.dhc.domain.model.UserRepository.Companion.USER_COLLECTION
 import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Updates
+import com.mongodb.client.model.UpdateOptions
+import com.mongodb.client.model.Updates.set
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -21,15 +22,16 @@ data class MonthlyFortune(
 class FortuneRepository(
     private val database: MongoDatabase
 ) {
-    suspend fun pushMonthlyFortune(
+    suspend fun upsertMonthlyFortune(
         userId: String,
         monthlyFortune: MonthlyFortune
     ) {
         database
             .getCollection<User>(USER_COLLECTION)
             .updateOne(
-                Filters.eq("_id", userId),
-                Updates.push(User::monthlyFortuneList.name, monthlyFortune)
+                filter = Filters.eq("_id", userId),
+                update = set(User::monthlyFortune.name, monthlyFortune),
+                options = UpdateOptions().upsert(true)
             )
     }
 }
@@ -47,8 +49,8 @@ data class DailyFortune(
     @SerialName("lucky_color") val luckyColor: String,
     @SerialName("lucky_color_hex") val luckyColorHex: String,
     @SerialName("lucky_number") val luckyNumber: Int,
-    @SerialName("positive_score")val positiveScore: Int,
-    @SerialName("negative_score")val negativeScore: Int,
+    @SerialName("positive_score") val positiveScore: Int,
+    @SerialName("negative_score") val negativeScore: Int,
     @SerialName("today_menu") val todayMenu: String
 ) {
     // 총점 계산 (직렬화에 포함됨)
