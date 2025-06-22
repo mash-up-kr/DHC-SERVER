@@ -19,11 +19,17 @@
             "type": "string",
             "description": "날짜 (YYYY-MM-DD 형태)"
           },
-          "score": {
+          "positive_score": {
             "type": "integer",
             "minimum": 0,
             "maximum": 100,
-            "description": "금전운 점수 (0-100)"
+            "description": "양의 금전운 점수 (0-100)"
+          },
+          "negative_score": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "음의 금전운 점수 (0-100)"
           },
           "lucky_color": {
             "type": "string",
@@ -72,7 +78,8 @@
         },
         "required": [
           "date",
-          "score",
+          "positive_score",
+          "negative_score",
           "lucky_color",
           "lucky_color_hex",
           "lucky_number",

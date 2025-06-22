@@ -47,6 +47,12 @@ data class DailyFortune(
     @SerialName("lucky_color") val luckyColor: String,
     @SerialName("lucky_color_hex") val luckyColorHex: String,
     @SerialName("lucky_number") val luckyNumber: Int,
-    val score: Int,
+    @SerialName("positive_score")val positiveScore: Int,
+    @SerialName("negative_score")val negativeScore: Int,
     @SerialName("today_menu") val todayMenu: String
-)
+) {
+    // 총점 계산 (직렬화에 포함됨)
+    @SerialName("total_score")
+    val totalScore: Int
+        get() = positiveScore + negativeScore
+}
