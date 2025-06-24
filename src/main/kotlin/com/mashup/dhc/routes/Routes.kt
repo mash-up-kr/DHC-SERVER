@@ -232,10 +232,10 @@ private fun Route.logout(userService: UserService) {
 enum class SEASON(
     val description: String
 ) {
-    SPRING("봄의"),
-    SUMMER("여름의"),
-    AUTUMN("가을의"),
-    WINTER("겨울의")
+    SPRING("봄"),
+    SUMMER("여름"),
+    AUTUMN("가을"),
+    WINTER("겨울")
 }
 
 enum class COLOR(
