@@ -68,7 +68,7 @@ paths:
               complete_mission:
                 summary: "Complete a mission"
                 value:
-                  finished: true
+              finished: true
               switch_mission:
                 summary: "Switch to a new mission"
                 value:
@@ -258,7 +258,7 @@ paths:
   /view/users/{userId}/analysis:
     get:
       summary: "Get Analysis View"
-      description: "Get user's spending analysis and mission completion statistics"
+      description: "Get user's spending analysis and mission completion statistics for three months (previous, current, next) based on the specified year-month"
       parameters:
         - name: userId
           in: path
@@ -267,6 +267,14 @@ paths:
             type: string
           description: "User ID"
           example: "507f1f77bcf86cd799439011"
+        - name: yearMonth
+          in: query
+          required: false
+          schema:
+            type: string
+            pattern: "^\\d{4}-\\d{2}$"
+          description: "Base year-month in YYYY-MM format. If not provided, uses current year-month."
+          example: "2024-01"
       responses:
         "200":
           description: "Analysis data retrieved successfully"
@@ -277,16 +285,40 @@ paths:
               example:
                 totalSavedMoney: "1250.00"
                 weeklySavedMoney: "85.50"
-                averageSucceedProbability: 75
-                calendarDayMissionViews:
-                  - day: 15
-                    date: "2024-01-15"
-                    finishedMissionCount: 2
-                    totalMissionCount: 3
-                  - day: 16
-                    date: "2024-01-16"
-                    finishedMissionCount: 3
-                    totalMissionCount: 3
+                threeMonthViewResponse:
+                  - month: "DECEMBER"
+                    averageSucceedProbability: 70
+                    calendarDayMissionViews:
+                      - day: 30
+                        date: "2023-12-30"
+                        finishedMissionCount: 2
+                        totalMissionCount: 3
+                      - day: 31
+                        date: "2023-12-31"
+                        finishedMissionCount: 1
+                        totalMissionCount: 2
+                  - month: "JANUARY"
+                    averageSucceedProbability: 75
+                    calendarDayMissionViews:
+                      - day: 15
+                        date: "2024-01-15"
+                        finishedMissionCount: 2
+                        totalMissionCount: 3
+                      - day: 16
+                        date: "2024-01-16"
+                        finishedMissionCount: 3
+                        totalMissionCount: 3
+                  - month: "FEBRUARY"
+                    averageSucceedProbability: 80
+                    calendarDayMissionViews:
+                      - day: 1
+                        date: "2024-02-01"
+                        finishedMissionCount: 1
+                        totalMissionCount: 2
+                      - day: 2
+                        date: "2024-02-02"
+                        finishedMissionCount: 2
+                        totalMissionCount: 2
         "404":
           description: "User not found"
           content:
@@ -527,8 +559,7 @@ components:
       required:
         - totalSavedMoney
         - weeklySavedMoney
-        - averageSucceedProbability
-        - calendarDayMissionViews
+        - threeMonthViewResponse
       properties:
         totalSavedMoney:
           type: string
@@ -538,15 +569,45 @@ components:
           type: string
           description: "Amount of money saved this week"
           example: "85.50"
+        threeMonthViewResponse:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalysisMonthViewResponse"
+          description: "Analysis data for three months"
+    
+    AnalysisMonthViewResponse:
+      type: object
+      required:
+        - month
+        - averageSucceedProbability
+        - calendarDayMissionViews
+      properties:
+        month:
+          type: string
+          enum:
+            - JANUARY
+            - FEBRUARY
+            - MARCH
+            - APRIL
+            - MAY
+            - JUNE
+            - JULY
+            - AUGUST
+            - SEPTEMBER
+            - OCTOBER
+            - NOVEMBER
+            - DECEMBER
+          description: "Month name"
+          example: "JANUARY"
         averageSucceedProbability:
           type: integer
-          description: "Average success probability as percentage"
+          description: "Average success probability as percentage for this month"
           example: 75
         calendarDayMissionViews:
           type: array
           items:
             $ref: "#/components/schemas/CalendarDayMissionView"
-          description: "Calendar view of daily missions"
+          description: "Calendar view of daily missions for this month"
     
     UserProfile:
       type: object

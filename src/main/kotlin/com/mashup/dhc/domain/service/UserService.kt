@@ -134,7 +134,7 @@ class UserService(
                     missions = todayMissionList
                 )
 
-            if (pastRoutineHistoryRepository.findByDate(date, session) != null) {
+            if (pastRoutineHistoryRepository.findByUserIdAndDate(ObjectId(userId), date, session) != null) {
                 throw BusinessException(ErrorCode.CONFLICT)
             }
 
@@ -241,8 +241,6 @@ class UserService(
         return getPastRoutineMissionHistoriesBetween(userId, startOfMonth, endOfMonth)
     }
 
-    fun LocalDate.isLeapYear(): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
-
     private suspend fun getPastRoutineMissionHistoriesBetween(
         userId: String,
         startDate: LocalDate,
@@ -253,7 +251,7 @@ class UserService(
     private fun User.resolveTodayMissionCategory() = this.preferredMissionCategoryList.random()
 
     companion object {
-        const val MAX_SWITCH_COUNT = 1
+        const val MAX_SWITCH_COUNT = 4
     }
 }
 
@@ -276,3 +274,5 @@ fun now() =
         .now()
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .date
+
+fun LocalDate.isLeapYear(): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
