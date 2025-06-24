@@ -4,6 +4,7 @@ import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.service.UserService
+import com.mashup.dhc.domain.service.isLeapYear
 import com.mashup.dhc.domain.service.now
 import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
 import com.mashup.dhc.utils.Money
@@ -25,8 +26,11 @@ import io.ktor.utils.io.readRemaining
 import java.math.BigDecimal
 import java.util.UUID
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.readByteArray
 
@@ -243,34 +247,39 @@ private fun Route.analysisView(userService: UserService) {
     get("/analysis") {
         val userId = call.pathParameters["userId"]!!
 
-        val user = userService.getUserById(userId)
         val now = now()
 
-        val monthlyPastRoutines = userService.getMonthlyPastRoutines(userId = userId, date = now)
-        val weeklyPastRoutines = userService.getWeekPastRoutines(userId = userId, date = now)
+        val yearMonthString =
+            call.parameters["yearMonth"]
+                ?: "${now.year}-${now.monthNumber.toString().padStart(2, '0')}"
+
+        val (year, month) = yearMonthString.split("-").map { it.toInt() }
+        val baseYearMonth = LocalDate(year, month, 1)
+
+        val user = userService.getUserById(userId)
+
+        val weeklyPastRoutines = userService.getWeekPastRoutines(userId = userId, date = baseYearMonth)
 
         val weeklySavedMoney =
             weeklyPastRoutines
                 .map { it.missions.calculateSavedMoney() }
                 .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
 
-        val monthlyFinishedPercentage =
-            monthlyPastRoutines
-                .filter { it.missions.isNotEmpty() }
-                .sumOf {
-                    100 * it.missions.filter { mission -> mission.finished }.size /
-                        (it.missions.size)
-                }
+        val threeMonthViewResponse =
+            (-1..1).map { addMonth ->
+                // TODO: 시간 날 때 캐싱하기
+                val currentMonthLocalDate: LocalDate = baseYearMonth.plus(addMonth, DateTimeUnit.MONTH)
+                val monthlyPastRoutines =
+                    userService.getMonthlyPastRoutines(userId = userId, date = currentMonthLocalDate)
+                val monthlyFinishedPercentage =
+                    monthlyPastRoutines
+                        .filter { it.missions.isNotEmpty() }
+                        .sumOf {
+                            100 * it.missions.filter { mission -> mission.finished }.size /
+                                (it.missions.size)
+                        }
 
-        val monthlyTotalPercentage = (1..now.dayOfMonth).sum() * 100
-
-        call.respond(
-            HttpStatusCode.OK,
-            AnalysisViewResponse(
-                totalSavedMoney = user.totalSavedMoney,
-                weeklySavedMoney = weeklySavedMoney,
-                averageSucceedProbability = monthlyFinishedPercentage / monthlyTotalPercentage,
-                calendarDayMissionViews =
+                val calendarDayMissionViews =
                     monthlyPastRoutines.map {
                         CalendarDayMissionView(
                             day = it.date.dayOfMonth,
@@ -279,6 +288,30 @@ private fun Route.analysisView(userService: UserService) {
                             totalMissionCount = it.missions.size
                         )
                     }
+
+                val monthlyTotalPercentage =
+                    if (addMonth == 0) {
+                        (1..now.dayOfMonth).sum() * 100
+                    } else {
+                        val isLeapYear = currentMonthLocalDate.isLeapYear()
+                        (1..currentMonthLocalDate.month.length(isLeapYear)).sum() * 100
+                    }
+
+                val averageSucceedProbability =
+                    if (monthlyTotalPercentage == 0) 0 else monthlyFinishedPercentage / monthlyTotalPercentage
+                AnalysisMonthViewResponse(
+                    month = currentMonthLocalDate.month,
+                    averageSucceedProbability = averageSucceedProbability,
+                    calendarDayMissionViews = calendarDayMissionViews
+                )
+            }
+
+        call.respond(
+            HttpStatusCode.OK,
+            AnalysisViewResponse(
+                totalSavedMoney = user.totalSavedMoney,
+                weeklySavedMoney = weeklySavedMoney,
+                threeMonthViewResponse = threeMonthViewResponse
             )
         )
     }

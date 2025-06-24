@@ -241,8 +241,6 @@ class UserService(
         return getPastRoutineMissionHistoriesBetween(userId, startOfMonth, endOfMonth)
     }
 
-    fun LocalDate.isLeapYear(): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
-
     private suspend fun getPastRoutineMissionHistoriesBetween(
         userId: String,
         startDate: LocalDate,
@@ -276,3 +274,5 @@ fun now() =
         .now()
         .toLocalDateTime(TimeZone.currentSystemDefault())
         .date
+
+fun LocalDate.isLeapYear(): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)

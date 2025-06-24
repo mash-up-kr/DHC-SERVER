@@ -8,6 +8,7 @@ import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -79,6 +80,12 @@ data class AnimalCard(
 data class AnalysisViewResponse(
     val totalSavedMoney: Money,
     val weeklySavedMoney: Money,
+    val threeMonthViewResponse: List<AnalysisMonthViewResponse>
+)
+
+@Serializable
+data class AnalysisMonthViewResponse(
+    val month: Month,
     val averageSucceedProbability: Int,
     val calendarDayMissionViews: List<CalendarDayMissionView>
 )
