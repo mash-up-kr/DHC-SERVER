@@ -42,7 +42,7 @@ paths:
   /api/users/{userId}/missions/{missionId}:
     put:
       summary: "Change Mission Status"
-      description: "Change the completion status of a specific mission for a user"
+      description: "Change the completion status of a specific mission for a user or switch to a new mission"
       parameters:
         - name: userId
           in: path
@@ -64,8 +64,19 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/ToggleMissionRequest"
-            example:
-              finished: true
+            examples:
+              complete_mission:
+                summary: "Complete a mission"
+                value:
+                  finished: true
+              switch_mission:
+                summary: "Switch to a new mission"
+                value:
+                  switch: true
+              mark_incomplete:
+                summary: "Mark mission as incomplete"
+                value:
+                  finished: false
       responses:
         "200":
           description: "Mission status updated successfully"
