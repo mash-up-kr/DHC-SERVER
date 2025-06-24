@@ -42,15 +42,6 @@ class PastRoutineHistoryRepository(
         return null
     }
 
-    suspend fun findByDate(
-        date: LocalDate,
-        session: ClientSession
-    ): PastRoutineHistory? =
-        mongoDatabase
-            .getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION)
-            .find(session, eq("date", date))
-            .firstOrNull()
-
     suspend fun findById(objectId: ObjectId): PastRoutineHistory? =
         mongoDatabase
             .getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION)
