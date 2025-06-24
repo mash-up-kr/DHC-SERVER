@@ -27,9 +27,11 @@ import java.math.BigDecimal
 import java.util.UUID
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.readByteArray
@@ -199,9 +201,18 @@ private fun User.resolveAnimalCard(): AnimalCard {
             Month.SEPTEMBER, Month.OCTOBER, Month.NOVEMBER -> SEASON.WINTER
         }
 
-    val middle = COLOR.WHITE
+    val epochStart =
+        Instant
+            .fromEpochSeconds(0)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date // 1970-01-01 UTC
+    val now = now()
 
-    val last = ANIMAL.HORSE
+    val daysFromEpoch = (now - epochStart).days
+
+    val middle = COLOR.entries[daysFromEpoch % COLOR.entries.size]
+
+    val last = ANIMAL.entries[daysFromEpoch % ANIMAL.entries.size]
 
     return AnimalCard(
         name = "${first.description}의 ${middle.description} ${last.description}",
@@ -230,7 +241,7 @@ enum class SEASON(
 enum class COLOR(
     val description: String
 ) {
-    BLUE("푸른"),
+    GREEN("초록"),
     RED("붉은"),
     YELLOW("노란"),
     WHITE("흰"),
@@ -240,7 +251,18 @@ enum class COLOR(
 enum class ANIMAL(
     val description: String
 ) {
-    HORSE("말")
+    MOUSE("쥐"),
+    COW("소"),
+    TIGER("호랑이"),
+    RABBIT("토끼"),
+    DRAGON("용"),
+    SNAKE("뱀"),
+    HORSE("말"),
+    SHEEP("양"),
+    MONKEY("원숭이"),
+    ROOSTER("닭"),
+    DOG("개"),
+    PIG("돼지")
 }
 
 private fun Route.analysisView(userService: UserService) {
