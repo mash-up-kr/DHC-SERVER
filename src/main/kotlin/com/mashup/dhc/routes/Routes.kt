@@ -322,7 +322,7 @@ private fun Route.analysisView(userService: UserService) {
                 val averageSucceedProbability =
                     if (monthlyTotalPercentage == 0) 0 else monthlyFinishedPercentage / monthlyTotalPercentage
                 AnalysisMonthViewResponse(
-                    month = currentMonthLocalDate.month,
+                    month = currentMonthLocalDate.month.value,
                     averageSucceedProbability = averageSucceedProbability,
                     calendarDayMissionViews = calendarDayMissionViews
                 )

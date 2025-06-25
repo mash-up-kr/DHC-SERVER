@@ -85,7 +85,7 @@ data class AnalysisViewResponse(
 
 @Serializable
 data class AnalysisMonthViewResponse(
-    val month: Month,
+    val month: Int,
     val averageSucceedProbability: Int,
     val calendarDayMissionViews: List<CalendarDayMissionView>
 )
