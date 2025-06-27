@@ -62,11 +62,27 @@ data class ToggleMissionResponse(
 )
 
 @Serializable
+data class MissionCategoryResponse(
+    val name: String,
+    val displayName: String,
+    val imageUrl: String
+) {
+    companion object {
+        fun from(category: MissionCategory): MissionCategoryResponse =
+            MissionCategoryResponse(
+                name = category.name,
+                displayName = category.displayName,
+                imageUrl = category.imageUrl
+            )
+    }
+}
+
+@Serializable
 data class MyPageResponse(
     val animalCard: AnimalCard,
     val birthDate: BirthDate,
     val birthTime: BirthTime?,
-    val preferredMissionCategoryList: List<MissionCategory>,
+    val preferredMissionCategoryList: List<MissionCategoryResponse>,
     val alarm: Boolean
 )
 
@@ -101,6 +117,11 @@ data class CalendarDayMissionView(
 @Serializable
 data class UploadResponse(
     val url: String
+)
+
+@Serializable
+data class MissionCategoriesResponse(
+    val categories: List<MissionCategoryResponse>
 )
 
 @Serializable

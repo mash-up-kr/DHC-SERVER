@@ -24,13 +24,16 @@ data class Mission(
     val endDate: LocalDate?
 )
 
-enum class MissionCategory {
-    TRANSPORTATION,
-    FOOD,
-    DIGITAL,
-    SHOPPING,
-    TRAVEL,
-    SOCIAL
+enum class MissionCategory(
+    val displayName: String,
+    val imageUrl: String
+) {
+    TRANSPORTATION("이동·교통", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/transportation.png"),
+    FOOD("식음료", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/food.png"),
+    DIGITAL("디지털·구독", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/digital.png"),
+    SHOPPING("쇼핑", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/shopping.png"),
+    TRAVEL("취미·문화", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/travel.png"),
+    SOCIAL("사교·모임", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/social.png")
 }
 
 enum class MissionType {

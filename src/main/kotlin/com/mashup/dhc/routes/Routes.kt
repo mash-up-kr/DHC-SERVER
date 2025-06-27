@@ -1,6 +1,7 @@
 package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.Mission
+import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.service.UserService
@@ -47,6 +48,29 @@ fun Route.userRoutes(userService: UserService) {
         home(userService)
         myPage(userService)
         analysisView(userService)
+    }
+    route("/api") {
+        missionCategoriesRoutes()
+    }
+}
+
+fun Route.missionCategoriesRoutes() {
+    route("/mission-categories") {
+        getMissionCategories()
+    }
+}
+
+private fun Route.getMissionCategories() {
+    get {
+        val categories =
+            MissionCategory.entries.map { category ->
+                MissionCategoryResponse.from(category)
+            }
+
+        call.respond(
+            HttpStatusCode.OK,
+            MissionCategoriesResponse(categories)
+        )
     }
 }
 
@@ -185,7 +209,7 @@ private fun Route.myPage(userService: UserService) {
                 user.resolveAnimalCard(),
                 user.birthDate,
                 user.birthTime,
-                user.preferredMissionCategoryList,
+                user.preferredMissionCategoryList.map { MissionCategoryResponse.from(it) },
                 true // TODO: alarm
             )
         )
