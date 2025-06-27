@@ -21,7 +21,7 @@ paths:
                 date: "2000-01-01"
                 calendarType: "SOLAR"
               birthTime: "09:30:00"
-              preferredMissionCategoryList: ["FOOD", "TRANSPORTATION"]
+              preferredMissionCategoryList: [ "FOOD", "TRANSPORTATION" ]
       responses:
         "200":
           description: "User registered successfully"
@@ -38,7 +38,7 @@ paths:
               schema:
                 type: "string"
               example: "Failed to register user"
-  
+
   /api/users/{userId}/missions/{missionId}:
     put:
       summary: "Change Mission Status"
@@ -95,7 +95,7 @@ paths:
                   endDate: "2024-01-15"
                   title: "오늘 점심은 집에서 해먹기"
                   switchCount: 0
-  
+
   /api/users/{userId}/done:
     post:
       summary: "End Today's Missions"
@@ -125,7 +125,7 @@ paths:
                 $ref: "#/components/schemas/EndTodayMissionResponse"
               example:
                 todaySavedMoney: "25.50"
-  
+
   /api/users/{userId}/logout:
     post:
       summary: "Logout User"
@@ -154,6 +154,38 @@ paths:
               schema:
                 type: "string"
               example: "User not found"
+
+  /api/mission-categories:
+    get:
+      summary: "Get Mission Categories"
+      description: "Get all available mission categories with their names and image URLs"
+      responses:
+        "200":
+          description: "Mission categories retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MissionCategoriesResponse"
+              example:
+                categories:
+                  - name: "TRANSPORTATION"
+                    displayName: "이동·교통"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/transport.png"
+                  - name: "FOOD"
+                    displayName: "식음료"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/eat.png"
+                  - name: "DIGITAL"
+                    displayName: "디지털·구독"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/digital.png"
+                  - name: "SHOPPING"
+                    displayName: "쇼핑"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/shopping.png"
+                  - name: "TRAVEL"
+                    displayName: "취미·문화"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/hobby.png"
+                  - name: "SOCIAL"
+                    displayName: "사교·모임"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/community.png"
 
   /view/users/{userId}/home:
     get:
@@ -245,7 +277,13 @@ paths:
                   date: "2000-01-01"
                   calendarType: "SOLAR"
                 birthTime: "09:30:00"
-                preferredMissionCategoryList: ["FOOD", "TRANSPORTATION"]
+                preferredMissionCategoryList:
+                  - name: "FOOD"
+                    displayName: "식음료"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/eat.png"
+                  - name: "TRANSPORTATION"
+                    displayName: "이동·교통"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/transport.png"
                 alarm: true
         "404":
           description: "User not found"
@@ -446,8 +484,8 @@ components:
           items:
             $ref: "#/components/schemas/MissionCategory"
           description: "List of preferred mission categories"
-          example: ["FOOD", "TRANSPORTATION"]
-    
+          example: [ "FOOD", "TRANSPORTATION" ]
+
     RegisterUserResponse:
       type: object
       required:
@@ -457,7 +495,7 @@ components:
           type: string
           description: "Generated user ID"
           example: "507f1f77bcf86cd799439011"
-    
+
     ToggleMissionRequest:
       type: object
       properties:
@@ -471,7 +509,7 @@ components:
           description: "Whether to switch the mission"
           example: false
           nullable: true
-    
+
     ToggleMissionResponse:
       type: object
       required:
@@ -479,7 +517,7 @@ components:
       properties:
         mission:
           $ref: "#/components/schemas/Mission"
-    
+
     EndTodayMissionRequest:
       type: object
       required:
@@ -490,7 +528,7 @@ components:
           format: date
           description: "Date in YYYY-MM-DD format"
           example: "2024-01-15"
-    
+
     EndTodayMissionResponse:
       type: object
       required:
@@ -500,7 +538,7 @@ components:
           type: string
           description: "Total money saved today"
           example: "25.50"
-    
+
     HomeViewResponse:
       type: object
       properties:
@@ -515,7 +553,7 @@ components:
         todayDailyFortune:
           $ref: "#/components/schemas/DailyFortune"
           nullable: true
-    
+
     LogoutResponse:
       type: object
       required:
@@ -525,7 +563,38 @@ components:
           type: string
           description: "Logout confirmation message"
           example: "Successfully logged out"
-    
+
+    MissionCategoriesResponse:
+      type: object
+      required:
+        - categories
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/MissionCategoryResponse"
+          description: "List of all available mission categories"
+
+    MissionCategoryResponse:
+      type: object
+      required:
+        - name
+        - displayName
+        - imageUrl
+      properties:
+        name:
+          type: string
+          description: "Mission category name (enum value)"
+          example: "FOOD"
+        displayName:
+          type: string
+          description: "Mission category display name in Korean"
+          example: "식음료"
+        imageUrl:
+          type: string
+          description: "URL of the category image"
+          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/eat.png"
+
     MyPageResponse:
       type: object
       required:
@@ -547,8 +616,8 @@ components:
         preferredMissionCategoryList:
           type: array
           items:
-            $ref: "#/components/schemas/MissionCategory"
-          description: "List of preferred mission categories"
+            $ref: "#/components/schemas/MissionCategoryResponse"
+          description: "List of preferred mission categories with image URLs"
         alarm:
           type: boolean
           description: "Whether alarm is enabled"
