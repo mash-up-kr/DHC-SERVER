@@ -27,7 +27,7 @@ data class HomeViewResponse(
 @Serializable
 data class MissionResponse(
     val missionId: String,
-    val category: MissionCategory,
+    val category: String,
     val difficulty: Int,
     val type: MissionType,
     val finished: Boolean,
@@ -40,7 +40,7 @@ data class MissionResponse(
         fun from(mission: Mission): MissionResponse =
             MissionResponse(
                 missionId = mission.id.toString(),
-                category = mission.category,
+                category = mission.category.displayName,
                 difficulty = mission.difficulty,
                 type = mission.type,
                 finished = mission.finished,

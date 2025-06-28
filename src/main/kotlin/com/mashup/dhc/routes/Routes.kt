@@ -169,7 +169,7 @@ private fun Route.home(userService: UserService) {
 private fun Mission.toMissionResponse() =
     MissionResponse(
         missionId = this.id.toString(),
-        category = this.category,
+        category = this.category.displayName,
         difficulty = this.difficulty,
         type = this.type,
         finished = this.finished,
