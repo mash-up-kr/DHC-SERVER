@@ -45,7 +45,7 @@ data class MissionResponse(
                 type = mission.type,
                 finished = mission.finished,
                 cost = mission.cost,
-                endDate = mission.endDate!!,
+                endDate = mission.endDate,
                 title = mission.title,
                 switchCount = mission.switchCount
             )

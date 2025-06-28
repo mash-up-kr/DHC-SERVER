@@ -246,7 +246,7 @@ class UserServiceTest {
             // Then
             // Verify longTermMission is updated
             assertTrue(result.longTermMission!!.finished)
-            assertEquals(longTermMissionId, result.longTermMission.id.toString())
+            assertEquals(longTermMissionId, result.longTermMission!!.id.toString())
 
             // Verify dailyMissionList remains unchanged
             assertEquals(3, result.todayDailyMissionList.size)
