@@ -6,6 +6,7 @@ import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
+import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
 import com.mashup.dhc.domain.service.now
@@ -37,6 +38,7 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.readByteArray
 import org.bson.types.ObjectId
@@ -65,13 +67,17 @@ private fun Int.plusTenPercent() = this * 11 / 10
 
 private fun Int.minusTenPercent() = this * 9 / 10
 
-fun Route.userRoutes(userService: UserService) {
+fun Route.userRoutes(
+    userService: UserService,
+    fortuneService: FortuneService
+) {
     route("/api/users") {
         register(userService)
         changeMissionStatus(userService)
         endToday(userService)
         logout(userService)
         searchUser(userService)
+        getDailyFortune(fortuneService)
     }
     route("/view/users/{userId}") {
         home(userService)
@@ -422,6 +428,23 @@ private fun Route.calendarView(userService: UserService) {
             }
 
         call.respond(HttpStatusCode.OK, CalendarViewResponse(threeMonthViewResponse))
+    }
+}
+
+private fun Route.getDailyFortune(fortuneService: FortuneService) {
+    get("/{userId}/fortune") {
+        val userId =
+            call.pathParameters["userId"]
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        val requestDate: LocalDate =
+            call.request.queryParameters["date"]
+                ?.let { dateStr -> LocalDate.parse(dateStr) } ?: now()
+
+        call.respond(
+            HttpStatusCode.OK,
+            FortuneResponse.from(fortuneService.queryDailyFortune(userId, requestDate.toJavaLocalDate()))
+        )
     }
 }
 
