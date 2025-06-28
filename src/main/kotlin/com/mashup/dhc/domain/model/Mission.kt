@@ -3,6 +3,7 @@ package com.mashup.dhc.domain.model
 import com.mashup.dhc.utils.Money
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Filters.or
 import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import java.math.BigDecimal
@@ -33,7 +34,8 @@ enum class MissionCategory(
     DIGITAL("디지털·구독", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/digital.png"),
     SHOPPING("쇼핑", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/shopping.png"),
     TRAVEL("취미·문화", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/travel.png"),
-    SOCIAL("사교·모임", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/social.png")
+    SOCIAL("사교·모임", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/social.png"),
+    SELF_REFLECTION("자기성찰", "")
 }
 
 enum class MissionType {
@@ -81,7 +83,13 @@ class MissionRepository(
     ): List<Mission> =
         mongoDatabase
             .getCollection<Mission>(MISSION_COLLECTION)
-            .find(session, and(eq("category", category), eq("type", type)))
+            .find(
+                session,
+                and(
+                    or(eq("category", category), eq("category", MissionCategory.SELF_REFLECTION)),
+                    eq("type", type)
+                )
+            )
             .toList()
 
     suspend fun findAll(): List<Mission> =

@@ -90,7 +90,7 @@ fun Route.searchUser(userService: UserService) {
 
         val user = userService.findUserByUserToken(userToken)
 
-        call.respond(HttpStatusCode.OK, user?.id, typeInfo<ObjectId>())
+        call.respond(HttpStatusCode.OK, user?.id?.toHexString(), typeInfo<String>())
     }
 }
 
@@ -103,9 +103,9 @@ fun Route.missionCategoriesRoutes() {
 private fun Route.getMissionCategories() {
     get {
         val categories =
-            MissionCategory.entries.map { category ->
-                MissionCategoryResponse.from(category)
-            }
+            MissionCategory.entries
+                .filter { category -> category != MissionCategory.SELF_REFLECTION }
+                .map { category -> MissionCategoryResponse.from(category) }
 
         call.respond(
             HttpStatusCode.OK,
