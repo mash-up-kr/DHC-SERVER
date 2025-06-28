@@ -127,7 +127,7 @@ paths:
                 todaySavedMoney: "25.50"
 
   /api/users/{userId}/logout:
-    post:
+    delete:
       summary: "Logout User"
       description: "Logout user and clear session"
       parameters:
@@ -296,7 +296,41 @@ paths:
   /view/users/{userId}/analysis:
     get:
       summary: "Get Analysis View"
-      description: "Get user's spending analysis and mission completion statistics for three months (previous, current, next) based on the specified year-month"
+      description: "Get user's spending analysis and mission completion statistics with generation comparison data"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "Analysis data retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisViewResponse"
+              example:
+                totalSavedMoney: "1250.00"
+                weeklySavedMoney: "85.50"
+                generationMoneyViewResponse:
+                  generation: "TWENTIES"
+                  gender: "MALE"
+                  averageSpendMoney: "70400.00"
+        "404":
+          description: "User not found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              example: "User not found"
+
+  /view/users/{userId}/calendar:
+    get:
+      summary: "Get Calendar View"
+      description: "Get user's calendar view with three months of mission completion data based on the specified year-month"
       parameters:
         - name: userId
           in: path
@@ -315,16 +349,14 @@ paths:
           example: "2024-01"
       responses:
         "200":
-          description: "Analysis data retrieved successfully"
+          description: "Calendar data retrieved successfully"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/AnalysisViewResponse"
+                $ref: "#/components/schemas/CalendarViewResponse"
               example:
-                totalSavedMoney: "1250.00"
-                weeklySavedMoney: "85.50"
                 threeMonthViewResponse:
-                  - month: "DECEMBER"
+                  - month: 12
                     averageSucceedProbability: 70
                     calendarDayMissionViews:
                       - day: 30
@@ -335,7 +367,7 @@ paths:
                         date: "2023-12-31"
                         finishedMissionCount: 1
                         totalMissionCount: 2
-                  - month: "JANUARY"
+                  - month: 1
                     averageSucceedProbability: 75
                     calendarDayMissionViews:
                       - day: 15
@@ -346,7 +378,7 @@ paths:
                         date: "2024-01-16"
                         finishedMissionCount: 3
                         totalMissionCount: 3
-                  - month: "FEBRUARY"
+                  - month: 2
                     averageSucceedProbability: 80
                     calendarDayMissionViews:
                       - day: 1
@@ -628,7 +660,7 @@ components:
       required:
         - totalSavedMoney
         - weeklySavedMoney
-        - threeMonthViewResponse
+        - generationMoneyViewResponse
       properties:
         totalSavedMoney:
           type: string
@@ -638,11 +670,9 @@ components:
           type: string
           description: "Amount of money saved this week"
           example: "85.50"
-        threeMonthViewResponse:
-          type: array
-          items:
-            $ref: "#/components/schemas/AnalysisMonthViewResponse"
-          description: "Analysis data for three months"
+        generationMoneyViewResponse:
+          $ref: "#/components/schemas/GenerationMoneyViewResponse"
+          description: "Generation-based spending comparison data"
     
     AnalysisMonthViewResponse:
       type: object
@@ -652,22 +682,11 @@ components:
         - calendarDayMissionViews
       properties:
         month:
-          type: string
-          enum:
-            - JANUARY
-            - FEBRUARY
-            - MARCH
-            - APRIL
-            - MAY
-            - JUNE
-            - JULY
-            - AUGUST
-            - SEPTEMBER
-            - OCTOBER
-            - NOVEMBER
-            - DECEMBER
-          description: "Month name"
-          example: "JANUARY"
+          type: integer
+          minimum: 1
+          maximum: 12
+          description: "Month number (1-12)"
+          example: 1
         averageSucceedProbability:
           type: integer
           description: "Average success probability as percentage for this month"
@@ -937,3 +956,41 @@ components:
           type: integer
           description: "Total number of missions for this day"
           example: 3
+
+    CalendarViewResponse:
+      type: object
+      required:
+        - threeMonthViewResponse
+      properties:
+        threeMonthViewResponse:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnalysisMonthViewResponse"
+          description: "Calendar data for three months (previous, current, next)"
+
+    GenerationMoneyViewResponse:
+      type: object
+      required:
+        - generation
+        - gender
+        - averageSpendMoney
+      properties:
+        generation:
+          $ref: "#/components/schemas/Generation"
+        gender:
+          $ref: "#/components/schemas/Gender"
+        averageSpendMoney:
+          type: string
+          description: "Average spending money for this generation and gender"
+          example: "70400.00"
+
+    Generation:
+      type: string
+      enum:
+        - TEENAGERS
+        - TWENTIES
+        - THIRTIES
+        - FORTIES
+        - UNKNOWN
+      description: "User generation based on age"
+      example: "TWENTIES"

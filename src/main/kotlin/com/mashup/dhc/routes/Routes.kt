@@ -66,6 +66,7 @@ fun Route.userRoutes(userService: UserService) {
         home(userService)
         myPage(userService)
         analysisView(userService)
+        calendarView(userService)
     }
     route("/api") {
         missionCategoriesRoutes()
@@ -311,6 +312,42 @@ private fun Route.analysisView(userService: UserService) {
     get("/analysis") {
         val userId = call.pathParameters["userId"]!!
 
+        val user = userService.getUserById(userId)
+
+        val now = now()
+        val year = now.year
+        val month = now.month
+
+        val baseYearMonth = LocalDate(year, month, 1)
+
+        val weeklyPastRoutines = userService.getWeekPastRoutines(userId = userId, date = baseYearMonth)
+
+        val weeklySavedMoney =
+            weeklyPastRoutines
+                .map { it.missions.calculateSavedMoney() }
+                .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+
+        call.respond(
+            HttpStatusCode.OK,
+            AnalysisViewResponse(
+                totalSavedMoney = user.totalSavedMoney,
+                weeklySavedMoney = weeklySavedMoney,
+                generationMoneyViewResponse =
+                    GenerationMoneyViewResponse(
+                        gender = user.gender,
+                        generation = user.generation,
+                        averageSpendMoney =
+                            generationAverageSpendMoney[user.generation]!![user.gender] ?: Money(BigDecimal.ZERO)
+                    )
+            )
+        )
+    }
+}
+
+private fun Route.calendarView(userService: UserService) {
+    get("/calendar") {
+        val userId = call.pathParameters["userId"]!!
+
         val now = now()
 
         val yearMonthString =
@@ -319,15 +356,6 @@ private fun Route.analysisView(userService: UserService) {
 
         val (year, month) = yearMonthString.split("-").map { it.toInt() }
         val baseYearMonth = LocalDate(year, month, 1)
-
-        val user = userService.getUserById(userId)
-
-        val weeklyPastRoutines = userService.getWeekPastRoutines(userId = userId, date = baseYearMonth)
-
-        val weeklySavedMoney =
-            weeklyPastRoutines
-                .map { it.missions.calculateSavedMoney() }
-                .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
 
         val threeMonthViewResponse =
             (-1..1).map { addMonth ->
@@ -370,21 +398,7 @@ private fun Route.analysisView(userService: UserService) {
                 )
             }
 
-        call.respond(
-            HttpStatusCode.OK,
-            AnalysisViewResponse(
-                totalSavedMoney = user.totalSavedMoney,
-                weeklySavedMoney = weeklySavedMoney,
-                generationMoneyViewResponse =
-                    GenerationMoneyViewResponse(
-                        gender = user.gender,
-                        generation = user.generation,
-                        averageSpendMoney =
-                            generationAverageSpendMoney[user.generation]!![user.gender] ?: Money(BigDecimal.ZERO)
-                    ),
-                threeMonthViewResponse = threeMonthViewResponse
-            )
-        )
+        call.respond(HttpStatusCode.OK, CalendarViewResponse(threeMonthViewResponse))
     }
 }
 
