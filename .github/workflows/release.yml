@@ -149,10 +149,10 @@ jobs:
           
           # MongoDB Settings
           MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc?replicaSet=rs0
-          EOF
           
           # Gemini Settings
           GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+          EOF
 
       - name: 배포 파일 복사
         uses: appleboy/scp-action@master
