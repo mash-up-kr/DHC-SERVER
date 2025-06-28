@@ -3,6 +3,8 @@ package com.mashup.dhc.domain.service
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
+import com.mashup.dhc.domain.task.FortuneGenerationTask
+import com.mashup.dhc.utils.BatchProcessor
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CoroutineScope
@@ -16,6 +18,14 @@ class FortuneService(
     private val geminiService: GeminiService
 ) {
     private val log = LoggerFactory.getLogger(FortuneService::class.java)
+
+    private val batchProcessor =
+        BatchProcessor(
+            backgroundScope = backgroundScope,
+            batchSize = 10,
+            batchTimeoutMs = 4000L,
+            batchExecutor = ::executeBatch
+        )
 
     private suspend fun executeFortuneGenerationTask(
         userId: String,
@@ -43,24 +53,49 @@ class FortuneService(
         userId: String,
         requestDate: LocalDate
     ) {
-        log.info("requestDate: $requestDate, userId: $userId")
-
         val lockKey = "$userId-${requestDate.year}-${requestDate.monthValue}"
-        log.info("Lock Key: $lockKey")
         if (!LockRegistry.tryLock(lockKey)) throw RuntimeException("Lock key is using") // TODO 커스텀 예외 붙이기
-        // DB에 이미 금전운이 존재하는지 확인
+
+        // DB에 이미 운세가 존재하는지 확인
         if (checkIfFortuneCached(userId, requestDate)) {
             LockRegistry.unlock(lockKey)
             throw RuntimeException("Fortune Cache already exists") // TODO 커스텀 예외 붙이기
         }
 
-        backgroundScope.launch {
-            LockRegistry.finallyUnlock(lockKey) {
-                executeFortuneGenerationTask(
-                    userId,
-                    requestDate.year,
-                    requestDate.monthValue
+        try {
+            // 배치 처리기에 작업 추가
+            val task =
+                FortuneGenerationTask(
+                    userId = userId,
+                    year = requestDate.year,
+                    month = requestDate.monthValue,
+                    lockKey = lockKey
                 )
+
+            batchProcessor.addTask(task)
+        } catch (e: Exception) {
+            LockRegistry.unlock(lockKey)
+            throw e
+        }
+    }
+
+    /**
+     * 배치 내의 각 작업을 순차적으로 실행
+     * BatchProcessor의 batchExecutor로 사용됨
+     */
+    private fun executeBatch(batch: List<FortuneGenerationTask>) {
+        batch.forEach { task ->
+            backgroundScope.launch {
+                LockRegistry.finallyUnlock(task.lockKey) {
+                    try {
+                        log.debug("${task.getDescription()} 처리 시작")
+                        executeFortuneGenerationTask(task.userId, task.year, task.month)
+                        log.debug("${task.getDescription()} 처리 완료")
+                    } catch (e: Exception) {
+                        log.error("${task.getDescription()} 처리 실패", e)
+                        throw e
+                    }
+                }
             }
         }
     }
@@ -78,6 +113,12 @@ class FortuneService(
         return user.monthlyFortune?.findDailyFortune(requestDate)
             ?: throw RuntimeException("Unable to find daily fortune") // TODO 커스텀 예외 붙이기
     }
+
+    /**
+     * 현재 대기 중인 요청 수 반환
+     */
+    fun getPendingRequestCount(): Int = batchProcessor.getPendingCount()
+
 }
 
 private fun MonthlyFortune.findDailyFortune(targetDate: LocalDate): DailyFortune? {
