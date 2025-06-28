@@ -53,7 +53,15 @@ val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
         Generation.UNKNOWN to mapOf(Gender.FEMALE to Money(resolveSpendMoney(72000)))
     )
 
-private fun resolveSpendMoney(value: Int): Int = value * 11 / 10
+private fun resolveSpendMoney(value: Int): Int = if (now().dayOfMonth % 2 == 1) {
+    value.plusTenPercent()
+} else {
+    value.minusTenPercent()
+}
+
+private fun Int.plusTenPercent() = this * 11 / 10
+
+private fun Int.minusTenPercent() = this * 9 / 10
 
 fun Route.userRoutes(userService: UserService) {
     route("/api/users") {
@@ -370,7 +378,7 @@ private fun Route.calendarView(userService: UserService) {
                         .filter { it.missions.isNotEmpty() }
                         .sumOf {
                             100 * it.missions.filter { mission -> mission.finished }.size /
-                                (it.missions.size)
+                                    (it.missions.size)
                         }
 
                 val calendarDayMissionViews =
