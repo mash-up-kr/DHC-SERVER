@@ -32,7 +32,7 @@ data class MissionResponse(
     val type: MissionType,
     val finished: Boolean = false,
     val cost: Money,
-    val endDate: LocalDate,
+    val endDate: LocalDate?,
     val title: String,
     val switchCount: Int
 ) {
@@ -59,7 +59,7 @@ data class EndTodayMissionResponse(
 
 @Serializable
 data class ToggleMissionResponse(
-    val mission: MissionResponse
+    val missions: List<MissionResponse>
 )
 
 @Serializable
