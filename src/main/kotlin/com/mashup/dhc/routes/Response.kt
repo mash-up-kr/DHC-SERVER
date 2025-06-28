@@ -30,7 +30,7 @@ data class MissionResponse(
     val category: MissionCategory,
     val difficulty: Int,
     val type: MissionType,
-    val finished: Boolean = false,
+    val finished: Boolean,
     val cost: Money,
     val endDate: LocalDate?,
     val title: String,
