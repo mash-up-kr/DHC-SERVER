@@ -109,7 +109,6 @@ class UserRepository(
             .find(Filters.and(Filters.eq("userToken", userToken), Filters.eq("deleted", false)))
             .firstOrNull()
 
-
     suspend fun findByUserToken(
         userToken: String,
         session: ClientSession
