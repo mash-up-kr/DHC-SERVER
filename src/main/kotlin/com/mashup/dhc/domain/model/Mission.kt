@@ -74,13 +74,14 @@ class MissionRepository(
             .find(and(eq("category", category), eq("type", MissionType.DAILY)))
             .toList()
 
-    suspend fun findDailyByCategory(
+    suspend fun findByCategory(
+        type: MissionType,
         category: MissionCategory,
         session: ClientSession
     ): List<Mission> =
         mongoDatabase
             .getCollection<Mission>(MISSION_COLLECTION)
-            .find(session, and(eq("category", category), eq("type", MissionType.DAILY)))
+            .find(session, and(eq("category", category), eq("type", type)))
             .toList()
 
     suspend fun findAll(): List<Mission> =
