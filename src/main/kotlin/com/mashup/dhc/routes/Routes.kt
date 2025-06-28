@@ -135,7 +135,10 @@ private fun Route.home(userService: UserService) {
             HomeViewResponse(
                 longTermMission = user.longTermMission?.let { MissionResponse.from(it) },
                 todayDailyMissionList = user.todayDailyMissionList.map { MissionResponse.from(it) },
-                todayDailyFortune = user.monthlyFortune?.dailyFortuneList?.find { it.date == now.toString() } // toString == "yyyy-MM-dd"
+                todayDailyFortune =
+                    user.monthlyFortune?.dailyFortuneList?.find {
+                        it.date == now.toString()
+                    } // toString == "yyyy-MM-dd"
             )
         )
     }
