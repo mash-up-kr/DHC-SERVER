@@ -116,7 +116,7 @@ paths:
               example:
                 missions:
                   - missionId: "507f1f77bcf86cd799439022"
-                    category: "FOOD"
+                    category: "식음료"
                     difficulty: 3
                     type: "DAILY"
                     finished: true
@@ -284,7 +284,7 @@ paths:
               example:
                 longTermMission:
                   missionId: "507f1f77bcf86cd799439033"
-                  category: "TRAVEL"
+                  category: "취미·문화"
                   difficulty: 5
                   type: "LONG_TERM"
                   finished: false
@@ -294,7 +294,7 @@ paths:
                   switchCount: 0
                 todayDailyMissionList:
                   - missionId: "507f1f77bcf86cd799439044"
-                    category: "FOOD"
+                    category: "식음료"
                     difficulty: 2
                     type: "DAILY"
                     finished: false
@@ -303,7 +303,7 @@ paths:
                     title: "점심 도시락 싸가기"
                     switchCount: 1
                   - missionId: "507f1f77bcf86cd799439055"
-                    category: "TRANSPORTATION"
+                    category: "이동·교통"
                     difficulty: 1
                     type: "DAILY"
                     finished: true
@@ -830,7 +830,9 @@ components:
           description: "Mission ID"
           example: "507f1f77bcf86cd799439022"
         category:
-          $ref: "#/components/schemas/MissionCategory"
+          type: string
+          description: "Mission category display name in Korean"
+          example: "식음료"
         difficulty:
           type: integer
           minimum: 1
