@@ -59,7 +59,7 @@ data class EndTodayMissionResponse(
 
 @Serializable
 data class ToggleMissionResponse(
-    val mission: MissionResponse
+    val missions: List<MissionResponse>
 )
 
 @Serializable

@@ -206,13 +206,16 @@ private fun Route.changeMissionStatus(userService: UserService) {
                 userService.switchTodayMission(userId, missionId)
             }
 
-        val mission =
-            (updated.todayDailyMissionList + updated.longTermMission)
-                .filterNotNull()
-                .find { it.id.toString() == missionId }
-                ?: throw BusinessException(ErrorCode.MISSION_NOT_FOUND)
+        val longTermMission =
+            if (updated.longTermMission != null) {
+                listOf(updated.longTermMission)
+            } else {
+                listOf()
+            }
+        val missions =
+            updated.todayDailyMissionList + longTermMission
 
-        call.respond(HttpStatusCode.OK, ToggleMissionResponse(MissionResponse.from(mission)))
+        call.respond(HttpStatusCode.OK, ToggleMissionResponse(missions.map { it.toMissionResponse() }))
     }
 }
 
