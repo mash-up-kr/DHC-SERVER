@@ -10,7 +10,7 @@ import io.ktor.server.routing.routing
 fun Application.configureRouting(dependencies: Dependencies) {
     routing {
         probeRoute()
-        userRoutes(dependencies.userService)
+        userRoutes(dependencies.userService, dependencies.fortuneService)
         storageRoutes(dependencies.storage)
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
     }
