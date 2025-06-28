@@ -434,7 +434,7 @@ private fun Route.calendarView(userService: UserService) {
                 application.log.info("monthlyTotalPercentage $monthlyTotalPercentage, monthlyFinishedPercentage $monthlyFinishedPercentage")
 
                 val averageSucceedProbability =
-                    if (monthlyTotalPercentage == 0) 0 else monthlyFinishedPercentage / monthlyTotalPercentage
+                    if (monthlyTotalPercentage == 0) 0 else monthlyFinishedPercentage * 100 / monthlyTotalPercentage
                 AnalysisMonthViewResponse(
                     month = currentMonthLocalDate.month.value,
                     averageSucceedProbability = averageSucceedProbability,
