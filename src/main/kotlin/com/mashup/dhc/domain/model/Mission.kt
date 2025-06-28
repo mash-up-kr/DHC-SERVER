@@ -29,12 +29,12 @@ enum class MissionCategory(
     val displayName: String,
     val imageUrl: String
 ) {
-    TRANSPORTATION("이동·교통", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/transportation.png"),
-    FOOD("식음료", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/food.png"),
-    DIGITAL("디지털·구독", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/digital.png"),
-    SHOPPING("쇼핑", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/shopping.png"),
-    TRAVEL("취미·문화", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/travel.png"),
-    SOCIAL("사교·모임", "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/social.png"),
+    TRANSPORTATION("이동·교통", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/transportaion.png"),
+    FOOD("식음료", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/food.png"),
+    DIGITAL("디지털·구독", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/digital.png"),
+    SHOPPING("쇼핑", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/shopping.png"),
+    TRAVEL("취미·문화", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/hobby.png"),
+    SOCIAL("사교·모임", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/friend.png"),
     SELF_REFLECTION("회고", "")
 }
 
