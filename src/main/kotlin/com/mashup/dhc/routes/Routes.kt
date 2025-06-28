@@ -425,10 +425,10 @@ private fun Route.calendarView(userService: UserService) {
 
                 val monthlyTotalPercentage =
                     if (addMonth == 0) {
-                        (1..now.dayOfMonth).sum() * 100
+                        (1..now.dayOfMonth).sum()
                     } else {
                         val isLeapYear = currentMonthLocalDate.isLeapYear()
-                        (1..currentMonthLocalDate.month.length(isLeapYear)).sum() * 100
+                        (1..currentMonthLocalDate.month.length(isLeapYear)).sum()
                     }
 
                 val averageSucceedProbability =
