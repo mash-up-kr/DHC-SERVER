@@ -1,6 +1,8 @@
 package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.DailyFortune
+import com.mashup.dhc.domain.model.Gender
+import com.mashup.dhc.domain.model.Generation
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
@@ -95,7 +97,15 @@ data class AnimalCard(
 data class AnalysisViewResponse(
     val totalSavedMoney: Money,
     val weeklySavedMoney: Money,
+    val generationMoneyViewResponse: GenerationMoneyViewResponse,
     val threeMonthViewResponse: List<AnalysisMonthViewResponse>
+)
+
+@Serializable
+data class GenerationMoneyViewResponse(
+    val generation: Generation,
+    val gender: Gender,
+    val averageSpendMoney: Money
 )
 
 @Serializable

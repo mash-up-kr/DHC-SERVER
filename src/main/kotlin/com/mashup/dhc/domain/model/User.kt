@@ -1,5 +1,6 @@
 package com.mashup.dhc.domain.model
 
+import com.mashup.dhc.domain.service.now
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Money
@@ -30,7 +31,21 @@ data class User(
     val currentAmulet: Amulet? = null,
     val totalSavedMoney: Money = Money(BigDecimal.ZERO),
     @Transient val deleted: Boolean = false
-)
+) {
+    private val age: Int
+        get() = now().year - birthDate.date.year + 1
+
+    val generation: Generation
+        get() {
+            return when (age) {
+                in 10..19 -> Generation.TEENAGERS
+                in 20..29 -> Generation.TWENTIES
+                in 30..39 -> Generation.THIRTIES
+                in 40..99 -> Generation.FORTIES
+                else -> Generation.UNKNOWN
+            }
+        }
+}
 
 data class Amulet(
     val totalPiece: Int,
@@ -130,4 +145,12 @@ class UserRepository(
 enum class Gender {
     MALE,
     FEMALE
+}
+
+enum class Generation {
+    TEENAGERS,
+    TWENTIES,
+    THIRTIES,
+    FORTIES,
+    UNKNOWN
 }
