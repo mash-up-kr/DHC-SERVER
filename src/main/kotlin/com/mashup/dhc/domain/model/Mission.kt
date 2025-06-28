@@ -89,8 +89,7 @@ class MissionRepository(
                     or(eq("category", category), eq("category", MissionCategory.SELF_REFLECTION)),
                     eq("type", type)
                 )
-            )
-            .toList()
+            ).toList()
 
     suspend fun findAll(): List<Mission> =
         mongoDatabase

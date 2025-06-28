@@ -3,6 +3,8 @@ package com.mashup.dhc.domain.service
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
+import com.mashup.dhc.routes.BusinessException
+import com.mashup.dhc.routes.ErrorCode
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CoroutineScope
@@ -76,7 +78,7 @@ class FortuneService(
     ): DailyFortune {
         val user = userService.getUserById(userId)
         return user.monthlyFortune?.findDailyFortune(requestDate)
-            ?: throw RuntimeException("Unable to find daily fortune") // TODO 커스텀 예외 붙이기
+            ?: throw BusinessException(ErrorCode.NOT_FOUND)
     }
 }
 

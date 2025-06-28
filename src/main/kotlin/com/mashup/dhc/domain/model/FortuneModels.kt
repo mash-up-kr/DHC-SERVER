@@ -57,4 +57,24 @@ data class DailyFortune(
     @SerialName("total_score")
     val totalScore: Int
         get() = positiveScore + negativeScore
+    val luckyColorType: FortuneColor
+        get() = FortuneColor.fromKor(luckyColor)
+    val jinxedColorType: FortuneColor
+        get() = FortuneColor.fromKor(jinxedColor)
+}
+
+enum class FortuneColor(
+    val description: String
+) {
+    GREEN("초록색"),
+    RED("빨간색"),
+    YELLOW("노란색"),
+    WHITE("흰색"),
+    BLACK("검정색");
+
+    companion object {
+        fun fromKor(description: String): FortuneColor =
+            values().find { it.description == description }
+                ?: throw IllegalArgumentException("$description is not a valid color")
+    }
 }
