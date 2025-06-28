@@ -101,9 +101,13 @@ fun Route.userRoutes(userService: UserService) {
 
 fun Route.searchUser(userService: UserService) {
     get {
-        val userToken: String = call.queryParameters["userToken"]!!
+        val userToken: String = call.pathParameters["userToken"]!!
 
         val user = userService.findUserByUserToken(userToken)
+
+        if (user?.id?.toHexString() == null) {
+            call.respond(HttpStatusCode.NotFound, "User not found")
+        }
 
         call.respond(HttpStatusCode.OK, user?.id?.toHexString(), typeInfo<String>())
     }
