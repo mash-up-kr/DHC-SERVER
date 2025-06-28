@@ -259,9 +259,9 @@ private fun User.resolveAnimalCard(): AnimalCard {
             .fromEpochSeconds(0)
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date // 1970-01-01 UTC
-    val now = now()
+    val nowDays = this.birthDate.date
 
-    val daysFromEpoch = (now - epochStart).days
+    val daysFromEpoch = (nowDays - epochStart).days
 
     val middle = COLOR.entries[daysFromEpoch % COLOR.entries.size]
 
