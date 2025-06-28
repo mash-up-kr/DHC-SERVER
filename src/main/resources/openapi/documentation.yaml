@@ -68,7 +68,7 @@ paths:
               complete_mission:
                 summary: "Complete a mission"
                 value:
-              finished: true
+                  finished: true
               switch_mission:
                 summary: "Switch to a new mission"
                 value:
