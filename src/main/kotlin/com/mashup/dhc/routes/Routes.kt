@@ -43,16 +43,31 @@ import org.bson.types.ObjectId
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
-        Generation.TEENAGERS to mapOf(Gender.MALE to Money(resolveSpendMoney(22000))),
-        Generation.TEENAGERS to mapOf(Gender.FEMALE to Money(resolveSpendMoney(31000))),
-        Generation.TWENTIES to mapOf(Gender.MALE to Money(resolveSpendMoney(64000))),
-        Generation.TWENTIES to mapOf(Gender.FEMALE to Money(resolveSpendMoney(55000))),
-        Generation.THIRTIES to mapOf(Gender.MALE to Money(resolveSpendMoney(76000))),
-        Generation.THIRTIES to mapOf(Gender.FEMALE to Money(resolveSpendMoney(62000))),
-        Generation.FORTIES to mapOf(Gender.MALE to Money(resolveSpendMoney(86000))),
-        Generation.FORTIES to mapOf(Gender.FEMALE to Money(resolveSpendMoney(72000))),
-        Generation.UNKNOWN to mapOf(Gender.MALE to Money(resolveSpendMoney(86000))),
-        Generation.UNKNOWN to mapOf(Gender.FEMALE to Money(resolveSpendMoney(72000)))
+        Generation.TEENAGERS to
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(22000)),
+                Gender.FEMALE to Money(resolveSpendMoney(31000))
+            ),
+        Generation.TWENTIES to
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(64000)),
+                Gender.FEMALE to Money(resolveSpendMoney(55000))
+            ),
+        Generation.THIRTIES to
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(76000)),
+                Gender.FEMALE to Money(resolveSpendMoney(62000))
+            ),
+        Generation.FORTIES to
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(86000)),
+                Gender.FEMALE to Money(resolveSpendMoney(72000))
+            ),
+        Generation.UNKNOWN to
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(86000)),
+                Gender.FEMALE to Money(resolveSpendMoney(72000))
+            )
     )
 
 private fun resolveSpendMoney(value: Int): Int = if (now().dayOfMonth % 2 == 1) {

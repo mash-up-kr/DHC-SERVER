@@ -48,15 +48,32 @@ class MissionPickerTest {
                     title = "밥 먹기"
                 )
 
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD, session) } } returns
+            every {
+                runBlocking {
+                    missionRepository.findByCategory(
+                        MissionType.DAILY,
+                        MissionCategory.FOOD,
+                        session
+                    )
+                }
+            } returns
                 listOf(expectedMission)
 
             // When
-            val result = missionPicker.pickMission(preferredCategories, session)
+            val result =
+                missionPicker.pickMission(preferredMissionCategoryList = preferredCategories, session = session)
 
             // Then
             assertEquals(expectedMission, result)
-            verify { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD, session) } }
+            verify {
+                runBlocking {
+                    missionRepository.findByCategory(
+                        MissionType.DAILY,
+                        MissionCategory.FOOD,
+                        session
+                    )
+                }
+            }
         }
 
     @Test
@@ -85,17 +102,38 @@ class MissionPickerTest {
                     title = "밥 먹기"
                 )
 
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.TRAVEL, session) } } returns
+            every {
+                runBlocking {
+                    missionRepository.findByCategory(
+                        MissionType.DAILY,
+                        MissionCategory.TRAVEL,
+                        session
+                    )
+                }
+            } returns
                 listOf(travelMission)
 
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.SHOPPING, session) } } returns
+            every {
+                runBlocking {
+                    missionRepository.findByCategory(
+                        MissionType.DAILY,
+                        MissionCategory.SHOPPING,
+                        session
+                    )
+                }
+            } returns
                 listOf(shoppingMission)
 
             // When
             val actual =
                 (0..10)
-                    .map { missionPicker.pickMission(preferredCategories, session).category }
-                    .toSet()
+                    .map {
+                        missionPicker
+                            .pickMission(
+                                preferredMissionCategoryList = preferredCategories,
+                                session = session
+                            ).category
+                    }.toSet()
 
             // Then
             assertTrue(actual.size > 1)
@@ -139,15 +177,40 @@ class MissionPickerTest {
                 )
 
             // Mock all possible category calls
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.FOOD, session) } } returns
+            every {
+                runBlocking {
+                    missionRepository.findByCategory(
+                        MissionType.DAILY,
+                        MissionCategory.FOOD,
+                        session
+                    )
+                }
+            } returns
                 listOf(foodMission)
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.DIGITAL, session) } } returns
+            every {
+                runBlocking {
+                    missionRepository.findByCategory(
+                        MissionType.DAILY,
+                        MissionCategory.DIGITAL,
+                        session
+                    )
+                }
+            } returns
                 listOf(digitalMission)
-            every { runBlocking { missionRepository.findDailyByCategory(MissionCategory.SHOPPING, session) } } returns
+            every {
+                runBlocking {
+                    missionRepository.findByCategory(
+                        MissionType.DAILY,
+                        MissionCategory.SHOPPING,
+                        session
+                    )
+                }
+            } returns
                 listOf(shoppingMission)
 
             // When
-            val result = missionPicker.pickMission(preferredCategories, session)
+            val result =
+                missionPicker.pickMission(preferredMissionCategoryList = preferredCategories, session = session)
 
             // Then
             assertTrue(
@@ -158,7 +221,7 @@ class MissionPickerTest {
             // Verify that one of the repository methods was called
             verify(atLeast = 1) {
                 runBlocking {
-                    missionRepository.findDailyByCategory(any(), session)
+                    missionRepository.findByCategory(MissionType.DAILY, any(), session)
                 }
             }
         }

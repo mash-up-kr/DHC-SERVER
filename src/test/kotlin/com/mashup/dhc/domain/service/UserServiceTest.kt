@@ -129,7 +129,15 @@ class UserServiceTest {
 
             // Mock repository calls
             every { runBlocking { userRepository.findById(ObjectId(userId), session) } } returns user
-            every { runBlocking { missionRepository.findDailyByCategory(missionCategory, session) } } returns
+            every {
+                runBlocking {
+                    missionRepository.findByCategory(
+                        MissionType.DAILY,
+                        missionCategory,
+                        session
+                    )
+                }
+            } returns
                 listOf(randomMission)
             every { runBlocking { userRepository.updateOne(ObjectId(userId), any(), session) } } returns 1
 
