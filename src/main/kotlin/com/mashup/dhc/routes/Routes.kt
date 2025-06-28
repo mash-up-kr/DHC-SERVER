@@ -41,7 +41,6 @@ import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.readByteArray
-import org.bson.types.ObjectId
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
@@ -57,11 +56,12 @@ val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
         Generation.UNKNOWN to mapOf(Gender.FEMALE to Money(resolveSpendMoney(72000)))
     )
 
-private fun resolveSpendMoney(value: Int): Int = if (now().dayOfMonth % 2 == 1) {
-    value.plusTenPercent()
-} else {
-    value.minusTenPercent()
-}
+private fun resolveSpendMoney(value: Int): Int =
+    if (now().dayOfMonth % 2 == 1) {
+        value.plusTenPercent()
+    } else {
+        value.minusTenPercent()
+    }
 
 private fun Int.plusTenPercent() = this * 11 / 10
 
@@ -397,7 +397,7 @@ private fun Route.calendarView(userService: UserService) {
                         .filter { it.missions.isNotEmpty() }
                         .sumOf {
                             100 * it.missions.filter { mission -> mission.finished }.size /
-                                    (it.missions.size)
+                                (it.missions.size)
                         }
 
                 val calendarDayMissionViews =

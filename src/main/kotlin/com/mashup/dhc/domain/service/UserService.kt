@@ -149,8 +149,8 @@ class UserService(
                 missionUpdatedUser.id!!,
                 missionUpdatedUser.copy(
                     pastRoutineHistoryIds = (
-                            missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
-                            ),
+                        missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
+                    ),
                     totalSavedMoney = user.totalSavedMoney + todaySavedMoney
                 ),
                 session
@@ -212,28 +212,27 @@ class UserService(
                             .pickMission(
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
                                 session = session
-                            )
-                            .copy(switchCount = todayMission.switchCount + 1)
+                            ).copy(switchCount = todayMission.switchCount + 1)
                     }
                 }
 
-            val longTermMission = user.longTermMission?.let {
-                if (it.id != ObjectId(missionId)) {
-                    it
-                } else {
-                    if (it.switchCount >= MAX_SWITCH_COUNT) {
-                        throw BusinessException(ErrorCode.MAXIMUM_SWITCH_COUNT_EXCEEDED)
-                    }
+            val longTermMission =
+                user.longTermMission?.let {
+                    if (it.id != ObjectId(missionId)) {
+                        it
+                    } else {
+                        if (it.switchCount >= MAX_SWITCH_COUNT) {
+                            throw BusinessException(ErrorCode.MAXIMUM_SWITCH_COUNT_EXCEEDED)
+                        }
 
-                    missionPicker
-                        .pickMission(
-                            type = MissionType.LONG_TERM,
-                            preferredMissionCategoryList = user.preferredMissionCategoryList,
-                            session
-                        )
-                        .copy(switchCount = it.switchCount + 1)
+                        missionPicker
+                            .pickMission(
+                                type = MissionType.LONG_TERM,
+                                preferredMissionCategoryList = user.preferredMissionCategoryList,
+                                session
+                            ).copy(switchCount = it.switchCount + 1)
+                    }
                 }
-            }
 
             val updatedUser =
                 user.copy(todayDailyMissionList = reRolledTodayMissionList, longTermMission = longTermMission)
