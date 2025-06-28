@@ -25,6 +25,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
+import io.ktor.util.reflect.typeInfo
 import io.ktor.utils.io.readRemaining
 import java.math.BigDecimal
 import java.util.UUID
@@ -38,6 +39,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.readByteArray
+import org.bson.types.ObjectId
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
@@ -69,6 +71,7 @@ fun Route.userRoutes(userService: UserService) {
         changeMissionStatus(userService)
         endToday(userService)
         logout(userService)
+        searchUser(userService)
     }
     route("/view/users/{userId}") {
         home(userService)
@@ -78,6 +81,16 @@ fun Route.userRoutes(userService: UserService) {
     }
     route("/api") {
         missionCategoriesRoutes()
+    }
+}
+
+fun Route.searchUser(userService: UserService) {
+    get {
+        val userToken: String = call.queryParameters["userToken"]!!
+
+        val user = userService.findUserByUserToken(userToken)
+
+        call.respond(HttpStatusCode.OK, user?.id, typeInfo<ObjectId>())
     }
 }
 

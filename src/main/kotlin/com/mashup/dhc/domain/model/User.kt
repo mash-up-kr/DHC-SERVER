@@ -103,6 +103,13 @@ class UserRepository(
             .find(session, Filters.and(Filters.eq("_id", objectId), Filters.eq("deleted", false)))
             .firstOrNull()
 
+    suspend fun findByUserToken(userToken: String): User? =
+        mongoDatabase
+            .getCollection<User>(USER_COLLECTION)
+            .find(Filters.and(Filters.eq("userToken", userToken), Filters.eq("deleted", false)))
+            .firstOrNull()
+
+
     suspend fun findByUserToken(
         userToken: String,
         session: ClientSession

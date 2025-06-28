@@ -4,6 +4,7 @@ import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionRepository
+import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.domain.model.PastRoutineHistory
 import com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import com.mashup.dhc.domain.model.User
@@ -36,6 +37,8 @@ class UserService(
     private val missionPicker: MissionPicker
 ) {
     suspend fun getUserById(userId: String): User = userRepository.findById(ObjectId(userId))!!
+
+    suspend fun findUserByUserToken(userToken: String): User? = userRepository.findByUserToken(userToken)
 
     suspend fun getPastRoutineHistories(userId: String): List<PastRoutineHistory> =
         pastRoutineHistoryRepository.findSortedByUserId(ObjectId(userId))
@@ -146,8 +149,8 @@ class UserService(
                 missionUpdatedUser.id!!,
                 missionUpdatedUser.copy(
                     pastRoutineHistoryIds = (
-                        missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
-                    ),
+                            missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
+                            ),
                     totalSavedMoney = user.totalSavedMoney + todaySavedMoney
                 ),
                 session
@@ -162,7 +165,7 @@ class UserService(
     ): User {
         val resolvedCategory = user.resolveTodayMissionCategory()
 
-        val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory, session)
+        val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory)
         val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory, session)
 
         val today = now()
@@ -198,19 +201,42 @@ class UserService(
 
             val reRolledTodayMissionList =
                 user.todayDailyMissionList.map { todayMission ->
-                    if (todayMission.id == ObjectId(missionId)) {
+                    if (todayMission.id != ObjectId(missionId)) {
+                        todayMission
+                    } else {
                         if (todayMission.switchCount >= MAX_SWITCH_COUNT) {
                             throw BusinessException(ErrorCode.MAXIMUM_SWITCH_COUNT_EXCEEDED)
                         }
+
                         missionPicker
-                            .pickMission(user.preferredMissionCategoryList, session)
+                            .pickMission(
+                                preferredMissionCategoryList = user.preferredMissionCategoryList,
+                                session = session
+                            )
                             .copy(switchCount = todayMission.switchCount + 1)
-                    } else {
-                        todayMission
                     }
                 }
 
-            val updatedUser = user.copy(todayDailyMissionList = reRolledTodayMissionList)
+            val longTermMission = user.longTermMission?.let {
+                if (it.id != ObjectId(missionId)) {
+                    it
+                } else {
+                    if (it.switchCount >= MAX_SWITCH_COUNT) {
+                        throw BusinessException(ErrorCode.MAXIMUM_SWITCH_COUNT_EXCEEDED)
+                    }
+
+                    missionPicker
+                        .pickMission(
+                            type = MissionType.LONG_TERM,
+                            preferredMissionCategoryList = user.preferredMissionCategoryList,
+                            session
+                        )
+                        .copy(switchCount = it.switchCount + 1)
+                }
+            }
+
+            val updatedUser =
+                user.copy(todayDailyMissionList = reRolledTodayMissionList, longTermMission = longTermMission)
             userRepository.updateOne(ObjectId(userId), updatedUser, session)
             updatedUser
         }
@@ -259,11 +285,12 @@ class MissionPicker(
     private val missionRepository: MissionRepository
 ) {
     suspend fun pickMission(
+        type: MissionType = MissionType.DAILY,
         preferredMissionCategoryList: List<MissionCategory>,
         session: ClientSession
     ): Mission {
         val peekMissionCategory = preferredMissionCategoryList.random()
-        val randomPeekMission = missionRepository.findDailyByCategory(peekMissionCategory, session).random()
+        val randomPeekMission = missionRepository.findByCategory(type, peekMissionCategory, session).random()
 
         return randomPeekMission
     }

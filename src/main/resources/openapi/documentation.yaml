@@ -4,6 +4,35 @@ info:
   description: "Application API"
   version: "1.0.0"
 paths:
+  /api/users:
+    get:
+      summary: "Search User by Token"
+      description: "Find a user by their user token"
+      parameters:
+        - name: userToken
+          in: query
+          required: true
+          schema:
+            type: string
+          description: "User token to search for"
+          example: "user123token"
+      responses:
+        "200":
+          description: "User found successfully"
+          content:
+            application/json:
+              schema:
+                type: string
+                description: "User ID"
+              example: "507f1f77bcf86cd799439011"
+        "404":
+          description: "User not found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              example: "User not found"
+
   /api/users/register:
     post:
       summary: "Register User"
@@ -23,7 +52,7 @@ paths:
               birthTime: "09:30:00"
               preferredMissionCategoryList: [ "FOOD", "TRANSPORTATION" ]
       responses:
-        "200":
+        "201":
           description: "User registered successfully"
           content:
             application/json:
@@ -31,13 +60,13 @@ paths:
                 $ref: "#/components/schemas/RegisterUserResponse"
               example:
                 id: "507f1f77bcf86cd799439011"
-        "500":
-          description: "Failed to register user"
+        "409":
+          description: "User already exists"
           content:
             text/plain:
               schema:
                 type: "string"
-              example: "Failed to register user"
+              example: "User already exists"
 
   /api/users/{userId}/missions/{missionId}:
     put:
@@ -85,16 +114,16 @@ paths:
               schema:
                 $ref: "#/components/schemas/ToggleMissionResponse"
               example:
-                mission:
-                  missionId: "507f1f77bcf86cd799439022"
-                  category: "FOOD"
-                  difficulty: 3
-                  type: "DAILY"
-                  finished: true
-                  cost: "10.00"
-                  endDate: "2024-01-15"
-                  title: "오늘 점심은 집에서 해먹기"
-                  switchCount: 0
+                missions:
+                  - missionId: "507f1f77bcf86cd799439022"
+                    category: "FOOD"
+                    difficulty: 3
+                    type: "DAILY"
+                    finished: true
+                    cost: "10.00"
+                    endDate: "2024-01-15"
+                    title: "오늘 점심은 집에서 해먹기"
+                    switchCount: 0
 
   /api/users/{userId}/done:
     post:
@@ -126,10 +155,10 @@ paths:
               example:
                 todaySavedMoney: "25.50"
 
-  /api/users/{userId}/logout:
+  /api/users/{userId}:
     delete:
-      summary: "Logout User"
-      description: "Logout user and clear session"
+      summary: "Delete User"
+      description: "Delete user account"
       parameters:
         - name: userId
           in: path
@@ -140,13 +169,7 @@ paths:
           example: "507f1f77bcf86cd799439011"
       responses:
         "200":
-          description: "User logged out successfully"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/LogoutResponse"
-              example:
-                message: "Successfully logged out"
+          description: "User deleted successfully"
         "404":
           description: "User not found"
           content:
@@ -170,10 +193,10 @@ paths:
                 categories:
                   - name: "TRANSPORTATION"
                     displayName: "이동·교통"
-                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/transport.png"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/transportation.png"
                   - name: "FOOD"
                     displayName: "식음료"
-                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/eat.png"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/food.png"
                   - name: "DIGITAL"
                     displayName: "디지털·구독"
                     imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/digital.png"
@@ -182,10 +205,10 @@ paths:
                     imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/shopping.png"
                   - name: "TRAVEL"
                     displayName: "취미·문화"
-                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/hobby.png"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/travel.png"
                   - name: "SOCIAL"
                     displayName: "사교·모임"
-                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/community.png"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/social.png"
 
   /view/users/{userId}/home:
     get:
@@ -280,10 +303,10 @@ paths:
                 preferredMissionCategoryList:
                   - name: "FOOD"
                     displayName: "식음료"
-                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/eat.png"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/food.png"
                   - name: "TRANSPORTATION"
                     displayName: "이동·교통"
-                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/transport.png"
+                    imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/transportation.png"
                 alarm: true
         "404":
           description: "User not found"
@@ -545,10 +568,13 @@ components:
     ToggleMissionResponse:
       type: object
       required:
-        - mission
+        - missions
       properties:
-        mission:
-          $ref: "#/components/schemas/Mission"
+        missions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Mission"
+          description: "List of missions (today's daily missions and long-term mission if exists)"
 
     EndTodayMissionRequest:
       type: object
@@ -586,16 +612,6 @@ components:
           $ref: "#/components/schemas/DailyFortune"
           nullable: true
 
-    LogoutResponse:
-      type: object
-      required:
-        - message
-      properties:
-        message:
-          type: string
-          description: "Logout confirmation message"
-          example: "Successfully logged out"
-
     MissionCategoriesResponse:
       type: object
       required:
@@ -625,7 +641,7 @@ components:
         imageUrl:
           type: string
           description: "URL of the category image"
-          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/eat.png"
+          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/food.png"
 
     MyPageResponse:
       type: object
