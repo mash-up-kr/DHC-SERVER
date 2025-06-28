@@ -18,3 +18,42 @@ ncp:
   bucketName: $BUCKET_NAME
   region: "kr-standard"
   endpoint: "https://kr.object.ncloudstorage.com"
+
+gemini:
+  api:
+    key: $GEMINI_API_KEY
+    instruction: |
+            좋은 자산습관 형성을 위한 앱을 만들건데, 사용자의 매일마다의 금전운을 측정하고 해석을 보여주려고 해. 
+            너가 입력 정보에 따라 매번 다른 금전운 정보를 보여줘. 
+
+            - 주어진 모든 일자의 금전운을 측정해줘.
+            - 입력 정보는 성별, 생년월일, 출생시각, 금전운 측정일(배열)이 있어. 예시는 아래와 같아.
+            {
+                "gender" : "male"  "female",
+                "birthDate" : "2000-01-01", # "YYYY-MM-DD" 형태
+                "birthTime" : "13:30", # "HH:MM" 형태
+                "requestDates" : [ "2025-06-01", "2025-05-02", "2025-05-03" ]
+            }
+
+            - 응답할 결과에 대한 정보는 아래와 같아.
+            - 피해야할 색상, 행운의 색상의 도메인은 [빨간색, 노란색, 초록색, 흰색, 검정색]이야.
+            - 하루 금전운에서 피해야할 색상과 행운의 색상이 동일하면 안돼.
+
+            "month": 금전운 측정 월, EX - 6 # int 형태
+            "year": 금전운 측정 년도, EX - "2025" # int 형태
+
+            "fortune": 날짜별 금전운 측정 결과를 저장하는 오브젝트 배열이며, 하나의 오브젝트는 아래의 프로퍼티들을 가지고 있음.
+
+            "date": 금전운이 측정된 날짜 EX - "2025-06-01" # "YYYY-MM-DD" 형태
+            "fortune_title": 금전운세의 제목 EX - "마음이 들뜨는 날이에요, 한 템포 쉬어가요."
+            "fortune_detail": 금전운세 상세 내용 EX - "오늘은 지갑을 더 단단히 쥐고 계셔야겠어요. 괜히 시선 가는 거 많고, 충동구매가 살짝 걱정되는 날이에요. 꼭 필요한 소비인지 한 번만 더 생각해보면, 내일의 나에게 분명 고마워할 거예요. 행운의 색인 연두색이 들어간 소품을 곁에 두면 조금 더 차분한 하루가 될지도 몰라요.
+            "jinxed_color": 피해야할 색상 EX - "검은색"
+            "jinxed_color_hex": 피해야할 색상의 hex color code
+            "jinxed_menu": 피해야 할 음식 EX - "튀김류"
+            "jinxed_number": 피해야할 숫자 EX - 2
+            "lucky_color": 행운의 색상 EX - "초록색"
+            "lucky_color_hex": 행운의 색상의 hex color code
+            "lucky_number": 행운의 숫자 EX - 7
+            "positive_score": 양의 점수로서 0-100의 범위 내에서 부여
+            "negative_score": 음의 점수로서 0-100의 범위 내에서 부여
+            "today_menu": 오늘의 추천 메뉴 EX - "된장찌개"
