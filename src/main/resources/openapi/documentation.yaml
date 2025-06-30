@@ -116,7 +116,7 @@ paths:
               example:
                 missions:
                   - missionId: "507f1f77bcf86cd799439022"
-                    category: "FOOD"
+                    category: "식음료"
                     difficulty: 3
                     type: "DAILY"
                     finished: true
@@ -170,6 +170,58 @@ paths:
       responses:
         "200":
           description: "User deleted successfully"
+        "404":
+          description: "User not found"
+          content:
+            text/plain:
+              schema:
+                type: "string"
+              example: "User not found"
+
+  /api/users/{userId}/fortune:
+    get:
+      summary: "Get Daily Fortune"
+      description: "Get daily fortune for a specific user and date"
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: "Date in YYYY-MM-DD format. If not provided, uses current date."
+          example: "2024-01-15"
+      responses:
+        "200":
+          description: "Daily fortune retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FortuneResponse"
+              example:
+                date: "2024-01-15"
+                fortuneTitle: "좋은 하루"
+                fortuneDetail: "오늘은 좋은 일이 생길 것입니다"
+                jinxedColor: "빨간색"
+                jinxedColorHex: "#FF0000"
+                jinxedMenu: "매운 음식"
+                jinxedNumber: 4
+                luckyColor: "파란색"
+                luckyColorHex: "#0000FF"
+                luckyNumber: 7
+                positiveScore: 80
+                negativeScore: 20
+                totalScore: 60
+                todayMenu: "샐러드"
+                luckyColorType: "GREEN"
+                jinxedColorType: "RED"
         "404":
           description: "User not found"
           content:
@@ -232,7 +284,7 @@ paths:
               example:
                 longTermMission:
                   missionId: "507f1f77bcf86cd799439033"
-                  category: "TRAVEL"
+                  category: "취미·문화"
                   difficulty: 5
                   type: "LONG_TERM"
                   finished: false
@@ -242,7 +294,7 @@ paths:
                   switchCount: 0
                 todayDailyMissionList:
                   - missionId: "507f1f77bcf86cd799439044"
-                    category: "FOOD"
+                    category: "식음료"
                     difficulty: 2
                     type: "DAILY"
                     finished: false
@@ -251,7 +303,7 @@ paths:
                     title: "점심 도시락 싸가기"
                     switchCount: 1
                   - missionId: "507f1f77bcf86cd799439055"
-                    category: "TRANSPORTATION"
+                    category: "이동·교통"
                     difficulty: 1
                     type: "DAILY"
                     finished: true
@@ -778,7 +830,9 @@ components:
           description: "Mission ID"
           example: "507f1f77bcf86cd799439022"
         category:
-          $ref: "#/components/schemas/MissionCategory"
+          type: string
+          description: "Mission category display name in Korean"
+          example: "식음료"
         difficulty:
           type: integer
           minimum: 1
@@ -1010,3 +1064,95 @@ components:
         - UNKNOWN
       description: "User generation based on age"
       example: "TWENTIES"
+
+    FortuneColor:
+      type: string
+      enum:
+        - RED
+        - YELLOW
+        - GREEN
+        - WHITE
+        - BLACK
+      description: "Fortune color type"
+      example: "RED"
+
+    FortuneResponse:
+      type: object
+      required:
+        - date
+        - fortuneTitle
+        - fortuneDetail
+        - jinxedColor
+        - jinxedColorHex
+        - jinxedMenu
+        - jinxedNumber
+        - luckyColor
+        - luckyColorHex
+        - luckyNumber
+        - positiveScore
+        - negativeScore
+        - totalScore
+        - todayMenu
+        - luckyColorType
+        - jinxedColorType
+      properties:
+        date:
+          type: string
+          description: "Fortune date in YYYY-MM-DD format"
+          example: "2024-01-15"
+        fortuneTitle:
+          type: string
+          description: "Fortune title"
+          example: "좋은 하루"
+        fortuneDetail:
+          type: string
+          description: "Detailed fortune description"
+          example: "오늘은 좋은 일이 생길 것입니다"
+        jinxedColor:
+          type: string
+          description: "Unlucky color name"
+          example: "빨간색"
+        jinxedColorHex:
+          type: string
+          description: "Unlucky color hex code"
+          example: "#FF0000"
+        jinxedMenu:
+          type: string
+          description: "Food to avoid today"
+          example: "매운 음식"
+        jinxedNumber:
+          type: integer
+          description: "Unlucky number"
+          example: 4
+        luckyColor:
+          type: string
+          description: "Lucky color name"
+          example: "파란색"
+        luckyColorHex:
+          type: string
+          description: "Lucky color hex code"
+          example: "#0000FF"
+        luckyNumber:
+          type: integer
+          description: "Lucky number"
+          example: 7
+        positiveScore:
+          type: integer
+          description: "Positive score"
+          example: 80
+        negativeScore:
+          type: integer
+          description: "Negative score"
+          example: 20
+        totalScore:
+          type: integer
+          description: "Total score"
+          example: 60
+        todayMenu:
+          type: string
+          description: "Recommended food for today"
+          example: "샐러드"
+        luckyColorType:
+          $ref: "#/components/schemas/FortuneColor"
+        jinxedColorType:
+          $ref: "#/components/schemas/FortuneColor"

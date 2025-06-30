@@ -1,6 +1,7 @@
 package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.DailyFortune
+import com.mashup.dhc.domain.model.FortuneColor
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Generation
 import com.mashup.dhc.domain.model.Mission
@@ -131,6 +132,48 @@ data class CalendarDayMissionView(
 data class UploadResponse(
     val url: String
 )
+
+@Serializable
+data class FortuneResponse(
+    val date: String,
+    val fortuneTitle: String,
+    val fortuneDetail: String,
+    val jinxedColor: String,
+    val jinxedColorHex: String,
+    val jinxedMenu: String,
+    val jinxedNumber: Int,
+    val luckyColor: String,
+    val luckyColorHex: String,
+    val luckyNumber: Int,
+    val positiveScore: Int,
+    val negativeScore: Int,
+    val todayMenu: String,
+    val totalScore: Int,
+    val luckyColorType: FortuneColor,
+    val jinxedColorType: FortuneColor
+) {
+    companion object {
+        fun from(dailyFortune: DailyFortune): FortuneResponse =
+            FortuneResponse(
+                date = dailyFortune.date,
+                fortuneTitle = dailyFortune.fortuneTitle,
+                fortuneDetail = dailyFortune.fortuneDetail,
+                jinxedColor = dailyFortune.jinxedColor,
+                jinxedColorHex = dailyFortune.jinxedColorHex,
+                jinxedMenu = dailyFortune.jinxedMenu,
+                jinxedNumber = dailyFortune.jinxedNumber,
+                jinxedColorType = dailyFortune.jinxedColorType,
+                positiveScore = dailyFortune.positiveScore,
+                negativeScore = dailyFortune.negativeScore,
+                todayMenu = dailyFortune.todayMenu,
+                totalScore = dailyFortune.totalScore,
+                luckyColor = dailyFortune.luckyColor,
+                luckyColorHex = dailyFortune.luckyColorHex,
+                luckyColorType = dailyFortune.luckyColorType,
+                luckyNumber = dailyFortune.luckyNumber
+            )
+    }
+}
 
 @Serializable
 data class MissionCategoriesResponse(

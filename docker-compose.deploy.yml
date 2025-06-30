@@ -39,6 +39,7 @@ services:
       - NCP_SECRET_KEY=${NCP_SECRET_KEY}
       - BUCKET_NAME=${BUCKET_NAME}
       - MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc?replicaSet=rs0
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - TZ=Asia/Seoul
     volumes:
       - ./logs:/app/logs
