@@ -26,13 +26,30 @@ class FortuneRepository(
         userId: String,
         monthlyFortune: MonthlyFortune
     ) {
-        database
-            .getCollection<User>(USER_COLLECTION)
-            .updateOne(
-                filter = Filters.eq("_id", userId),
-                update = set(User::monthlyFortune.name, monthlyFortune),
-                options = UpdateOptions().upsert(true)
-            )
+        try {
+            val filter =
+                if (ObjectId.isValid(userId)) {
+                    Filters.eq("_id", ObjectId(userId))
+                } else {
+                    Filters.eq("userToken", userId)
+                }
+
+            val result =
+                database
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(
+                        filter = filter,
+                        update = set(User::monthlyFortune.name, monthlyFortune),
+                        options = UpdateOptions().upsert(false)
+                    )
+
+            if (result.matchedCount == 0L) {
+                throw IllegalArgumentException("사용자를 찾을 수 없습니다: $userId")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
     }
 }
 
