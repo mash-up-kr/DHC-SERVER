@@ -25,7 +25,6 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import io.ktor.util.reflect.typeInfo
 import io.ktor.utils.io.readRemaining
 import java.math.BigDecimal
 import java.util.UUID
@@ -39,7 +38,6 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.io.readByteArray
-import org.bson.types.ObjectId
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
@@ -70,11 +68,12 @@ val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
                 )
     )
 
-private fun resolveSpendMoney(value: Int): Int = if (now().dayOfMonth % 2 == 1) {
-    value.plusTenPercent()
-} else {
-    value.minusTenPercent()
-}
+private fun resolveSpendMoney(value: Int): Int =
+    if (now().dayOfMonth % 2 == 1) {
+        value.plusTenPercent()
+    } else {
+        value.minusTenPercent()
+    }
 
 private fun Int.plusTenPercent() = this * 11 / 10
 
@@ -101,15 +100,19 @@ fun Route.userRoutes(userService: UserService) {
 
 fun Route.searchUser(userService: UserService) {
     get {
-        val userToken: String = call.pathParameters["userToken"]!!
+        val userToken: String? = call.request.queryParameters["userToken"]
+
+        if (userToken.isNullOrBlank()) {
+            throw BusinessException(ErrorCode.INVALID_REQUEST)
+        }
 
         val user = userService.findUserByUserToken(userToken)
 
-        if (user?.id?.toHexString() == null) {
-            call.respond(HttpStatusCode.NotFound, "User not found")
+        if (user?.id == null) {
+            throw BusinessException(ErrorCode.USER_NOT_FOUND)
         }
 
-        call.respond(HttpStatusCode.OK, user?.id?.toHexString(), typeInfo<String>())
+        call.respond(HttpStatusCode.OK, user.id.toHexString())
     }
 }
 
@@ -431,7 +434,9 @@ private fun Route.calendarView(userService: UserService) {
                         (1..currentMonthLocalDate.month.length(isLeapYear)).sum()
                     }
 
-                application.log.info("monthlyTotalPercentage $monthlyTotalPercentage, monthlyFinishedPercentage $monthlyFinishedPercentage")
+                application.log.info(
+                    "monthlyTotalPercentage $monthlyTotalPercentage, monthlyFinishedPercentage $monthlyFinishedPercentage"
+                )
 
                 val averageSucceedProbability =
                     if (monthlyTotalPercentage == 0) 0 else monthlyFinishedPercentage * 100 / monthlyTotalPercentage
