@@ -131,7 +131,7 @@ jobs:
   build:
     name: 빌드
     runs-on: ubuntu-22.04
-    needs: [ktlint, test]
+    needs: [ ktlint, test ]
 
     steps:
       - name: 코드 체크아웃
@@ -216,7 +216,7 @@ jobs:
   pr-comment:
     name: PR 코멘트
     runs-on: ubuntu-latest
-    needs: [ktlint, test, build, docker-validate]
+    needs: [ ktlint, test, build, docker-validate ]
     if: always()
 
     steps:
@@ -232,7 +232,7 @@ jobs:
             const allSuccess = ktlintResult === 'success' && 
                               testResult === 'success' && 
                               buildResult === 'success';
-            const status = allSuccess ? '✅ 성공' : '❌ 실패';
+            const status = allSuccess ? '성공' : '❌ 실패';
             
             const getIcon = (result) => {
               switch(result) {

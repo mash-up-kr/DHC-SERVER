@@ -9,7 +9,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.slf4j.LoggerFactory
 
 class FortuneService(
     private val backgroundScope: CoroutineScope,
@@ -17,43 +16,46 @@ class FortuneService(
     private val fortuneRepository: FortuneRepository,
     private val geminiService: GeminiService
 ) {
-    private val log = LoggerFactory.getLogger(FortuneService::class.java)
-
     private suspend fun executeFortuneGenerationTask(
         userId: String,
         year: Int,
         month: Int
     ) {
-        val user = userService.getUserById(userId)
-        fortuneRepository.upsertMonthlyFortune(
-            userId,
-            geminiService
-                .generateFortune(
+        try {
+            val user = userService.getUserById(userId)
+
+            geminiService.generateFortuneWithBatch(
+                userId = userId,
+                request =
                     GeminiFortuneRequest(
                         user.gender.toString(),
                         user.birthDate.toString(),
                         user.birthTime?.toString()
-                            ?: throw RuntimeException(), // TODO 커스텀 예외 붙이기
+                            ?: throw RuntimeException("birthTime이 null입니다. userId: $userId"),
                         year,
                         month
-                    )
-                ).toMonthlyFortune()
-        )
+                    ),
+                fortuneRepository = fortuneRepository
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
     }
 
     suspend fun addFortuneGenerationTask(
         userId: String,
         requestDate: LocalDate
     ) {
-        log.info("requestDate: $requestDate, userId: $userId")
-
         val lockKey = "$userId-${requestDate.year}-${requestDate.monthValue}"
-        log.info("Lock Key: $lockKey")
-        if (!LockRegistry.tryLock(lockKey)) throw RuntimeException("Lock key is using") // TODO 커스텀 예외 붙이기
-        // DB에 이미 금전운이 존재하는지 확인
+
+        if (!LockRegistry.tryLock(lockKey)) {
+            throw RuntimeException("Lock key is using")
+        }
+
         if (checkIfFortuneCached(userId, requestDate)) {
             LockRegistry.unlock(lockKey)
-            throw RuntimeException("Fortune Cache already exists") // TODO 커스텀 예외 붙이기
+            throw RuntimeException("Fortune Cache already exists")
         }
 
         backgroundScope.launch {
@@ -70,7 +72,10 @@ class FortuneService(
     private suspend fun checkIfFortuneCached(
         userId: String,
         requestDate: LocalDate
-    ): Boolean = userService.getUserById(userId).monthlyFortune?.findDailyFortune(requestDate) != null
+    ): Boolean {
+        val user = userService.getUserById(userId)
+        return user.monthlyFortune?.findDailyFortune(requestDate) != null
+    }
 
     suspend fun queryDailyFortune(
         userId: String,
