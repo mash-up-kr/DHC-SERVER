@@ -80,7 +80,7 @@ class BatchProcessor<T : BatchTask>(
                         log.info(
                             "Batch timeout (${batchTimeoutMs}ms) reached. Processing ${pendingTasks.size} tasks: $taskTypes"
                         )
-                        processBatch()
+                        processBatch(isTimeout = true)  // 타임아웃 플래그 전달
                     }
                     timeoutJob = null
                 }
@@ -93,23 +93,23 @@ class BatchProcessor<T : BatchTask>(
     private suspend fun cancelTimeoutAndProcess() {
         timeoutJob?.cancel()
         timeoutJob = null
-        processBatch()
+        processBatch(isTimeout = false)  // 일반 배치 처리
     }
 
     /**
      * 현재 대기 중인 작업들을 배치로 처리
+     * @param isTimeout 타임아웃으로 인한 호출인지 여부
      */
-    private suspend fun processBatch() {
+    private suspend fun processBatch(isTimeout: Boolean = false) {
         val batch = mutableListOf<T>()
 
-        // 큐에서 배치 크기만큼 작업을 가져옴
-        repeat(batchSize) {
-            val task = pendingTasks.poll()
-            if (task != null) {
-                batch.add(task)
-            } else {
-                return@repeat
-            }
+        // 타임아웃인 경우 모든 작업을 처리, 아닌 경우 배치 크기만큼만 처리
+        val maxToProcess = if (isTimeout) pendingTasks.size else batchSize
+
+        // 큐에서 작업을 가져옴 (타임아웃이면 모든 작업, 아니면 배치 크기까지)
+        repeat(maxToProcess) {
+            val task = pendingTasks.poll() ?: return@repeat
+            batch.add(task)
         }
 
         if (batch.isNotEmpty()) {
@@ -132,29 +132,6 @@ class BatchProcessor<T : BatchTask>(
                 startBatchTimeout()
             }
         }
-    }
-
-    /**
-     * 배치 상태 정보 반환
-     */
-    fun getBatchStatus(): BatchStatus {
-        val pendingCount = pendingTasks.size
-        val isTimerActive = timeoutJob?.isActive == true
-        val taskTypeDistribution = pendingTasks.groupBy { it.taskType }.mapValues { it.value.size }
-
-        return BatchStatus(
-            pendingTasks = pendingCount,
-            batchSizeThreshold = batchSize,
-            isTimeoutActive = isTimerActive,
-            taskTypeDistribution = taskTypeDistribution,
-            nextProcessCondition =
-                when {
-                    pendingCount >= batchSize -> "즉시 처리 (배치 크기 도달)"
-                    isTimerActive -> "타이머 대기 중 (최대 ${batchTimeoutMs}ms)"
-                    pendingCount > 0 -> "다음 요청 시 타이머 시작"
-                    else -> "대기 중인 요청 없음"
-                }
-        )
     }
 }
 
