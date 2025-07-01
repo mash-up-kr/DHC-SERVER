@@ -19,6 +19,11 @@ data class RegisterUserResponse(
 )
 
 @Serializable
+data class SearchUserResponse(
+    val id: String
+)
+
+@Serializable
 data class HomeViewResponse(
     val longTermMission: MissionResponse?,
     val todayDailyMissionList: List<MissionResponse>,
