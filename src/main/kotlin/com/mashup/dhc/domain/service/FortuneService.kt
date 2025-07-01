@@ -81,8 +81,17 @@ class FortuneService(
         userId: String,
         requestDate: LocalDate
     ): DailyFortune {
-        val user = userService.getUserById(userId)
-        return user.monthlyFortune?.findDailyFortune(requestDate)
+        var user = userService.getUserById(userId)
+        if (user.dailyFortune == null) {
+            val dailyFortune = fortuneRepository.retrieveDailyFortune()
+            if (dailyFortune != null) {
+                user = userService.updateUserDailyFortune(user.id!!.toHexString(), dailyFortune)
+            }
+        }
+
+        return user.dailyFortune?.copy(
+            date = "${requestDate.year}-${requestDate.month.value.toString().padStart(2, '0')}"
+        )
             ?: throw BusinessException(ErrorCode.NOT_FOUND)
     }
 }
