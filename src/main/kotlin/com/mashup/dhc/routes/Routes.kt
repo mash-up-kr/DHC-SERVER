@@ -584,7 +584,7 @@ private fun Route.uploadFile(storage: NaverCloudPlatformObjectStorageAgent) {
         val url =
             storage.upload(
                 key = key,
-                data = fileData,
+                data = fileData!!,
                 contentType = contentType
             )
         call.respond(HttpStatusCode.OK, UploadResponse(url))
