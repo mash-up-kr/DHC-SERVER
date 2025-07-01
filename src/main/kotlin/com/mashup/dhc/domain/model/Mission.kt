@@ -1,5 +1,6 @@
 package com.mashup.dhc.domain.model
 
+import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
@@ -26,16 +27,27 @@ data class Mission(
 )
 
 enum class MissionCategory(
-    val displayName: String,
-    val imageUrl: String
+    val displayName: String
 ) {
-    TRANSPORTATION("이동·교통", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/transportaion.png"),
-    FOOD("식음료", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/food.png"),
-    DIGITAL("디지털·구독", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/digital.png"),
-    SHOPPING("쇼핑", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/shopping.png"),
-    TRAVEL("취미·문화", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/hobby.png"),
-    SOCIAL("사교·모임", "https://dhc-object-storage.kr.object.ncloudstorage.com/logos/friend.png"),
-    SELF_REFLECTION("회고", "")
+    TRANSPORTATION("이동·교통"),
+    FOOD("식음료"),
+    DIGITAL("디지털·구독"),
+    SHOPPING("쇼핑"),
+    TRAVEL("취미·문화"),
+    SOCIAL("사교·모임"),
+    SELF_REFLECTION("회고");
+
+    val imageUrl: String
+        get() =
+            when (this) {
+                TRANSPORTATION -> ImageUrlMapper.MissionCategory.getTransportationImageUrl()
+                FOOD -> ImageUrlMapper.MissionCategory.getFoodImageUrl()
+                DIGITAL -> ImageUrlMapper.MissionCategory.getDigitalImageUrl()
+                SHOPPING -> ImageUrlMapper.MissionCategory.getShoppingImageUrl()
+                TRAVEL -> ImageUrlMapper.MissionCategory.getHobbyImageUrl()
+                SOCIAL -> ImageUrlMapper.MissionCategory.getFriendImageUrl()
+                SELF_REFLECTION -> ""
+            }
 }
 
 enum class MissionType {

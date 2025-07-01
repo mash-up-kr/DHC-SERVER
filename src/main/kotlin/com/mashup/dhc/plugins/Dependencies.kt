@@ -105,7 +105,7 @@ private data class MongoConfig(
 )
 
 private fun Application.getMongoConfig(): MongoConfig {
-    val host = environment.config.tryGetString("db.mongo.host") ?: "localhost"
+    val host = environment.config.tryGetString("db.mongo.host") ?: "211.188.52.240"
     val port = environment.config.tryGetString("db.mongo.port") ?: "27017"
     val databaseName = environment.config.tryGetString("db.mongo.database.name") ?: "dhc"
 
