@@ -386,7 +386,7 @@ private fun Route.analysisView(userService: UserService) {
                 generationMoneyViewResponse =
                     GenerationMoneyViewResponse(
                         gender = user.gender,
-                        generation = user.generation,
+                        generation = user.generation.description,
                         averageSpendMoney =
                             generationAverageSpendMoney[user.generation]!![user.gender] ?: Money(BigDecimal.ZERO)
                     )

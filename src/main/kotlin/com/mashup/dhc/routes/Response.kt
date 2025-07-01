@@ -113,7 +113,7 @@ data class CalendarViewResponse(
 
 @Serializable
 data class GenerationMoneyViewResponse(
-    val generation: Generation,
+    val generation: String,
     val gender: Gender,
     val averageSpendMoney: Money
 )

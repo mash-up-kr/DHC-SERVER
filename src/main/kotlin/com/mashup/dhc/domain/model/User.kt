@@ -153,10 +153,10 @@ enum class Gender {
     FEMALE
 }
 
-enum class Generation {
-    TEENAGERS,
-    TWENTIES,
-    THIRTIES,
-    FORTIES,
-    UNKNOWN
+enum class Generation(val description: String) {
+    TEENAGERS("10대"),
+    TWENTIES("20대"),
+    THIRTIES("30대"),
+    FORTIES("40대"),
+    UNKNOWN("알 수 없음");
 }

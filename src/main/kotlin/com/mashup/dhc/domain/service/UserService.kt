@@ -210,6 +210,7 @@ class UserService(
 
                         missionPicker
                             .pickMission(
+                                existingMission = todayMission,
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
                                 session = session
                             ).copy(switchCount = todayMission.switchCount + 1)
@@ -227,6 +228,7 @@ class UserService(
 
                         missionPicker
                             .pickMission(
+                                existingMission = it,
                                 type = MissionType.LONG_TERM,
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
                                 session
@@ -284,12 +286,15 @@ class MissionPicker(
     private val missionRepository: MissionRepository
 ) {
     suspend fun pickMission(
+        existingMission: Mission? = null,
         type: MissionType = MissionType.DAILY,
         preferredMissionCategoryList: List<MissionCategory>,
         session: ClientSession
     ): Mission {
         val peekMissionCategory = preferredMissionCategoryList.random()
-        val randomPeekMission = missionRepository.findByCategory(type, peekMissionCategory, session).random()
+        val randomPeekMission = missionRepository.findByCategory(type, peekMissionCategory, session)
+            .filter { it.id != existingMission?.id }
+            .random()
 
         return randomPeekMission
     }
