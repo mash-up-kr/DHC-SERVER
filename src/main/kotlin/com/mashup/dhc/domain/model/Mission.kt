@@ -119,3 +119,9 @@ fun List<Mission>.calculateSavedMoney() =
         .filter { it.finished }
         .map { it.cost }
         .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+
+fun List<Mission>.calculateSpendMoney() =
+    this
+        .filterNot { it.finished }
+        .map { it.cost }
+        .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)

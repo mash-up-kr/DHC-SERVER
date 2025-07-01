@@ -104,6 +104,7 @@ data class AnimalCard(
 data class AnalysisViewResponse(
     val totalSavedMoney: Money,
     val weeklySavedMoney: Money,
+    val monthlySpendMoney: Money,
     val generationMoneyViewResponse: GenerationMoneyViewResponse
 )
 

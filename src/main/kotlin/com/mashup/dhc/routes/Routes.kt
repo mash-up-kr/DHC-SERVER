@@ -6,6 +6,7 @@ import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
+import com.mashup.dhc.domain.model.calculateSpendMoney
 import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
@@ -429,11 +430,19 @@ private fun Route.analysisView(userService: UserService) {
                 .map { it.missions.calculateSavedMoney() }
                 .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
 
+        val monthlyPastRoutines = userService.getMonthlyPastRoutines(userId = userId, date = baseYearMonth)
+
+        val monthlySpendMoney =
+            monthlyPastRoutines
+                .map { it.missions.calculateSpendMoney() }
+                .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+
         call.respond(
             HttpStatusCode.OK,
             AnalysisViewResponse(
                 totalSavedMoney = user.totalSavedMoney,
                 weeklySavedMoney = weeklySavedMoney,
+                monthlySpendMoney = monthlySpendMoney,
                 generationMoneyViewResponse =
                     GenerationMoneyViewResponse(
                         gender = user.gender,

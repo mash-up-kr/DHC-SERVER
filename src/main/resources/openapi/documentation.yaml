@@ -220,15 +220,19 @@ paths:
                 fortuneDetail: "오늘은 좋은 일이 생길 것입니다"
                 jinxedColor: "빨간색"
                 jinxedColorHex: "#FF0000"
+                jinxedColorImageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-color.png"
                 jinxedMenu: "매운 음식"
+                jinxedMenuImageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-menu.png"
                 jinxedNumber: 4
                 luckyColor: "파란색"
                 luckyColorHex: "#0000FF"
+                luckyColorImageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/lucky-color.png"
                 luckyNumber: 7
                 positiveScore: 80
                 negativeScore: 20
                 totalScore: 60
                 todayMenu: "샐러드"
+                todayMenuImageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/today-menu.png"
                 luckyColorType: "GREEN"
                 jinxedColorType: "RED"
         "404":
@@ -332,6 +336,7 @@ paths:
                   luckyNumber: 7
                   score: 85
                   todayMenu: "샐러드"
+                todayDone: false
 
   /view/users/{userId}/myPage:
     get:
@@ -397,6 +402,7 @@ paths:
               example:
                 totalSavedMoney: "1250.00"
                 weeklySavedMoney: "85.50"
+                monthlySpendMoney: "320.00"
                 generationMoneyViewResponse:
                   generation: "TWENTIES"
                   gender: "MALE"
@@ -681,6 +687,10 @@ components:
         todayDailyFortune:
           $ref: "#/components/schemas/DailyFortune"
           nullable: true
+        todayDone:
+          type: boolean
+          description: "Whether today's missions are completed"
+          example: false
 
     MissionCategoriesResponse:
       type: object
@@ -746,6 +756,7 @@ components:
       required:
         - totalSavedMoney
         - weeklySavedMoney
+        - monthlySpendMoney
         - generationMoneyViewResponse
       properties:
         totalSavedMoney:
@@ -756,6 +767,10 @@ components:
           type: string
           description: "Amount of money saved this week (Money type as string)"
           example: "85.50"
+        monthlySpendMoney:
+          type: string
+          description: "Amount of money spent this month (Money type as string)"
+          example: "320.00"
         generationMoneyViewResponse:
           $ref: "#/components/schemas/GenerationMoneyViewResponse"
           description: "Generation-based spending comparison data"
@@ -1117,15 +1132,19 @@ components:
         - fortuneDetail
         - jinxedColor
         - jinxedColorHex
+        - jinxedColorImageUrl
         - jinxedMenu
+        - jinxedMenuImageUrl
         - jinxedNumber
         - luckyColor
         - luckyColorHex
+        - luckyColorImageUrl
         - luckyNumber
         - positiveScore
         - negativeScore
         - totalScore
         - todayMenu
+        - todayMenuImageUrl
         - luckyColorType
         - jinxedColorType
       properties:
@@ -1149,10 +1168,18 @@ components:
           type: string
           description: "Unlucky color hex code"
           example: "#FF0000"
+        jinxedColorImageUrl:
+          type: string
+          description: "URL of the unlucky color image"
+          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-color.png"
         jinxedMenu:
           type: string
           description: "Food to avoid today"
           example: "매운 음식"
+        jinxedMenuImageUrl:
+          type: string
+          description: "URL of the food to avoid image"
+          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-menu.png"
         jinxedNumber:
           type: integer
           description: "Unlucky number"
@@ -1165,6 +1192,10 @@ components:
           type: string
           description: "Lucky color hex code"
           example: "#0000FF"
+        luckyColorImageUrl:
+          type: string
+          description: "URL of the lucky color image"
+          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/lucky-color.png"
         luckyNumber:
           type: integer
           description: "Lucky number"
@@ -1185,6 +1216,10 @@ components:
           type: string
           description: "Recommended food for today"
           example: "샐러드"
+        todayMenuImageUrl:
+          type: string
+          description: "URL of the recommended food image"
+          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/today-menu.png"
         luckyColorType:
           $ref: "#/components/schemas/FortuneColor"
         jinxedColorType:
