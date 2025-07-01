@@ -22,15 +22,14 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import org.slf4j.LoggerFactory
 
 class GeminiService(
     private val apiKey: String,
-    private val systemInstruction: String
+    private val systemInstruction: String,
+    private val fortuneRepository: FortuneRepository
 ) {
-    companion object {
-        private const val BASE_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
-    }
+    private val logger = LoggerFactory.getLogger(this::class.java)
 
     private val responseSchema: JsonElement by lazy { loadResponseSchema() }
     private val batchResponseSchema: JsonElement by lazy { loadBatchResponseSchema() }
@@ -81,7 +80,15 @@ class GeminiService(
 
         val geminiResponse: GeminiApiResponse = response.body()
         val responseText = geminiResponse.validateAndExtractText()
-        return Json.decodeFromString<GeminiFortuneResponse>(responseText)
+        val geminiFortuneResponse = Json.decodeFromString<GeminiFortuneResponse>(responseText)
+
+        val monthlyFortune = geminiFortuneResponse.toMonthlyFortune()
+        try {
+            monthlyFortune.dailyFortuneList.forEach { fortuneRepository.insertDailyOne(it) }
+        } catch (ex: Exception) {
+            logger.info("daily fortune update failed.")
+        }
+        return geminiFortuneResponse
     }
 
     suspend fun generateBatchFortuneInternal(
@@ -195,6 +202,11 @@ class GeminiService(
                 ?: throw IllegalStateException("gemini-batch-response-schema.json을 찾을 수 없습니다.")
 
         return Json.parseToJsonElement(schemaResource.bufferedReader().use { it.readText() })
+    }
+
+    companion object {
+        private const val BASE_URL =
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
     }
 }
 
