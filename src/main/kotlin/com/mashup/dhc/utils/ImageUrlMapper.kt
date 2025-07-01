@@ -6,7 +6,6 @@ import com.mashup.dhc.routes.COLOR
 object ImageUrlMapper {
     private const val BASE_URL = "https://kr.object.ncloudstorage.com/dhc-object-storage"
 
-
     /**
      * 미션 카테고리 이미지 URL
      */
