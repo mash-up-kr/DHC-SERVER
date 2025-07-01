@@ -118,7 +118,7 @@ fun Route.searchUser(userService: UserService) {
             throw BusinessException(ErrorCode.USER_NOT_FOUND)
         }
 
-        call.respond(HttpStatusCode.OK, user.id.toHexString())
+        call.respond(HttpStatusCode.OK, SearchUserResponse(user.id.toHexString()))
     }
 }
 
@@ -161,7 +161,7 @@ private fun Route.register(userService: UserService) {
             )
 
         if (registeredUserId != null) {
-            call.respond(HttpStatusCode.Created, RegisterUserResponse(registeredUserId.toString()))
+            call.respond(HttpStatusCode.Created, RegisterUserResponse(registeredUserId.toHexString()))
         } else {
             throw BusinessException(ErrorCode.USER_ALREADY_EXISTS)
         }

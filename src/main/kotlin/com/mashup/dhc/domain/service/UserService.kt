@@ -24,7 +24,6 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import org.bson.BsonValue
 import org.bson.types.ObjectId
 
 private const val PEEK_MISSION_SIZE = 3
@@ -54,7 +53,7 @@ class UserService(
         birthDate: BirthDate,
         birthTime: BirthTime?,
         preferredMissionCategoryList: List<MissionCategory>
-    ): BsonValue? =
+    ): ObjectId? =
         transactionService.executeInTransaction { session ->
             if (userRepository.findByUserToken(userToken, session) != null) {
                 throw BusinessException(ErrorCode.CONFLICT)
@@ -70,7 +69,8 @@ class UserService(
                 )
 
             val updatedUser = updateUserMissions(user, session)
-            userRepository.insertOne(updatedUser, session)
+            val insertedId = userRepository.insertOne(updatedUser, session)
+            insertedId?.asObjectId()?.value
         }
 
     suspend fun updateTodayMission(
