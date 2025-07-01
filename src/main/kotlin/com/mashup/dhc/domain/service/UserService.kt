@@ -1,5 +1,6 @@
 package com.mashup.dhc.domain.service
 
+import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
@@ -117,6 +118,17 @@ class UserService(
             }
 
             updated
+        }
+
+    suspend fun updateUserDailyFortune(
+        userId: String,
+        dailyFortune: DailyFortune
+    ): User =
+        transactionService.executeInTransaction { session ->
+            val user = userRepository.findById(ObjectId(userId))!!
+            val updatedUser = user.copy(dailyFortune = dailyFortune)
+            userRepository.updateOne(user.id!!, updatedUser, session)
+            updatedUser
         }
 
     suspend fun summaryTodayMission(
