@@ -68,7 +68,8 @@ fun Application.configureDependencies(): Dependencies {
             pastRoutineHistoryRepository = pastRoutineHistoryRepository,
             missionPicker = missionPicker
         )
-    val geminiService: GeminiService = GeminiService(geminiApiKey, systemInstruction)
+    val geminiService = GeminiService(geminiApiKey, systemInstruction, fortuneRepository)
+    geminiService.startBatchProcessor(backgroundScope)
 
     val fortuneService =
         FortuneService(
