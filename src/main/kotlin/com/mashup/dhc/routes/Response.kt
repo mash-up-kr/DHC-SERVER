@@ -8,6 +8,7 @@ import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
+import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -144,14 +145,18 @@ data class FortuneResponse(
     val fortuneDetail: String,
     val jinxedColor: String,
     val jinxedColorHex: String,
+    val jinxedColorImageUrl: String,
     val jinxedMenu: String,
+    val jinxedMenuImageUrl: String,
     val jinxedNumber: Int,
     val luckyColor: String,
     val luckyColorHex: String,
+    val luckyColorImageUrl: String,
     val luckyNumber: Int,
     val positiveScore: Int,
     val negativeScore: Int,
     val todayMenu: String,
+    val todayMenuImageUrl: String,
     val totalScore: Int,
     val luckyColorType: FortuneColor,
     val jinxedColorType: FortuneColor
@@ -164,15 +169,19 @@ data class FortuneResponse(
                 fortuneDetail = dailyFortune.fortuneDetail,
                 jinxedColor = dailyFortune.jinxedColor,
                 jinxedColorHex = dailyFortune.jinxedColorHex,
+                jinxedColorImageUrl = ImageUrlMapper.Fortune.getJinxedColorImageUrl(),
                 jinxedMenu = dailyFortune.jinxedMenu,
+                jinxedMenuImageUrl = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(),
                 jinxedNumber = dailyFortune.jinxedNumber,
                 jinxedColorType = dailyFortune.jinxedColorType,
                 positiveScore = dailyFortune.positiveScore,
                 negativeScore = dailyFortune.negativeScore,
                 todayMenu = dailyFortune.todayMenu,
+                todayMenuImageUrl = ImageUrlMapper.Fortune.getTodayMenuImageUrl(),
                 totalScore = dailyFortune.totalScore,
                 luckyColor = dailyFortune.luckyColor,
                 luckyColorHex = dailyFortune.luckyColorHex,
+                luckyColorImageUrl = ImageUrlMapper.Fortune.getLuckyColorImageUrl(),
                 luckyColorType = dailyFortune.luckyColorType,
                 luckyNumber = dailyFortune.luckyNumber
             )
