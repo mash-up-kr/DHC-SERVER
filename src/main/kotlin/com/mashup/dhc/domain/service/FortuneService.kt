@@ -82,7 +82,14 @@ class FortuneService(
         requestDate: LocalDate
     ): DailyFortune {
         val user = userService.getUserById(userId)
-        return user.monthlyFortune?.findDailyFortune(requestDate)
+        if (user.dailyFortune == null) {
+            val dailyFortune = fortuneRepository.retrieveDailyFortune()
+            if (dailyFortune != null) {
+                userService.updateUserDailyFortune(user.id!!.toHexString(), dailyFortune)
+            }
+        }
+
+        return user.dailyFortune
             ?: throw BusinessException(ErrorCode.NOT_FOUND)
     }
 }

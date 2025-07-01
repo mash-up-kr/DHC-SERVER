@@ -28,6 +28,7 @@ data class User(
     val todayDailyMissionList: List<Mission> = listOf(),
     val pastRoutineHistoryIds: List<ObjectId> = listOf(),
     val monthlyFortune: MonthlyFortune? = null,
+    val dailyFortune: DailyFortune? = null,
     val currentAmulet: Amulet? = null,
     val totalSavedMoney: Money = Money(BigDecimal.ZERO),
     @Transient val deleted: Boolean = false
@@ -130,6 +131,7 @@ class UserRepository(
                     Updates.set(User::longTermMission.name, user.longTermMission),
                     Updates.set(User::todayDailyMissionList.name, user.todayDailyMissionList),
                     Updates.set(User::pastRoutineHistoryIds.name, user.pastRoutineHistoryIds),
+                    Updates.set(User::dailyFortune.name, user.dailyFortune),
                     Updates.set(User::totalSavedMoney.name, user.totalSavedMoney)
                 )
             val result =
