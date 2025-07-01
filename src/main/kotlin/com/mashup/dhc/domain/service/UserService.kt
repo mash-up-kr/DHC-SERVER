@@ -292,9 +292,11 @@ class MissionPicker(
         session: ClientSession
     ): Mission {
         val peekMissionCategory = preferredMissionCategoryList.random()
-        val randomPeekMission = missionRepository.findByCategory(type, peekMissionCategory, session)
-            .filter { it.id != existingMission?.id }
-            .random()
+        val randomPeekMission =
+            missionRepository
+                .findByCategory(type, peekMissionCategory, session)
+                .filter { it.id != existingMission?.id }
+                .random()
 
         return randomPeekMission
     }

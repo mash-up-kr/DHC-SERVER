@@ -3,7 +3,6 @@ package com.mashup.dhc.routes
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneColor
 import com.mashup.dhc.domain.model.Gender
-import com.mashup.dhc.domain.model.Generation
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
