@@ -1,12 +1,16 @@
 package com.mashup.dhc.domain.model
 
 import com.mashup.dhc.domain.model.UserRepository.Companion.USER_COLLECTION
+import com.mongodb.MongoException
+import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.UpdateOptions
 import com.mongodb.client.model.Updates.set
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.bson.BsonValue
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
@@ -22,17 +26,31 @@ data class MonthlyFortune(
 class FortuneRepository(
     private val database: MongoDatabase
 ) {
+    suspend fun insertDailyOne(dailyFortune: DailyFortune): BsonValue? {
+        try {
+            val result =
+                database
+                    .getCollection<DailyFortune>(FORTUNE_COLLECTION)
+                    .insertOne(dailyFortune)
+            return result.insertedId
+        } catch (e: MongoException) {
+            System.err.println("Unable to insert due to an error: $e")
+        }
+        return null
+    }
+
+    suspend fun retrieveDailyFortune(): DailyFortune? =
+        database
+            .getCollection<DailyFortune>(FORTUNE_COLLECTION)
+            .aggregate<DailyFortune>(listOf(Aggregates.sample(1)))
+            .firstOrNull()
+
     suspend fun upsertMonthlyFortune(
         userId: String,
         monthlyFortune: MonthlyFortune
     ) {
         try {
-            val filter =
-                if (ObjectId.isValid(userId)) {
-                    Filters.eq("_id", ObjectId(userId))
-                } else {
-                    Filters.eq("userToken", userId)
-                }
+            val filter = Filters.eq("_id", ObjectId(userId))
 
             val result =
                 database
@@ -50,6 +68,10 @@ class FortuneRepository(
             e.printStackTrace()
             throw e
         }
+    }
+
+    companion object {
+        const val FORTUNE_COLLECTION = "fortune"
     }
 }
 
