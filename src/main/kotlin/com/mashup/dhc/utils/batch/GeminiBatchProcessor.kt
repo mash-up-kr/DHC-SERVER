@@ -1,6 +1,6 @@
 package com.mashup.dhc.utils.batch
 
-import com.mashup.dhc.domain.model.FortuneRepository
+import com.mashup.dhc.domain.model.MonthlyFortune
 import com.mashup.dhc.domain.service.GeminiFortuneRequest
 import com.mashup.dhc.domain.service.GeminiFortuneResponse
 import com.mashup.dhc.domain.service.GeminiService
@@ -30,7 +30,7 @@ class GeminiBatchProcessor(
         val request: GeminiFortuneRequest,
         val continuation: Continuation<GeminiFortuneResponse>,
         val timestamp: Long = System.currentTimeMillis(),
-        val fortuneRepository: FortuneRepository
+        val monthlyFortuneHandler: suspend (MonthlyFortune) -> Unit
     )
 
     // 서버 시작 시 호출하여 배치 프로세서를 상시 실행
@@ -51,10 +51,11 @@ class GeminiBatchProcessor(
     suspend fun generateFortune(
         userId: String,
         request: GeminiFortuneRequest,
-        fortuneRepository: FortuneRepository
+        monthlyFortuneHandler: suspend (MonthlyFortune) -> Unit
     ): GeminiFortuneResponse =
         suspendCoroutine { continuation ->
-            val batchRequest = BatchRequest(userId, request, continuation, fortuneRepository = fortuneRepository)
+            val batchRequest =
+                BatchRequest(userId, request, continuation, monthlyFortuneHandler = monthlyFortuneHandler)
             pendingRequests.offer(batchRequest)
         }
 
@@ -74,7 +75,7 @@ class GeminiBatchProcessor(
             val response = geminiService.generateFortuneInternal(singleRequest.request)
             val monthlyFortune = response.toMonthlyFortune()
 
-            singleRequest.fortuneRepository.upsertMonthlyFortune(singleRequest.userId, monthlyFortune)
+            singleRequest.monthlyFortuneHandler(monthlyFortune)
             singleRequest.continuation.resume(response)
         } catch (e: Exception) {
             batch.forEach { it.continuation.resumeWithException(e) }

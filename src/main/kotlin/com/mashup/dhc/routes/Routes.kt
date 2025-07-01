@@ -212,7 +212,7 @@ private fun Route.generateDailyFortune(fortuneService: FortuneService) {
 
         try {
             // fortune 생성 작업을 백그라운드에서 실행
-            fortuneService.addFortuneGenerationTask(userId, requestDate.toJavaLocalDate())
+            fortuneService.enqueueGenerateFortuneTask(userId, requestDate.toJavaLocalDate())
 
             call.respond(
                 HttpStatusCode.Accepted,

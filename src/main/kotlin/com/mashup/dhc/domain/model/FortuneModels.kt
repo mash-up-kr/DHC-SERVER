@@ -39,7 +39,7 @@ class FortuneRepository(
         return null
     }
 
-    suspend fun retrieveDailyFortune(): DailyFortune? =
+    suspend fun retrieveArbitraryDailyFortune(): DailyFortune? =
         database
             .getCollection<DailyFortune>(FORTUNE_COLLECTION)
             .aggregate<DailyFortune>(listOf(Aggregates.sample(1)))

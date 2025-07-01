@@ -64,9 +64,11 @@ class GeminiService(
 
     suspend fun generateFortuneWithBatch(
         userId: String,
-        request: GeminiFortuneRequest,
-        fortuneRepository: FortuneRepository
-    ): GeminiFortuneResponse = batchProcessor.generateFortune(userId, request, fortuneRepository)
+        request: GeminiFortuneRequest
+    ): GeminiFortuneResponse =
+        batchProcessor.generateFortune(userId, request) { monthlyFortune ->
+            fortuneRepository.upsertMonthlyFortune(userId, monthlyFortune)
+        }
 
     suspend fun generateFortuneInternal(request: GeminiFortuneRequest): GeminiFortuneResponse {
         val geminiRequest = request.toPrompt().toGeminiRequest()

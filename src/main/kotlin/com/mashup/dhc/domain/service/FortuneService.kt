@@ -14,67 +14,41 @@ class FortuneService(
     private val backgroundScope: CoroutineScope,
     private val userService: UserService,
     private val fortuneRepository: FortuneRepository,
-    private val geminiService: GeminiService
+    private val geminiService: GeminiService,
+    private val mutexManager: MutexManager
 ) {
-    private suspend fun executeFortuneGenerationTask(
-        userId: String,
-        year: Int,
-        month: Int
-    ) {
-        try {
-            val user = userService.getUserById(userId)
-
-            geminiService.generateFortuneWithBatch(
-                userId = userId,
-                request =
-                    GeminiFortuneRequest(
-                        user.gender.toString(),
-                        user.birthDate.toString(),
-                        user.birthTime?.toString()
-                            ?: throw RuntimeException("birthTime이 null입니다. userId: $userId"),
-                        year,
-                        month
-                    ),
-                fortuneRepository = fortuneRepository
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            throw e
-        }
-    }
-
-    suspend fun addFortuneGenerationTask(
+    suspend fun enqueueGenerateFortuneTask(
         userId: String,
         requestDate: LocalDate
     ) {
         val lockKey = "$userId-${requestDate.year}-${requestDate.monthValue}"
 
-        if (!LockRegistry.tryLock(lockKey)) {
-            throw RuntimeException("Lock key is using")
-        }
+        mutexManager.withLock(lockKey) {
+            val user = userService.getUserById(userId)
+            if (user.monthlyFortune?.findDailyFortune(requestDate) != null) {
+                throw RuntimeException("Fortune Cache already exists")
+            }
 
-        if (checkIfFortuneCached(userId, requestDate)) {
-            LockRegistry.unlock(lockKey)
-            throw RuntimeException("Fortune Cache already exists")
-        }
-
-        backgroundScope.launch {
-            LockRegistry.finallyUnlock(lockKey) {
-                executeFortuneGenerationTask(
-                    userId,
-                    requestDate.year,
-                    requestDate.monthValue
-                )
+            backgroundScope.launch {
+                try {
+                    geminiService.generateFortuneWithBatch(
+                        userId = userId,
+                        request =
+                            GeminiFortuneRequest(
+                                user.gender.toString(),
+                                user.birthDate.toString(),
+                                user.birthTime?.toString()
+                                    ?: throw RuntimeException("birthTime이 null입니다. userId: $userId"),
+                                requestDate.year,
+                                requestDate.monthValue
+                            )
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    throw e
+                }
             }
         }
-    }
-
-    private suspend fun checkIfFortuneCached(
-        userId: String,
-        requestDate: LocalDate
-    ): Boolean {
-        val user = userService.getUserById(userId)
-        return user.monthlyFortune?.findDailyFortune(requestDate) != null
     }
 
     suspend fun queryDailyFortune(
@@ -83,7 +57,7 @@ class FortuneService(
     ): DailyFortune {
         var user = userService.getUserById(userId)
         if (user.dailyFortune?.date != requestDate.toYearMonthDayString()) {
-            val dailyFortune = fortuneRepository.retrieveDailyFortune()
+            val dailyFortune = fortuneRepository.retrieveArbitraryDailyFortune()
             if (dailyFortune != null) {
                 user = userService.updateUserDailyFortune(user.id!!.toHexString(), dailyFortune)
             }
