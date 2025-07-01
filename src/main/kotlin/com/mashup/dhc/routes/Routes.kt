@@ -44,30 +44,30 @@ import kotlinx.io.readByteArray
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
         Generation.TEENAGERS to
-            mapOf(
-                Gender.MALE to Money(resolveSpendMoney(22000)),
-                Gender.FEMALE to Money(resolveSpendMoney(31000))
-            ),
+                mapOf(
+                    Gender.MALE to Money(resolveSpendMoney(22000)),
+                    Gender.FEMALE to Money(resolveSpendMoney(31000))
+                ),
         Generation.TWENTIES to
-            mapOf(
-                Gender.MALE to Money(resolveSpendMoney(64000)),
-                Gender.FEMALE to Money(resolveSpendMoney(55000))
-            ),
+                mapOf(
+                    Gender.MALE to Money(resolveSpendMoney(64000)),
+                    Gender.FEMALE to Money(resolveSpendMoney(55000))
+                ),
         Generation.THIRTIES to
-            mapOf(
-                Gender.MALE to Money(resolveSpendMoney(76000)),
-                Gender.FEMALE to Money(resolveSpendMoney(62000))
-            ),
+                mapOf(
+                    Gender.MALE to Money(resolveSpendMoney(76000)),
+                    Gender.FEMALE to Money(resolveSpendMoney(62000))
+                ),
         Generation.FORTIES to
-            mapOf(
-                Gender.MALE to Money(resolveSpendMoney(86000)),
-                Gender.FEMALE to Money(resolveSpendMoney(72000))
-            ),
+                mapOf(
+                    Gender.MALE to Money(resolveSpendMoney(86000)),
+                    Gender.FEMALE to Money(resolveSpendMoney(72000))
+                ),
         Generation.UNKNOWN to
-            mapOf(
-                Gender.MALE to Money(resolveSpendMoney(86000)),
-                Gender.FEMALE to Money(resolveSpendMoney(72000))
-            )
+                mapOf(
+                    Gender.MALE to Money(resolveSpendMoney(86000)),
+                    Gender.FEMALE to Money(resolveSpendMoney(72000))
+                )
     )
 
 private fun resolveSpendMoney(value: Int): Int =
@@ -305,13 +305,20 @@ private fun User.resolveAnimalCard(): AnimalCard {
     val daysFromEpoch = (nowDays - epochStart).days
 
     val middle = COLOR.entries[daysFromEpoch % COLOR.entries.size]
-
     val last = ANIMAL.entries[daysFromEpoch % ANIMAL.entries.size]
 
     return AnimalCard(
         name = "${first.description}의 ${middle.description} ${last.description}",
-        cardImageUrl = ""
+        cardImageUrl = generateAnimalCardImageUrl(middle, last)
     )
+}
+
+private fun generateAnimalCardImageUrl(
+    color: COLOR,
+    animal: ANIMAL
+): String {
+    val baseUrl = "https://kr.object.ncloudstorage.com/dhc-object-storage/logos"
+    return "$baseUrl/${color.englishName}_${animal.englishName}.svg"
 }
 
 private fun Route.logout(userService: UserService) {
@@ -333,30 +340,32 @@ enum class SEASON(
 }
 
 enum class COLOR(
-    val description: String
+    val description: String,
+    val englishName: String
 ) {
-    GREEN("초록"),
-    RED("붉은"),
-    YELLOW("노란"),
-    WHITE("흰"),
-    BLACK("검정")
+    GREEN("초록", "Green"),
+    RED("붉은", "Red"),
+    YELLOW("노란", "Yellow"),
+    WHITE("흰", "White"),
+    BLACK("검정", "Black")
 }
 
 enum class ANIMAL(
-    val description: String
+    val description: String,
+    val englishName: String
 ) {
-    MOUSE("쥐"),
-    COW("소"),
-    TIGER("호랑이"),
-    RABBIT("토끼"),
-    DRAGON("용"),
-    SNAKE("뱀"),
-    HORSE("말"),
-    SHEEP("양"),
-    MONKEY("원숭이"),
-    ROOSTER("닭"),
-    DOG("개"),
-    PIG("돼지")
+    MOUSE("쥐", "Mouse"),
+    COW("소", "Meet"),
+    TIGER("호랑이", "Tiger"),
+    RABBIT("토끼", "Rabbit"),
+    DRAGON("용", "Dragon"),
+    SNAKE("뱀", "Snake"),
+    HORSE("말", "Horse"),
+    SHEEP("양", "Sheep"),
+    MONKEY("원숭이", "Monkey"),
+    ROOSTER("닭", "Chicken"),
+    DOG("개", "Dog"),
+    PIG("돼지", "Pig")
 }
 
 private fun Route.analysisView(userService: UserService) {
@@ -419,7 +428,7 @@ private fun Route.calendarView(userService: UserService) {
                         .filter { it.missions.isNotEmpty() }
                         .sumOf {
                             100 * it.missions.filter { mission -> mission.finished }.size /
-                                (it.missions.size)
+                                    (it.missions.size)
                         }
 
                 val calendarDayMissionViews =
