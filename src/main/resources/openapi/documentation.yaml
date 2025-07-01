@@ -22,16 +22,18 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                description: "User ID"
-              example: "507f1f77bcf86cd799439011"
+                $ref: "#/components/schemas/SearchUserResponse"
+              example:
+                id: "507f1f77bcf86cd799439011"
         "404":
           description: "User not found"
           content:
-            text/plain:
+            application/json:
               schema:
-                type: "string"
-              example: "User not found"
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                message: "User not found"
 
   /api/users/register:
     post:
@@ -63,10 +65,12 @@ paths:
         "409":
           description: "User already exists"
           content:
-            text/plain:
+            application/json:
               schema:
-                type: "string"
-              example: "User already exists"
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 409
+                message: "User already exists"
 
   /api/users/{userId}/missions/{missionId}:
     put:
@@ -124,6 +128,12 @@ paths:
                     endDate: "2024-01-15"
                     title: "오늘 점심은 집에서 해먹기"
                     switchCount: 0
+        "400":
+          description: "Validation error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
 
   /api/users/{userId}/done:
     post:
@@ -173,10 +183,9 @@ paths:
         "404":
           description: "User not found"
           content:
-            text/plain:
+            application/json:
               schema:
-                type: "string"
-              example: "User not found"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/users/{userId}/fortune:
     get:
@@ -225,15 +234,14 @@ paths:
         "404":
           description: "User not found"
           content:
-            text/plain:
+            application/json:
               schema:
-                type: "string"
-              example: "User not found"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/mission-categories:
     get:
       summary: "Get Mission Categories"
-      description: "Get all available mission categories with their names and image URLs"
+      description: "Get all available mission categories with their names and image URLs (excludes SELF_REFLECTION)"
       responses:
         "200":
           description: "Mission categories retrieved successfully"
@@ -363,10 +371,9 @@ paths:
         "404":
           description: "User not found"
           content:
-            text/plain:
+            application/json:
               schema:
-                type: "string"
-              example: "User not found"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /view/users/{userId}/analysis:
     get:
@@ -397,10 +404,9 @@ paths:
         "404":
           description: "User not found"
           content:
-            text/plain:
+            application/json:
               schema:
-                type: "string"
-              example: "User not found"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /view/users/{userId}/calendar:
     get:
@@ -467,10 +473,9 @@ paths:
         "404":
           description: "User not found"
           content:
-            text/plain:
+            application/json:
               schema:
-                type: "string"
-              example: "User not found"
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/storage/upload:
     post:
@@ -507,7 +512,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
-                error: "파일이 없습니다"
+                code: 400
+                message: "파일이 없습니다"
 
   /api/storage/{key}:
     delete:
@@ -531,7 +537,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
-                error: "키가 필요합니다"
+                code: 400
+                message: "키가 필요합니다"
 
   /api/storage/url/{key}:
     get:
@@ -561,7 +568,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
               example:
-                error: "키가 필요합니다"
+                code: 400
+                message: "키가 필요합니다"
 
 components:
   schemas:
@@ -601,6 +609,16 @@ components:
         id:
           type: string
           description: "Generated user ID"
+          example: "507f1f77bcf86cd799439011"
+
+    SearchUserResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: "User ID"
           example: "507f1f77bcf86cd799439011"
 
     ToggleMissionRequest:
@@ -646,7 +664,7 @@ components:
       properties:
         todaySavedMoney:
           type: string
-          description: "Total money saved today"
+          description: "Total money saved today (Money type as string)"
           example: "25.50"
 
     HomeViewResponse:
@@ -673,7 +691,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/MissionCategoryResponse"
-          description: "List of all available mission categories"
+          description: "List of all available mission categories (excludes SELF_REFLECTION)"
 
     MissionCategoryResponse:
       type: object
@@ -720,9 +738,9 @@ components:
           description: "List of preferred mission categories with image URLs"
         alarm:
           type: boolean
-          description: "Whether alarm is enabled"
+          description: "Whether alarm is enabled (hardcoded to true)"
           example: true
-    
+
     AnalysisViewResponse:
       type: object
       required:
@@ -732,16 +750,16 @@ components:
       properties:
         totalSavedMoney:
           type: string
-          description: "Total amount of money saved"
+          description: "Total amount of money saved (Money type as string)"
           example: "1250.00"
         weeklySavedMoney:
           type: string
-          description: "Amount of money saved this week"
+          description: "Amount of money saved this week (Money type as string)"
           example: "85.50"
         generationMoneyViewResponse:
           $ref: "#/components/schemas/GenerationMoneyViewResponse"
           description: "Generation-based spending comparison data"
-    
+
     AnalysisMonthViewResponse:
       type: object
       required:
@@ -764,39 +782,7 @@ components:
           items:
             $ref: "#/components/schemas/CalendarDayMissionView"
           description: "Calendar view of daily missions for this month"
-    
-    UserProfile:
-      type: object
-      required:
-        - id
-        - userToken
-        - gender
-        - preferredMissionCategoryList
-      properties:
-        id:
-          type: string
-          description: "User ID"
-          example: "507f1f77bcf86cd799439011"
-        userToken:
-          type: string
-          description: "User token"
-          example: "user123token"
-        gender:
-          $ref: "#/components/schemas/Gender"
-        birthDate:
-          $ref: "#/components/schemas/BirthDate"
-        birthTime:
-          type: string
-          format: time
-          description: "Birth time in HH:mm:ss format"
-          example: "09:30:00"
-          nullable: true
-        preferredMissionCategoryList:
-          type: array
-          items:
-            $ref: "#/components/schemas/MissionCategory"
-          description: "List of preferred mission categories"
-    
+
     AnimalCard:
       type: object
       required:
@@ -804,14 +790,14 @@ components:
       properties:
         name:
           type: string
-          description: "Animal card name"
+          description: "Animal card name (generated from birth date: season + color + animal)"
           example: "봄의 흰 말"
         cardImageUrl:
           type: string
-          description: "URL of the animal card image"
+          description: "URL of the animal card image (currently empty string)"
           example: ""
           nullable: true
-    
+
     Mission:
       type: object
       required:
@@ -847,13 +833,14 @@ components:
           example: false
         cost:
           type: string
-          description: "Mission cost/reward amount"
+          description: "Mission cost/reward amount (Money type as string)"
           example: "10.00"
         endDate:
           type: string
           format: date
           description: "Mission end date in YYYY-MM-DD format"
           example: "2024-12-31"
+          nullable: true
         title:
           type: string
           description: "Mission title"
@@ -862,7 +849,7 @@ components:
           type: integer
           description: "Number of times mission has been switched"
           example: 0
-    
+
     DailyFortune:
       type: object
       required:
@@ -923,13 +910,13 @@ components:
           type: integer
           minimum: 0
           maximum: 100
-          description: "Fortune score"
+          description: "Fortune score (used in home view)"
           example: 85
         todayMenu:
           type: string
           description: "Recommended food for today"
           example: "샐러드"
-    
+
     Gender:
       type: string
       enum:
@@ -937,7 +924,7 @@ components:
         - FEMALE
       description: "User gender"
       example: "MALE"
-    
+
     BirthDate:
       type: object
       required:
@@ -952,7 +939,7 @@ components:
         calendarType:
           $ref: "#/components/schemas/CalendarType"
       nullable: true
-    
+
     CalendarType:
       type: string
       enum:
@@ -960,7 +947,7 @@ components:
         - LUNAR
       description: "Calendar type for birth date"
       example: "SOLAR"
-    
+
     MissionCategory:
       type: string
       enum:
@@ -970,9 +957,10 @@ components:
         - SHOPPING
         - TRAVEL
         - SOCIAL
-      description: "Mission category"
+        - SELF_REFLECTION
+      description: "Mission category (SELF_REFLECTION is excluded from mission-categories endpoint)"
       example: "FOOD"
-    
+
     MissionType:
       type: string
       enum:
@@ -980,7 +968,7 @@ components:
         - DAILY
       description: "Mission type"
       example: "DAILY"
-    
+
     UploadResponse:
       type: object
       required:
@@ -990,17 +978,62 @@ components:
           type: string
           description: "URL of the uploaded file"
           example: "https://storage.example.com/uploads/file.jpg"
-    
+
     ErrorResponse:
       type: object
       required:
-        - error
+        - code
+        - message
       properties:
-        error:
+        code:
+          type: integer
+          description: "Error code"
+          example: 404
+        message:
           type: string
           description: "Error message"
-          example: "파일이 없습니다"
-    
+          example: "User not found"
+        details:
+          type: string
+          description: "Additional error details"
+          nullable: true
+
+    ValidationErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+        - validationErrors
+      properties:
+        code:
+          type: integer
+          description: "Validation error code"
+          example: 400
+        message:
+          type: string
+          description: "Validation error message"
+          example: "Validation failed"
+        validationErrors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorDetail"
+          description: "List of validation errors"
+
+    ErrorDetail:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          description: "Specific error code"
+          example: 1001
+        message:
+          type: string
+          description: "Specific error message"
+          example: "Invalid field value"
+
     CalendarDayMissionView:
       type: object
       required:
@@ -1051,7 +1084,7 @@ components:
           $ref: "#/components/schemas/Gender"
         averageSpendMoney:
           type: string
-          description: "Average spending money for this generation and gender"
+          description: "Average spending money for this generation and gender (Money type as string)"
           example: "70400.00"
 
     Generation:
