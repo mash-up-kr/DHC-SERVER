@@ -182,6 +182,8 @@ private fun Route.home(userService: UserService) {
                 .toLocalDateTime(TimeZone.currentSystemDefault())
                 .date
 
+        val todayPastRoutines = userService.getTodayPastRoutines(userId, now)
+
         call.respond(
             HttpStatusCode.OK,
             HomeViewResponse(
@@ -190,7 +192,8 @@ private fun Route.home(userService: UserService) {
                 todayDailyFortune =
                     user.monthlyFortune?.dailyFortuneList?.find {
                         it.date == now.toString()
-                    } // toString == "yyyy-MM-dd"
+                    }, // toString == "yyyy-MM-dd"
+                todayDone = todayPastRoutines.isNotEmpty()
             )
         )
     }

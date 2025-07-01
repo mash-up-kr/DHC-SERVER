@@ -254,6 +254,11 @@ class UserService(
             updatedUser
         }
 
+    suspend fun getTodayPastRoutines(
+        userId: String,
+        date: LocalDate
+    ) = getPastRoutineMissionHistoriesBetween(userId, date, date)
+
     suspend fun getWeekPastRoutines(
         userId: String,
         date: LocalDate
