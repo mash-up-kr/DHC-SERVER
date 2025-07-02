@@ -7,6 +7,7 @@ import com.mashup.dhc.domain.model.UserRepository
 import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.GeminiService
 import com.mashup.dhc.domain.service.MissionPicker
+import com.mashup.dhc.domain.service.MutexManager
 import com.mashup.dhc.domain.service.TransactionService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
@@ -31,9 +32,10 @@ data class Dependencies(
 fun Application.configureDependencies(): Dependencies {
     // backgroundScope 애플리케이션 전역에서 사용
     val backgroundScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    val mutexManager = MutexManager()
 
     // 서버 종료 시 backgroundScope 취소
-    environment.monitor.subscribe(ApplicationStopped) {
+    monitor.subscribe(ApplicationStopped) {
         backgroundScope.cancel()
     }
 
@@ -76,7 +78,8 @@ fun Application.configureDependencies(): Dependencies {
             backgroundScope = backgroundScope,
             userService = userService,
             geminiService = geminiService,
-            fortuneRepository = fortuneRepository
+            fortuneRepository = fortuneRepository,
+            mutexManager = mutexManager
         )
 
     // Storage 설정
