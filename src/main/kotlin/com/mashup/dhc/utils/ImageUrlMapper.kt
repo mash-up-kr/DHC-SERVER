@@ -35,12 +35,12 @@ object ImageUrlMapper {
      * 운세 상세 이미지 URL
      */
     object Fortune {
-        fun getJinxedColorImageUrl(): String = "$BASE_URL/fortune-detail/jinxedColor.svg"
+        fun getJinxedColorImageUrl(): String = "$BASE_URL/logos/jinxedColor.svg"
 
-        fun getJinxedMenuImageUrl(): String = "$BASE_URL/fortune-detail/jinxedMenu.svg"
+        fun getJinxedMenuImageUrl(): String = "$BASE_URL/logos/jinxedMenu.svg"
 
-        fun getLuckyColorImageUrl(): String = "$BASE_URL/fortune-detail/luckyColor.svg"
+        fun getLuckyColorImageUrl(): String = "$BASE_URL/logos/luckyColor.svg"
 
-        fun getTodayMenuImageUrl(): String = "$BASE_URL/fortune-detail/todayMenu.svg"
+        fun getTodayMenuImageUrl(): String = "$BASE_URL/logos/todayMenu.svg"
     }
 }
