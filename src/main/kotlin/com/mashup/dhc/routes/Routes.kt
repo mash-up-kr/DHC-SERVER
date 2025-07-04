@@ -188,16 +188,17 @@ private fun Route.home(userService: UserService) {
 
         val todayPastRoutines = userService.getTodayPastRoutines(userId, now)
 
+        val todayDailyFortune =
+            user.dailyFortune ?: user.monthlyFortune?.dailyFortuneList?.find {
+                it.date == now.toString()
+            }
+
         call.respond(
             HttpStatusCode.OK,
             HomeViewResponse(
                 longTermMission = user.longTermMission?.let { MissionResponse.from(it) },
                 todayDailyMissionList = user.todayDailyMissionList.map { MissionResponse.from(it) },
-                todayDailyFortune =
-                    user.dailyFortune ?: user.monthlyFortune?.dailyFortuneList?.find {
-                        it.date == now.toString()
-                    },
-                // toString == "yyyy-MM-dd"
+                todayDailyFortune = todayDailyFortune?.let { FortuneResponse.from(it) }, // FortuneResponse로 변환
                 todayDone = todayPastRoutines.isNotEmpty()
             )
         )

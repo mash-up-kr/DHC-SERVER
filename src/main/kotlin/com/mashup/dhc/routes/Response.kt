@@ -29,7 +29,7 @@ data class SearchUserResponse(
 data class HomeViewResponse(
     val longTermMission: MissionResponse?,
     val todayDailyMissionList: List<MissionResponse>,
-    val todayDailyFortune: DailyFortune?,
+    val todayDailyFortune: FortuneResponse?,
     val todayDone: Boolean
 )
 
