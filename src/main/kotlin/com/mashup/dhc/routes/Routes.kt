@@ -11,17 +11,13 @@ import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
 import com.mashup.dhc.domain.service.now
-import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
 import com.mashup.dhc.utils.Image
 import com.mashup.dhc.utils.ImageFormat
 import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
 import io.ktor.server.application.log
 import io.ktor.server.request.receive
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.application
@@ -30,9 +26,7 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
-import io.ktor.utils.io.readRemaining
 import java.math.BigDecimal
-import java.util.UUID
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -43,7 +37,6 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toLocalDateTime
-import kotlinx.io.readByteArray
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
@@ -547,7 +540,6 @@ private fun Route.getDailyFortune(fortuneService: FortuneService) {
             call.request.queryParameters["date"]
                 ?.let { dateStr -> LocalDate.parse(dateStr) } ?: now()
 
-        // 클라이언트에서 format 파라미터를 받음
         val formatParam = call.request.queryParameters["format"] ?: "svg"
         val format =
             try {
@@ -563,86 +555,5 @@ private fun Route.getDailyFortune(fortuneService: FortuneService) {
                 format
             )
         )
-    }
-}
-
-fun Route.storageRoutes(storage: NaverCloudPlatformObjectStorageAgent) {
-    route("/api/storage") {
-        uploadFile(storage)
-        deleteFile(storage)
-        getFileUrl(storage)
-    }
-}
-
-private fun Route.uploadFile(storage: NaverCloudPlatformObjectStorageAgent) {
-    post("/upload") {
-        val multipart = call.receiveMultipart()
-        var displayLogo: String? = null
-        var fileData: ByteArray? = null
-        var contentType: String? = null
-        var originalFileName: String? = null
-
-        multipart.forEachPart { part ->
-            when (part) {
-                is PartData.FormItem -> {
-                    if (part.name == "displayLogo") {
-                        displayLogo = part.value
-                    }
-                }
-
-                is PartData.FileItem -> {
-                    originalFileName = part.originalFileName ?: "file"
-                    fileData = part.provider().readRemaining().readByteArray()
-                    contentType = part.contentType?.toString()
-                }
-
-                else -> {}
-            }
-            part.dispose()
-        }
-
-        if (fileData == null) {
-            throw BusinessException(ErrorCode.FILE_NOT_FOUND)
-        }
-
-        val key =
-            if (!displayLogo.isNullOrBlank()) {
-                val extension = originalFileName?.substringAfterLast('.', "") ?: ""
-                "logos/${displayLogo}${if (extension.isNotEmpty()) ".$extension" else ""}"
-            } else {
-                "uploads/${UUID.randomUUID()}_$originalFileName"
-            }
-
-        val url =
-            storage.upload(
-                key = key,
-                data = fileData!!,
-                contentType = contentType
-            )
-        call.respond(HttpStatusCode.OK, UploadResponse(url))
-    }
-}
-
-private fun Route.deleteFile(storage: NaverCloudPlatformObjectStorageAgent) {
-    delete("/{key...}") {
-        val key =
-            call.parameters.getAll("key")?.joinToString("/")
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
-        storage.delete(key)
-        call.respond(HttpStatusCode.NoContent)
-    }
-}
-
-private fun Route.getFileUrl(storage: NaverCloudPlatformObjectStorageAgent) {
-    get("/url/{key...}") {
-        val key = call.parameters.getAll("key")?.joinToString("/")
-
-        if (key.isNullOrBlank()) {
-            throw BusinessException(ErrorCode.INVALID_REQUEST)
-        }
-
-        val url = storage.getUrl(key)
-        call.respond(HttpStatusCode.OK, UploadResponse(url))
     }
 }

@@ -10,7 +10,6 @@ import com.mashup.dhc.domain.service.MissionPicker
 import com.mashup.dhc.domain.service.MutexManager
 import com.mashup.dhc.domain.service.TransactionService
 import com.mashup.dhc.domain.service.UserService
-import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import io.ktor.server.application.Application
@@ -24,7 +23,6 @@ import kotlinx.coroutines.cancel
 data class Dependencies(
     val userService: UserService,
     val fortuneService: FortuneService,
-    val storage: NaverCloudPlatformObjectStorageAgent,
     val mongoClient: MongoClient,
     val mongoDatabase: MongoDatabase
 )
@@ -82,14 +80,6 @@ fun Application.configureDependencies(): Dependencies {
             mutexManager = mutexManager
         )
 
-    // Storage 설정
-    val storage =
-        NaverCloudPlatformObjectStorageAgent(
-            accessKey = environment.config.property("ncp.accessKey").getString(),
-            secretKey = environment.config.property("ncp.secretKey").getString(),
-            bucketName = environment.config.property("ncp.bucketName").getString()
-        )
-
     monitor.subscribe(ApplicationStopped) {
         mongoClient.close()
     }
@@ -97,7 +87,6 @@ fun Application.configureDependencies(): Dependencies {
     return Dependencies(
         userService = userService,
         fortuneService = fortuneService,
-        storage = storage,
         mongoClient = mongoClient,
         mongoDatabase = mongoDatabase
     )
