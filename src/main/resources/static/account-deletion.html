@@ -210,8 +210,10 @@
                 <p><strong>⚠️ 삭제된 데이터는 복구할 수 없습니다.</strong></p>
             </div>
             
-            <div class="user-info" id="userInfo">
-                <strong>사용자 ID:</strong> <span id="userIdDisplay">로딩 중...</span>
+            <div class="user-info">
+                <label for="userIdInput" style="display: block; margin-bottom: 8px; font-weight: bold;">사용자 ID를 입력하세요:</label>
+                <input type="text" id="userIdInput" placeholder="사용자 ID를 입력하세요" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; margin-bottom: 12px;">
+                <small style="color: #666; display: block; text-align: left;">앱에서 확인할 수 있는 사용자 ID를 정확히 입력해주세요.</small>
             </div>
             
             <div class="button-group">
@@ -257,21 +259,10 @@
         // 현재 서버 주소를 자동으로 가져오기
         const API_BASE_URL = window.location.origin;
         
-        // URL에서 userId 파싱
-        function getUserIdFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const userId = urlParams.get('userId');
-            
-            if (!userId) {
-                // URL 경로에서 userId 추출 (예: /account-deletion/{userId})
-                const pathSegments = window.location.pathname.split('/');
-                const lastSegment = pathSegments[pathSegments.length - 1];
-                if (lastSegment && lastSegment !== 'account-deletion.html') {
-                    return lastSegment;
-                }
-            }
-            
-            return userId;
+        // 사용자가 입력한 userId 가져오기
+        function getUserIdFromInput() {
+            const userIdInput = document.getElementById('userIdInput');
+            return userIdInput.value.trim();
         }
         
         // 계정 삭제 API 호출
@@ -309,20 +300,23 @@
         
         // 초기화
         document.addEventListener('DOMContentLoaded', function() {
-            const userId = getUserIdFromUrl();
-            
-            if (!userId) {
-                document.getElementById('userIdDisplay').textContent = '사용자 ID를 찾을 수 없습니다.';
-                document.getElementById('deleteBtn').disabled = true;
-                document.getElementById('errorMessage').textContent = 'URL에서 사용자 ID를 찾을 수 없습니다. 올바른 링크를 통해 접근해 주세요.';
-                showScreen('errorScreen');
-                return;
-            }
-            
-            document.getElementById('userIdDisplay').textContent = userId;
-            
             // 계정 삭제 버튼 이벤트
             document.getElementById('deleteBtn').addEventListener('click', async function() {
+                const userId = getUserIdFromInput();
+                
+                if (!userId) {
+                    alert('사용자 ID를 입력해주세요.');
+                    document.getElementById('userIdInput').focus();
+                    return;
+                }
+                
+                // 기본적인 MongoDB ObjectId 형식 검증 (24자리 hex 문자열)
+                if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
+                    alert('올바른 사용자 ID 형식이 아닙니다. 24자리 영문자와 숫자로 구성된 ID를 입력해주세요.');
+                    document.getElementById('userIdInput').focus();
+                    return;
+                }
+                
                 if (!confirm('정말로 계정을 삭제하시겠습니까?\n\n삭제된 데이터는 복구할 수 없습니다.')) {
                     return;
                 }
@@ -347,6 +341,13 @@
             // 재시도 버튼 이벤트
             document.getElementById('retryBtn').addEventListener('click', function() {
                 showScreen('initialScreen');
+            });
+            
+            // Enter 키로 삭제 버튼 실행
+            document.getElementById('userIdInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('deleteBtn').click();
+                }
             });
         });
     </script>
