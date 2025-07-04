@@ -19,9 +19,9 @@ object ImageUrlMapper {
         fun getShoppingImageUrl(format: ImageFormat = ImageFormat.SVG): Image =
             Image.forMissionCategory("shopping", format)
 
-        fun getHobbyImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("hobby", format)
+        fun getTravelImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("travel", format)
 
-        fun getFriendImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("friend", format)
+        fun getSocialImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("social", format)
 
         fun getReflectionImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("", format)
     }

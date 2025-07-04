@@ -45,8 +45,8 @@ enum class MissionCategory(
             FOOD -> ImageUrlMapper.MissionCategory.getFoodImageUrl(format)
             DIGITAL -> ImageUrlMapper.MissionCategory.getDigitalImageUrl(format)
             SHOPPING -> ImageUrlMapper.MissionCategory.getShoppingImageUrl(format)
-            TRAVEL -> ImageUrlMapper.MissionCategory.getHobbyImageUrl(format)
-            SOCIAL -> ImageUrlMapper.MissionCategory.getFriendImageUrl(format)
+            TRAVEL -> ImageUrlMapper.MissionCategory.getTravelImageUrl(format)
+            SOCIAL -> ImageUrlMapper.MissionCategory.getSocialImageUrl(format)
             SELF_REFLECTION -> Image.custom("")
         }
 }
