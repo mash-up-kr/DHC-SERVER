@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계정 삭제 - DHC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+            color: #ff6b6b;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 24px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            color: #856404;
+        }
+
+        .warning-box h3 {
+            color: #d63031;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        .warning-box ul {
+            text-align: left;
+            margin-top: 12px;
+            padding-left: 20px;
+        }
+
+        .warning-box li {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            color: #495057;
+        }
+
+        .user-info strong {
+            color: #2c3e50;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            color: #155724;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            color: #721c24;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .footer {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #eee;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 24px;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">⚠️</div>
+        
+        <h1>계정 삭제 요청</h1>
+        
+        <!-- 초기 화면 -->
+        <div id="initialScreen">
+            <div class="warning-box">
+                <h3>🚨 중요한 안내사항</h3>
+                <p>계정을 삭제하면 다음 데이터가 영구적으로 삭제됩니다:</p>
+                <ul>
+                    <li>개인 정보 (생년월일, 성별 등)</li>
+                    <li>미션 기록 및 진행 상황</li>
+                    <li>운세 정보</li>
+                    <li>저축 금액 및 분석 데이터</li>
+                    <li>기타 모든 앱 사용 데이터</li>
+                </ul>
+                <p><strong>⚠️ 삭제된 데이터는 복구할 수 없습니다.</strong></p>
+            </div>
+            
+            <div class="user-info" id="userInfo">
+                <strong>사용자 ID:</strong> <span id="userIdDisplay">로딩 중...</span>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-danger" id="deleteBtn">계정 삭제</button>
+                <button class="btn btn-secondary" onclick="window.close()">취소</button>
+            </div>
+        </div>
+        
+        <!-- 로딩 화면 -->
+        <div id="loadingScreen" class="hidden">
+            <div class="loading"></div>
+            <p>계정 삭제 처리 중...</p>
+        </div>
+        
+        <!-- 성공 화면 -->
+        <div id="successScreen" class="hidden">
+            <div class="success-message">
+                <h3>✅ 계정 삭제 완료</h3>
+                <p>계정이 성공적으로 삭제되었습니다.</p>
+                <p>모든 데이터가 영구적으로 삭제되었으며, 복구할 수 없습니다.</p>
+            </div>
+            <p>DHC 앱을 이용해 주셔서 감사했습니다.</p>
+        </div>
+        
+        <!-- 에러 화면 -->
+        <div id="errorScreen" class="hidden">
+            <div class="error-message">
+                <h3>❌ 삭제 실패</h3>
+                <p id="errorMessage">계정 삭제 중 오류가 발생했습니다.</p>
+            </div>
+            <div class="button-group">
+                <button class="btn btn-danger" id="retryBtn">다시 시도</button>
+                <button class="btn btn-secondary" onclick="window.close()">닫기</button>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>계정 삭제에 대한 문의사항이 있으시면 고객센터로 연락해 주세요.</p>
+        </div>
+    </div>
+
+    <script>
+        // 현재 서버 주소를 자동으로 가져오기
+        const API_BASE_URL = window.location.origin;
+        
+        // URL에서 userId 파싱
+        function getUserIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userId = urlParams.get('userId');
+            
+            if (!userId) {
+                // URL 경로에서 userId 추출 (예: /account-deletion/{userId})
+                const pathSegments = window.location.pathname.split('/');
+                const lastSegment = pathSegments[pathSegments.length - 1];
+                if (lastSegment && lastSegment !== 'account-deletion.html') {
+                    return lastSegment;
+                }
+            }
+            
+            return userId;
+        }
+        
+        // 계정 삭제 API 호출
+        async function deleteAccount(userId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return { success: true };
+            } catch (error) {
+                console.error('Delete account error:', error);
+                return { 
+                    success: false, 
+                    error: error.message 
+                };
+            }
+        }
+        
+        // 화면 전환 함수
+        function showScreen(screenId) {
+            const screens = ['initialScreen', 'loadingScreen', 'successScreen', 'errorScreen'];
+            screens.forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            const userId = getUserIdFromUrl();
+            
+            if (!userId) {
+                document.getElementById('userIdDisplay').textContent = '사용자 ID를 찾을 수 없습니다.';
+                document.getElementById('deleteBtn').disabled = true;
+                document.getElementById('errorMessage').textContent = 'URL에서 사용자 ID를 찾을 수 없습니다. 올바른 링크를 통해 접근해 주세요.';
+                showScreen('errorScreen');
+                return;
+            }
+            
+            document.getElementById('userIdDisplay').textContent = userId;
+            
+            // 계정 삭제 버튼 이벤트
+            document.getElementById('deleteBtn').addEventListener('click', async function() {
+                if (!confirm('정말로 계정을 삭제하시겠습니까?\n\n삭제된 데이터는 복구할 수 없습니다.')) {
+                    return;
+                }
+                
+                if (!confirm('마지막 확인입니다.\n\n계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.\n정말로 진행하시겠습니까?')) {
+                    return;
+                }
+                
+                showScreen('loadingScreen');
+                
+                const result = await deleteAccount(userId);
+                
+                if (result.success) {
+                    showScreen('successScreen');
+                } else {
+                    document.getElementById('errorMessage').textContent = 
+                        `계정 삭제 중 오류가 발생했습니다: ${result.error}`;
+                    showScreen('errorScreen');
+                }
+            });
+            
+            // 재시도 버튼 이벤트
+            document.getElementById('retryBtn').addEventListener('click', function() {
+                showScreen('initialScreen');
+            });
+        });
+    </script>
+</body>
+</html> 
