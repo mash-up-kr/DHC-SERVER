@@ -1,5 +1,7 @@
 package com.mashup.dhc.domain.model
 
+import com.mashup.dhc.utils.Image
+import com.mashup.dhc.utils.ImageFormat
 import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import com.mongodb.client.model.Filters.and
@@ -37,17 +39,16 @@ enum class MissionCategory(
     SOCIAL("사교·모임"),
     SELF_REFLECTION("회고");
 
-    val imageUrl: String
-        get() =
-            when (this) {
-                TRANSPORTATION -> ImageUrlMapper.MissionCategory.getTransportationImageUrl()
-                FOOD -> ImageUrlMapper.MissionCategory.getFoodImageUrl()
-                DIGITAL -> ImageUrlMapper.MissionCategory.getDigitalImageUrl()
-                SHOPPING -> ImageUrlMapper.MissionCategory.getShoppingImageUrl()
-                TRAVEL -> ImageUrlMapper.MissionCategory.getHobbyImageUrl()
-                SOCIAL -> ImageUrlMapper.MissionCategory.getFriendImageUrl()
-                SELF_REFLECTION -> ""
-            }
+    fun imageUrl(format: ImageFormat = ImageFormat.SVG): Image =
+        when (this) {
+            TRANSPORTATION -> ImageUrlMapper.MissionCategory.getTransportationImageUrl(format)
+            FOOD -> ImageUrlMapper.MissionCategory.getFoodImageUrl(format)
+            DIGITAL -> ImageUrlMapper.MissionCategory.getDigitalImageUrl(format)
+            SHOPPING -> ImageUrlMapper.MissionCategory.getShoppingImageUrl(format)
+            TRAVEL -> ImageUrlMapper.MissionCategory.getHobbyImageUrl(format)
+            SOCIAL -> ImageUrlMapper.MissionCategory.getFriendImageUrl(format)
+            SELF_REFLECTION -> Image.custom("")
+        }
 }
 
 enum class MissionType {

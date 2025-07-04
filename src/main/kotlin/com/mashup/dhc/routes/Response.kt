@@ -8,6 +8,8 @@ import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
+import com.mashup.dhc.utils.Image
+import com.mashup.dhc.utils.ImageFormat
 import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
@@ -73,14 +75,17 @@ data class ToggleMissionResponse(
 data class MissionCategoryResponse(
     val name: String,
     val displayName: String,
-    val imageUrl: String
+    val image: Image
 ) {
     companion object {
-        fun from(category: MissionCategory): MissionCategoryResponse =
+        fun from(
+            category: MissionCategory,
+            format: ImageFormat = ImageFormat.SVG
+        ): MissionCategoryResponse =
             MissionCategoryResponse(
                 name = category.name,
                 displayName = category.displayName,
-                imageUrl = category.imageUrl
+                image = category.imageUrl(format)
             )
     }
 }
@@ -97,7 +102,7 @@ data class MyPageResponse(
 @Serializable
 data class AnimalCard(
     val name: String,
-    val cardImageUrl: String?
+    val cardImage: Image?
 )
 
 @Serializable
@@ -147,43 +152,46 @@ data class FortuneResponse(
     val fortuneDetail: String,
     val jinxedColor: String,
     val jinxedColorHex: String,
-    val jinxedColorImageUrl: String,
+    val jinxedColorImage: Image,
     val jinxedMenu: String,
-    val jinxedMenuImageUrl: String,
+    val jinxedMenuImage: Image,
     val jinxedNumber: Int,
     val luckyColor: String,
     val luckyColorHex: String,
-    val luckyColorImageUrl: String,
+    val luckyColorImage: Image,
     val luckyNumber: Int,
     val positiveScore: Int,
     val negativeScore: Int,
     val todayMenu: String,
-    val todayMenuImageUrl: String,
+    val todayMenuImage: Image,
     val totalScore: Int,
     val luckyColorType: FortuneColor,
     val jinxedColorType: FortuneColor
 ) {
     companion object {
-        fun from(dailyFortune: DailyFortune): FortuneResponse =
+        fun from(
+            dailyFortune: DailyFortune,
+            format: ImageFormat = ImageFormat.SVG
+        ): FortuneResponse =
             FortuneResponse(
                 date = dailyFortune.date,
                 fortuneTitle = dailyFortune.fortuneTitle,
                 fortuneDetail = dailyFortune.fortuneDetail,
                 jinxedColor = dailyFortune.jinxedColor,
                 jinxedColorHex = dailyFortune.jinxedColorHex,
-                jinxedColorImageUrl = ImageUrlMapper.Fortune.getJinxedColorImageUrl(),
+                jinxedColorImage = ImageUrlMapper.Fortune.getJinxedColorImageUrl(format),
                 jinxedMenu = dailyFortune.jinxedMenu,
-                jinxedMenuImageUrl = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(),
+                jinxedMenuImage = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(format),
                 jinxedNumber = dailyFortune.jinxedNumber,
                 jinxedColorType = dailyFortune.jinxedColorType,
                 positiveScore = dailyFortune.positiveScore,
                 negativeScore = dailyFortune.negativeScore,
                 todayMenu = dailyFortune.todayMenu,
-                todayMenuImageUrl = ImageUrlMapper.Fortune.getTodayMenuImageUrl(),
+                todayMenuImage = ImageUrlMapper.Fortune.getTodayMenuImageUrl(format),
                 totalScore = dailyFortune.totalScore,
                 luckyColor = dailyFortune.luckyColor,
                 luckyColorHex = dailyFortune.luckyColorHex,
-                luckyColorImageUrl = ImageUrlMapper.Fortune.getLuckyColorImageUrl(),
+                luckyColorImage = ImageUrlMapper.Fortune.getLuckyColorImageUrl(format),
                 luckyColorType = dailyFortune.luckyColorType,
                 luckyNumber = dailyFortune.luckyNumber
             )

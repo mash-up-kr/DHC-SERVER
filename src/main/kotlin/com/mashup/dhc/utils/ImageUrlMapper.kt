@@ -4,23 +4,26 @@ import com.mashup.dhc.routes.ANIMAL
 import com.mashup.dhc.routes.COLOR
 
 object ImageUrlMapper {
-    private const val BASE_URL = "https://kr.object.ncloudstorage.com/dhc-object-storage"
-
     /**
      * 미션 카테고리 이미지 URL
      */
     object MissionCategory {
-        fun getTransportationImageUrl(): String = "$BASE_URL/logos/transportaion.png"
+        fun getTransportationImageUrl(format: ImageFormat = ImageFormat.SVG): Image =
+            Image.forMissionCategory("transportation", format)
 
-        fun getFoodImageUrl(): String = "$BASE_URL/logos/food.png"
+        fun getFoodImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("food", format)
 
-        fun getDigitalImageUrl(): String = "$BASE_URL/logos/digital.png"
+        fun getDigitalImageUrl(format: ImageFormat = ImageFormat.SVG): Image =
+            Image.forMissionCategory("digital", format)
 
-        fun getShoppingImageUrl(): String = "$BASE_URL/logos/shopping.png"
+        fun getShoppingImageUrl(format: ImageFormat = ImageFormat.SVG): Image =
+            Image.forMissionCategory("shopping", format)
 
-        fun getHobbyImageUrl(): String = "$BASE_URL/logos/hobby.png"
+        fun getHobbyImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("hobby", format)
 
-        fun getFriendImageUrl(): String = "$BASE_URL/logos/friend.png"
+        fun getFriendImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("friend", format)
+
+        fun getReflectionImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forMissionCategory("", format)
     }
 
     /**
@@ -28,19 +31,21 @@ object ImageUrlMapper {
      */
     fun getAnimalCardImageUrl(
         color: COLOR,
-        animal: ANIMAL
-    ): String = "$BASE_URL/logos/${color.englishName}_${animal.englishName}.svg"
+        animal: ANIMAL,
+        format: ImageFormat = ImageFormat.SVG
+    ): Image = Image.forAnimalCard(color.englishName, animal.englishName, format)
 
     /**
      * 운세 상세 이미지 URL
      */
     object Fortune {
-        fun getJinxedColorImageUrl(): String = "$BASE_URL/logos/jinxedColor.svg"
+        fun getJinxedColorImageUrl(format: ImageFormat = ImageFormat.SVG): Image =
+            Image.forFortune("jinxedColor", format)
 
-        fun getJinxedMenuImageUrl(): String = "$BASE_URL/logos/jinxedMenu.svg"
+        fun getJinxedMenuImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("jinxedMenu", format)
 
-        fun getLuckyColorImageUrl(): String = "$BASE_URL/logos/luckyColor.svg"
+        fun getLuckyColorImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("luckyColor", format)
 
-        fun getTodayMenuImageUrl(): String = "$BASE_URL/logos/todayMenu.svg"
+        fun getTodayMenuImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("todayMenu", format)
     }
 }
