@@ -191,9 +191,10 @@ private fun Route.home(userService: UserService) {
                 longTermMission = user.longTermMission?.let { MissionResponse.from(it) },
                 todayDailyMissionList = user.todayDailyMissionList.map { MissionResponse.from(it) },
                 todayDailyFortune =
-                    user.monthlyFortune?.dailyFortuneList?.find {
+                    user.dailyFortune ?: user.monthlyFortune?.dailyFortuneList?.find {
                         it.date == now.toString()
-                    }, // toString == "yyyy-MM-dd"
+                    },
+                // toString == "yyyy-MM-dd"
                 todayDone = todayPastRoutines.isNotEmpty()
             )
         )

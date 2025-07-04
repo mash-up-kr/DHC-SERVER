@@ -4,11 +4,9 @@ import com.mashup.dhc.probe.probeRoute
 import com.mashup.dhc.routes.storageRoutes
 import com.mashup.dhc.routes.userRoutes
 import io.ktor.server.application.Application
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.swagger.swaggerUI
 import io.ktor.server.routing.routing
-import io.ktor.server.http.content.resources
-import io.ktor.server.http.content.static
-import io.ktor.server.http.content.staticResources
 
 fun Application.configureRouting(dependencies: Dependencies) {
     routing {
@@ -16,7 +14,7 @@ fun Application.configureRouting(dependencies: Dependencies) {
         userRoutes(dependencies.userService, dependencies.fortuneService)
         storageRoutes(dependencies.storage)
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
-        
+
         // 정적 파일 제공
         staticResources("/static", "static")
     }
