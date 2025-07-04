@@ -12,6 +12,8 @@ import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
 import com.mashup.dhc.domain.service.now
 import com.mashup.dhc.external.NaverCloudPlatformObjectStorageAgent
+import com.mashup.dhc.utils.Image
+import com.mashup.dhc.utils.ImageFormat
 import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import io.ktor.http.HttpStatusCode
@@ -133,10 +135,18 @@ fun Route.missionCategoriesRoutes() {
 
 private fun Route.getMissionCategories() {
     get {
+        val formatParam = call.request.queryParameters["format"] ?: "svg"
+        val format =
+            try {
+                ImageFormat.valueOf(formatParam.uppercase())
+            } catch (e: IllegalArgumentException) {
+                ImageFormat.SVG
+            }
+
         val categories =
             MissionCategory.entries
                 .filter { category -> category != MissionCategory.SELF_REFLECTION }
-                .map { category -> MissionCategoryResponse.from(category) }
+                .map { category -> MissionCategoryResponse.from(category, format) }
 
         call.respond(
             HttpStatusCode.OK,
@@ -320,20 +330,28 @@ private fun Route.myPage(userService: UserService) {
         val userId = call.pathParameters["userId"]!!
         val user = userService.getUserById(userId)
 
+        val formatParam = call.request.queryParameters["format"] ?: "svg"
+        val format =
+            try {
+                ImageFormat.valueOf(formatParam.uppercase())
+            } catch (e: IllegalArgumentException) {
+                ImageFormat.SVG
+            }
+
         call.respond(
             HttpStatusCode.OK,
             MyPageResponse(
-                user.resolveAnimalCard(),
+                user.resolveAnimalCard(format),
                 user.birthDate,
                 user.birthTime,
-                user.preferredMissionCategoryList.map { MissionCategoryResponse.from(it) },
+                user.preferredMissionCategoryList.map { MissionCategoryResponse.from(it, format) },
                 true // TODO: alarm
             )
         )
     }
 }
 
-private fun User.resolveAnimalCard(): AnimalCard {
+private fun User.resolveAnimalCard(format: ImageFormat = ImageFormat.SVG): AnimalCard {
     val first =
         when (this.birthDate.date.month) {
             Month.DECEMBER, Month.JANUARY, Month.FEBRUARY -> SEASON.SPRING
@@ -346,7 +364,7 @@ private fun User.resolveAnimalCard(): AnimalCard {
         Instant
             .fromEpochSeconds(0)
             .toLocalDateTime(TimeZone.currentSystemDefault())
-            .date // 1970-01-01 UTC
+            .date
     val nowDays = this.birthDate.date
 
     val daysFromEpoch = (nowDays - epochStart).days
@@ -356,14 +374,15 @@ private fun User.resolveAnimalCard(): AnimalCard {
 
     return AnimalCard(
         name = "${first.description}의 ${middle.description} ${last.description}",
-        cardImageUrl = generateAnimalCardImageUrl(middle, last)
+        cardImage = generateAnimalCardImageUrl(middle, last, format)
     )
 }
 
 private fun generateAnimalCardImageUrl(
     color: COLOR,
-    animal: ANIMAL
-): String = ImageUrlMapper.getAnimalCardImageUrl(color, animal)
+    animal: ANIMAL,
+    format: ImageFormat = ImageFormat.SVG
+): Image = ImageUrlMapper.getAnimalCardImageUrl(color, animal, format)
 
 private fun Route.logout(userService: UserService) {
     delete("/{userId}") {
@@ -528,9 +547,21 @@ private fun Route.getDailyFortune(fortuneService: FortuneService) {
             call.request.queryParameters["date"]
                 ?.let { dateStr -> LocalDate.parse(dateStr) } ?: now()
 
+        // 클라이언트에서 format 파라미터를 받음
+        val formatParam = call.request.queryParameters["format"] ?: "svg"
+        val format =
+            try {
+                ImageFormat.valueOf(formatParam.uppercase())
+            } catch (e: IllegalArgumentException) {
+                ImageFormat.SVG
+            }
+
         call.respond(
             HttpStatusCode.OK,
-            FortuneResponse.from(fortuneService.queryDailyFortune(userId, requestDate.toJavaLocalDate()))
+            FortuneResponse.from(
+                fortuneService.queryDailyFortune(userId, requestDate.toJavaLocalDate()),
+                format
+            )
         )
     }
 }
