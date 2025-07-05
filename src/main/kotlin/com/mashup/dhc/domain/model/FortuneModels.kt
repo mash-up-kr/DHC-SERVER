@@ -117,3 +117,70 @@ enum class FortuneColor(
                 ?: throw IllegalArgumentException("$description is not a valid color")
     }
 }
+
+data class DailyFortuneResponse(
+    val date: String,
+    val fortuneTitle: String,
+    val fortuneDetail: String,
+    val totalScore: Int,
+    val positiveScore: Int,
+    val negativeScore: Int,
+    val tips: List<FortuneTip>,
+    val cardInfo: FortuneCard
+)
+
+fun DailyFortune.toResponse(): DailyFortuneResponse {
+    val jinxedColor = FortuneTip(
+        imageURL = "temp",
+        title = "피해야 할 색상",
+        description = jinxedColor,
+        hexColor = jinxedColorHex,
+    )
+
+    val jinxedMenu = FortuneTip(
+        imageURL = "temp",
+        title = "피해야 할 색상",
+        description = jinxedMenu,
+    )
+
+    val todayMenu = FortuneTip(
+        imageURL = "temp",
+        title = "오늘의 추천메뉴",
+        description = todayMenu,
+    )
+
+    val luckyColor = FortuneTip(
+        imageURL = "temp",
+        title =  "행운의 색상",
+        description = luckyColor,
+        hexColor = luckyColorHex,
+    )
+
+    return DailyFortuneResponse(
+        date = date,
+        fortuneTitle = fortuneTitle,
+        fortuneDetail = fortuneDetail,
+        totalScore = totalScore,
+        tips = listOf(todayMenu, luckyColor, jinxedColor, jinxedMenu),
+        cardInfo = FortuneCard(
+            imageURL = "temp",
+            title = "최고의 날",
+            subTitle = "네잎클로버"
+        ),
+        positiveScore = positiveScore,
+        negativeScore = negativeScore,
+    )
+}
+
+data class FortuneTip(
+    val imageURL: String,
+    val title: String,
+    val description: String,
+    val hexColor: String? = null,
+)
+
+data class FortuneCard(
+    val imageURL: String,
+    val title: String,
+    val subTitle: String,
+)
