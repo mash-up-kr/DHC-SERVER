@@ -1,8 +1,10 @@
 package com.mashup.dhc.domain.service
 
 import com.mashup.dhc.domain.model.DailyFortune
+import com.mashup.dhc.domain.model.DailyFortuneResponse
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
+import com.mashup.dhc.domain.model.toResponse
 import com.mashup.dhc.routes.BusinessException
 import com.mashup.dhc.routes.ErrorCode
 import java.time.LocalDate
@@ -54,7 +56,7 @@ class FortuneService(
     suspend fun queryDailyFortune(
         userId: String,
         requestDate: LocalDate
-    ): DailyFortune {
+    ): DailyFortuneResponse {
         var user = userService.getUserById(userId)
         if (user.dailyFortune?.date != requestDate.toYearMonthDayString()) {
             val dailyFortune = fortuneRepository.retrieveArbitraryDailyFortune()
@@ -63,7 +65,8 @@ class FortuneService(
             }
         }
 
-        return user.dailyFortune?.copy(date = requestDate.toYearMonthDayString())
+        return user.dailyFortune
+            ?.toResponse()?.copy(date = requestDate.toYearMonthDayString())
             ?: throw BusinessException(ErrorCode.NOT_FOUND)
     }
 }
