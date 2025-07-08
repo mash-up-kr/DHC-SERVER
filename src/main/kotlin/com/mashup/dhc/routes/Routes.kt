@@ -35,7 +35,6 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toLocalDateTime
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
@@ -92,7 +91,7 @@ fun Route.userRoutes(
         getDailyFortune(fortuneService)
     }
     route("/view/users/{userId}") {
-        home(userService)
+        home(userService, fortuneService)
         myPage(userService)
         analysisView(userService)
         calendarView(userService)
@@ -174,7 +173,10 @@ private fun Route.register(userService: UserService) {
     }
 }
 
-private fun Route.home(userService: UserService) {
+private fun Route.home(
+    userService: UserService,
+    fortuneService: FortuneService
+) {
     get("/home") {
         val userId = call.pathParameters["userId"] ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
@@ -188,10 +190,7 @@ private fun Route.home(userService: UserService) {
 
         val todayPastRoutines = userService.getTodayPastRoutines(userId, now)
 
-        val todayDailyFortune =
-            user.dailyFortune ?: user.monthlyFortune?.dailyFortuneList?.find {
-                it.date == now.toString()
-            }
+        val todayDailyFortune = fortuneService.queryDailyFortune(userId, now)
 
         call.respond(
             HttpStatusCode.OK,
@@ -217,7 +216,7 @@ private fun Route.generateDailyFortune(fortuneService: FortuneService) {
 
         try {
             // fortune 생성 작업을 백그라운드에서 실행
-            fortuneService.enqueueGenerateFortuneTask(userId, requestDate.toJavaLocalDate())
+            fortuneService.enqueueGenerateFortuneTask(userId, requestDate)
 
             call.respond(
                 HttpStatusCode.Accepted,
@@ -552,7 +551,7 @@ private fun Route.getDailyFortune(fortuneService: FortuneService) {
         call.respond(
             HttpStatusCode.OK,
             FortuneResponse.from(
-                fortuneService.queryDailyFortune(userId, requestDate.toJavaLocalDate()),
+                fortuneService.queryDailyFortune(userId, requestDate),
                 format
             )
         )

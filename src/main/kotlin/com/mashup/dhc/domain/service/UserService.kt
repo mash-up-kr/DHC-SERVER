@@ -224,6 +224,7 @@ class UserService(
                             .pickMission(
                                 existingMission = todayMission,
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
+                                luckTotalScore = user.dailyFortune!!.totalScore,
                                 session = session
                             ).copy(switchCount = todayMission.switchCount + 1)
                     }
@@ -243,6 +244,7 @@ class UserService(
                                 existingMission = it,
                                 type = MissionType.LONG_TERM,
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
+                                luckTotalScore = user.dailyFortune!!.totalScore,
                                 session
                             ).copy(switchCount = it.switchCount + 1)
                     }
@@ -306,6 +308,7 @@ class MissionPicker(
         existingMission: Mission? = null,
         type: MissionType = MissionType.DAILY,
         preferredMissionCategoryList: List<MissionCategory>,
+        luckTotalScore: Int = 0,
         session: ClientSession
     ): Mission {
         val peekMissionCategory = preferredMissionCategoryList.random()
@@ -313,10 +316,23 @@ class MissionPicker(
             missionRepository
                 .findByCategory(type, peekMissionCategory, session)
                 .filter { it.id != existingMission?.id }
-                .random()
+                .filter {
+                    Difficulty.entries[it.difficulty - 1].let { difficulty: Difficulty ->
+                        luckTotalScore in difficulty.minValue..difficulty.maxValue
+                    }
+                }.random()
 
         return randomPeekMission
     }
+}
+
+enum class Difficulty(
+    val minValue: Int,
+    val maxValue: Int
+) {
+    EASY(0, 33),
+    MIDDLE(34, 67),
+    HARD(68, 100)
 }
 
 fun now() =

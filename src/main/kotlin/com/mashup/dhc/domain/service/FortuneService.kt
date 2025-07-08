@@ -3,12 +3,9 @@ package com.mashup.dhc.domain.service
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
-import com.mashup.dhc.routes.BusinessException
-import com.mashup.dhc.routes.ErrorCode
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 class FortuneService(
     private val backgroundScope: CoroutineScope,
@@ -21,7 +18,7 @@ class FortuneService(
         userId: String,
         requestDate: LocalDate
     ) {
-        val lockKey = "$userId-${requestDate.year}-${requestDate.monthValue}"
+        val lockKey = "$userId-${requestDate.year}-${requestDate.monthNumber}"
 
         mutexManager.withLock(lockKey) {
             val user = userService.getUserById(userId)
@@ -40,7 +37,7 @@ class FortuneService(
                                 user.birthTime?.toString()
                                     ?: throw RuntimeException("birthTime이 null입니다. userId: $userId"),
                                 requestDate.year,
-                                requestDate.monthValue
+                                requestDate.monthNumber
                             )
                     )
                 } catch (e: Exception) {
@@ -63,13 +60,12 @@ class FortuneService(
             }
         }
 
-        return user.dailyFortune?.copy(date = requestDate.toYearMonthDayString())
-            ?: throw BusinessException(ErrorCode.NOT_FOUND)
+        return user.dailyFortune?.copy(date = requestDate.toYearMonthDayString())!!
     }
 }
 
 private fun MonthlyFortune.findDailyFortune(targetDate: LocalDate): DailyFortune? {
-    val targetDateStr = targetDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+    val targetDateStr = targetDate.toYearMonthDayString()
     return dailyFortuneList.find { it.date == targetDateStr }
 }
 
