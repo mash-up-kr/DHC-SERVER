@@ -48,4 +48,12 @@ object ImageUrlMapper {
 
         fun getTodayMenuImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("todayMenu", format)
     }
+
+    /**
+     * 홈 화면 운세 이미지 URL
+     */
+    object MainCard {
+        fun getFourLeafClover(format: ImageFormat = ImageFormat.PNG): Image =
+            Image.forMainCard("fourLeafClover", format)
+    }
 }

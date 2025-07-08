@@ -46,6 +46,15 @@ value class Image(
         ): Image = Image("$BASE_URL/logos/fortune/${format.extension}/$fortuneType.${format.extension}")
 
         /**
+         * 홈 화면 운세 이미지 URL 생성
+         * 폴더 구조: /logos/mainCard/{format}/{fortuneType}.{extension}
+         */
+        fun forMainCard(
+            fortuneType: String,
+            format: ImageFormat = ImageFormat.SVG
+        ): Image = Image("$BASE_URL/logos/mainCard/${format.extension}/$fortuneType.${format.extension}")
+
+        /**
          * 빈 문자열의 경우 그대로 유지
          */
         fun custom(path: String): Image =
