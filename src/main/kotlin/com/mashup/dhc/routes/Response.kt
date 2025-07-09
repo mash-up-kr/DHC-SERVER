@@ -11,6 +11,7 @@ import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Image
 import com.mashup.dhc.utils.ImageFormat
 import com.mashup.dhc.utils.ImageUrlMapper
+import com.mashup.dhc.utils.ImageUrlMapper.MainCard.getFourLeafClover
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -166,7 +167,8 @@ data class FortuneResponse(
     val todayMenuImage: Image,
     val totalScore: Int,
     val luckyColorType: FortuneColor,
-    val jinxedColorType: FortuneColor
+    val jinxedColorType: FortuneColor,
+    val fortuneCardImage: Image,
 ) {
     companion object {
         fun from(
@@ -193,7 +195,8 @@ data class FortuneResponse(
                 luckyColorHex = dailyFortune.luckyColorHex,
                 luckyColorImage = ImageUrlMapper.Fortune.getLuckyColorImageUrl(format),
                 luckyColorType = dailyFortune.luckyColorType,
-                luckyNumber = dailyFortune.luckyNumber
+                luckyNumber = dailyFortune.luckyNumber,
+                fortuneCardImage = getFourLeafClover() // TODO: 디자인 작업 완료 후 교체
             )
     }
 }
