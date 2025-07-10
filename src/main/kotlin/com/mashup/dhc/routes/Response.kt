@@ -169,6 +169,8 @@ data class FortuneResponse(
     val luckyColorType: FortuneColor,
     val jinxedColorType: FortuneColor,
     val fortuneCardImage: Image,
+    val fortuneCardTitle: String,
+    val fortuneCardSubTitle: String,
 ) {
     companion object {
         fun from(
@@ -196,7 +198,9 @@ data class FortuneResponse(
                 luckyColorImage = ImageUrlMapper.Fortune.getLuckyColorImageUrl(format),
                 luckyColorType = dailyFortune.luckyColorType,
                 luckyNumber = dailyFortune.luckyNumber,
-                fortuneCardImage = getFourLeafClover() // TODO: 디자인 작업 완료 후 교체
+                fortuneCardImage = getFourLeafClover(), // TODO: 디자인 작업 완료 후 교체
+                fortuneCardTitle = "네잎클로버", // TODO: 디자인 작업 완료 후 교체
+                fortuneCardSubTitle = "최고의 날" // TODO: 디자인 작업 완료 후 교체
             )
     }
 }
