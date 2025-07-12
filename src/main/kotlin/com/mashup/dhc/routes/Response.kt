@@ -1,7 +1,6 @@
 package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.DailyFortune
-import com.mashup.dhc.domain.model.FortuneColor
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
@@ -10,7 +9,6 @@ import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Image
 import com.mashup.dhc.utils.ImageFormat
-import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.ImageUrlMapper.MainCard.getFourLeafClover
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
@@ -150,27 +148,12 @@ data class UploadResponse(
 data class FortuneResponse(
     val date: String,
     val fortuneTitle: String,
-    val fortuneDetail: String,
-    val jinxedColor: String,
-    val jinxedColorHex: String,
-    val jinxedColorImage: Image,
-    val jinxedMenu: String,
-    val jinxedMenuImage: Image,
-    val jinxedNumber: Int,
-    val luckyColor: String,
-    val luckyColorHex: String,
-    val luckyColorImage: Image,
-    val luckyNumber: Int,
     val positiveScore: Int,
     val negativeScore: Int,
-    val todayMenu: String,
-    val todayMenuImage: Image,
     val totalScore: Int,
-    val luckyColorType: FortuneColor,
-    val jinxedColorType: FortuneColor,
     val fortuneCardImage: Image,
     val fortuneCardTitle: String,
-    val fortuneCardSubTitle: String,
+    val fortuneCardSubTitle: String
 ) {
     companion object {
         fun from(
@@ -180,24 +163,9 @@ data class FortuneResponse(
             FortuneResponse(
                 date = dailyFortune.date,
                 fortuneTitle = dailyFortune.fortuneTitle,
-                fortuneDetail = dailyFortune.fortuneDetail,
-                jinxedColor = dailyFortune.jinxedColor,
-                jinxedColorHex = dailyFortune.jinxedColorHex,
-                jinxedColorImage = ImageUrlMapper.Fortune.getJinxedColorImageUrl(format),
-                jinxedMenu = dailyFortune.jinxedMenu,
-                jinxedMenuImage = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(format),
-                jinxedNumber = dailyFortune.jinxedNumber,
-                jinxedColorType = dailyFortune.jinxedColorType,
                 positiveScore = dailyFortune.positiveScore,
                 negativeScore = dailyFortune.negativeScore,
-                todayMenu = dailyFortune.todayMenu,
-                todayMenuImage = ImageUrlMapper.Fortune.getTodayMenuImageUrl(format),
                 totalScore = dailyFortune.totalScore,
-                luckyColor = dailyFortune.luckyColor,
-                luckyColorHex = dailyFortune.luckyColorHex,
-                luckyColorImage = ImageUrlMapper.Fortune.getLuckyColorImageUrl(format),
-                luckyColorType = dailyFortune.luckyColorType,
-                luckyNumber = dailyFortune.luckyNumber,
                 fortuneCardImage = getFourLeafClover(), // TODO: 디자인 작업 완료 후 교체
                 fortuneCardTitle = "네잎클로버", // TODO: 디자인 작업 완료 후 교체
                 fortuneCardSubTitle = "최고의 날" // TODO: 디자인 작업 완료 후 교체
