@@ -7,6 +7,7 @@ import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.model.calculateSpendMoney
+import com.mashup.dhc.domain.model.toResponse
 import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
@@ -540,20 +541,9 @@ private fun Route.getDailyFortune(fortuneService: FortuneService) {
             call.request.queryParameters["date"]
                 ?.let { dateStr -> LocalDate.parse(dateStr) } ?: now()
 
-        val formatParam = call.request.queryParameters["format"] ?: "svg"
-        val format =
-            try {
-                ImageFormat.valueOf(formatParam.uppercase())
-            } catch (e: IllegalArgumentException) {
-                ImageFormat.SVG
-            }
-
         call.respond(
             HttpStatusCode.OK,
-            FortuneResponse.from(
-                fortuneService.queryDailyFortune(userId, requestDate),
-                format
-            )
+            fortuneService.queryDailyFortune(userId, requestDate).toResponse()
         )
     }
 }

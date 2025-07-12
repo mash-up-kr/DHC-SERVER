@@ -1,6 +1,9 @@
 package com.mashup.dhc.domain.model
 
 import com.mashup.dhc.domain.model.UserRepository.Companion.USER_COLLECTION
+import com.mashup.dhc.utils.Image
+import com.mashup.dhc.utils.ImageFormat
+import com.mashup.dhc.utils.ImageUrlMapper
 import com.mongodb.MongoException
 import com.mongodb.client.model.Aggregates
 import com.mongodb.client.model.Filters
@@ -130,31 +133,35 @@ data class DailyFortuneResponse(
 )
 
 fun DailyFortune.toResponse(): DailyFortuneResponse {
-    val jinxedColor = FortuneTip(
-        imageURL = "temp",
-        title = "피해야 할 색상",
-        description = jinxedColor,
-        hexColor = jinxedColorHex,
-    )
+    val jinxedColor =
+        FortuneTip(
+            image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(ImageFormat.SVG),
+            title = "피해야 할 색상",
+            description = jinxedColor,
+            hexColor = jinxedColorHex
+        )
 
-    val jinxedMenu = FortuneTip(
-        imageURL = "temp",
-        title = "피해야 할 색상",
-        description = jinxedMenu,
-    )
+    val jinxedMenu =
+        FortuneTip(
+            image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(ImageFormat.SVG),
+            title = "피해야 할 음식",
+            description = jinxedMenu
+        )
 
-    val todayMenu = FortuneTip(
-        imageURL = "temp",
-        title = "오늘의 추천메뉴",
-        description = todayMenu,
-    )
+    val todayMenu =
+        FortuneTip(
+            image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(ImageFormat.SVG),
+            title = "오늘의 추천메뉴",
+            description = todayMenu
+        )
 
-    val luckyColor = FortuneTip(
-        imageURL = "temp",
-        title =  "행운의 색상",
-        description = luckyColor,
-        hexColor = luckyColorHex,
-    )
+    val luckyColor =
+        FortuneTip(
+            image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(ImageFormat.SVG),
+            title = "행운의 색상",
+            description = luckyColor,
+            hexColor = luckyColorHex
+        )
 
     return DailyFortuneResponse(
         date = date,
@@ -162,25 +169,29 @@ fun DailyFortune.toResponse(): DailyFortuneResponse {
         fortuneDetail = fortuneDetail,
         totalScore = totalScore,
         tips = listOf(todayMenu, luckyColor, jinxedColor, jinxedMenu),
-        cardInfo = FortuneCard(
-            imageURL = "temp",
-            title = "최고의 날",
-            subTitle = "네잎클로버"
-        ),
+        cardInfo =
+            FortuneCard(
+                image =
+                    Image.custom(
+                        "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+                    ),
+                title = "최고의 날",
+                subTitle = "네잎클로버"
+            ),
         positiveScore = positiveScore,
-        negativeScore = negativeScore,
+        negativeScore = negativeScore
     )
 }
 
 data class FortuneTip(
-    val imageURL: String,
+    val image: Image,
     val title: String,
     val description: String,
-    val hexColor: String? = null,
+    val hexColor: String? = null
 )
 
 data class FortuneCard(
-    val imageURL: String,
+    val image: Image,
     val title: String,
-    val subTitle: String,
+    val subTitle: String
 )
