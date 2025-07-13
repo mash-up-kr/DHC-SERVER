@@ -121,6 +121,7 @@ enum class FortuneColor(
     }
 }
 
+@Serializable
 data class DailyFortuneResponse(
     val date: String,
     val fortuneTitle: String,
@@ -183,6 +184,7 @@ fun DailyFortune.toResponse(): DailyFortuneResponse {
     )
 }
 
+@Serializable
 data class FortuneTip(
     val image: Image,
     val title: String,
@@ -190,6 +192,7 @@ data class FortuneTip(
     val hexColor: String? = null
 )
 
+@Serializable
 data class FortuneCard(
     val image: Image,
     val title: String,

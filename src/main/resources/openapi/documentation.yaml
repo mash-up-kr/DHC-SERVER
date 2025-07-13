@@ -213,28 +213,33 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FortuneResponse"
+                $ref: "#/components/schemas/DailyFortuneResponse"
               example:
                 date: "2024-01-15"
                 fortuneTitle: "좋은 하루"
                 fortuneDetail: "오늘은 좋은 일이 생길 것입니다"
-                jinxedColor: "빨간색"
-                jinxedColorHex: "#FF0000"
-                jinxedColorImageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-color.png"
-                jinxedMenu: "매운 음식"
-                jinxedMenuImageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-menu.png"
-                jinxedNumber: 4
-                luckyColor: "파란색"
-                luckyColorHex: "#0000FF"
-                luckyColorImageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/lucky-color.png"
-                luckyNumber: 7
+                totalScore: 60
                 positiveScore: 80
                 negativeScore: 20
-                totalScore: 60
-                todayMenu: "샐러드"
-                todayMenuImageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/today-menu.png"
-                luckyColorType: "GREEN"
-                jinxedColorType: "RED"
+                tips:
+                  - image: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/today-menu.png"
+                    title: "오늘의 추천메뉴"
+                    description: "샐러드"
+                  - image: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/lucky-color.png"
+                    title: "행운의 색상"
+                    description: "파란색"
+                    hexColor: "#0000FF"
+                  - image: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-color.png"
+                    title: "피해야 할 색상"
+                    description: "빨간색"
+                    hexColor: "#FF0000"
+                  - image: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-menu.png"
+                    title: "피해야 할 음식"
+                    description: "매운 음식"
+                cardInfo:
+                  image: "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+                  title: "최고의 날"
+                  subTitle: "네잎클로버"
         "404":
           description: "User not found"
           content:
@@ -326,16 +331,12 @@ paths:
                 todayDailyFortune:
                   date: "2024-01-15"
                   fortuneTitle: "좋은 하루"
-                  fortuneDetail: "오늘은 좋은 일이 생길 것입니다"
-                  jinxedColor: "빨간색"
-                  jinxedColorHex: "#FF0000"
-                  jinxedMenu: "매운 음식"
-                  jinxedNumber: 4
-                  luckyColor: "파란색"
-                  luckyColorHex: "#0000FF"
-                  luckyNumber: 7
-                  score: 85
-                  todayMenu: "샐러드"
+                  positiveScore: 75
+                  negativeScore: 25
+                  totalScore: 50
+                  fortuneCardImage: "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+                  fortuneCardTitle: "네잎클로버"
+                  fortuneCardSubTitle: "최고의 날"
                 todayDone: false
 
   /view/users/{userId}/myPage:
@@ -685,7 +686,7 @@ components:
             $ref: "#/components/schemas/Mission"
           description: "List of today's daily missions"
         todayDailyFortune:
-          $ref: "#/components/schemas/DailyFortune"
+          $ref: "#/components/schemas/FortuneResponse"
           nullable: true
         todayDone:
           type: boolean
@@ -1129,24 +1130,54 @@ components:
       required:
         - date
         - fortuneTitle
-        - fortuneDetail
-        - jinxedColor
-        - jinxedColorHex
-        - jinxedColorImageUrl
-        - jinxedMenu
-        - jinxedMenuImageUrl
-        - jinxedNumber
-        - luckyColor
-        - luckyColorHex
-        - luckyColorImageUrl
-        - luckyNumber
         - positiveScore
         - negativeScore
         - totalScore
-        - todayMenu
-        - todayMenuImageUrl
-        - luckyColorType
-        - jinxedColorType
+        - fortuneCardImage
+        - fortuneCardTitle
+        - fortuneCardSubTitle
+      properties:
+        date:
+          type: string
+          description: "Fortune date in YYYY-MM-DD format"
+          example: "2024-01-15"
+        fortuneTitle:
+          type: string
+          description: "Fortune title"
+          example: "좋은 하루"
+        positiveScore:
+          type: integer
+          description: "Positive score"
+          example: 80
+        negativeScore:
+          type: integer
+          description: "Negative score"
+          example: 20
+        totalScore:
+          type: integer
+          description: "Total score"
+          example: 60
+        fortuneCardImage:
+          type: string
+          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+        fortuneCardTitle:
+          type: string
+          example: "네잎클로버"
+        fortuneCardSubTitle:
+          type: string
+          example: "최고의 날"
+
+    DailyFortuneResponse:
+      type: object
+      required:
+        - date
+        - fortuneTitle
+        - fortuneDetail
+        - totalScore
+        - positiveScore
+        - negativeScore
+        - tips
+        - cardInfo
       properties:
         date:
           type: string
@@ -1160,46 +1191,10 @@ components:
           type: string
           description: "Detailed fortune description"
           example: "오늘은 좋은 일이 생길 것입니다"
-        jinxedColor:
-          type: string
-          description: "Unlucky color name"
-          example: "빨간색"
-        jinxedColorHex:
-          type: string
-          description: "Unlucky color hex code"
-          example: "#FF0000"
-        jinxedColorImageUrl:
-          type: string
-          description: "URL of the unlucky color image"
-          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-color.png"
-        jinxedMenu:
-          type: string
-          description: "Food to avoid today"
-          example: "매운 음식"
-        jinxedMenuImageUrl:
-          type: string
-          description: "URL of the food to avoid image"
-          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-menu.png"
-        jinxedNumber:
+        totalScore:
           type: integer
-          description: "Unlucky number"
-          example: 4
-        luckyColor:
-          type: string
-          description: "Lucky color name"
-          example: "파란색"
-        luckyColorHex:
-          type: string
-          description: "Lucky color hex code"
-          example: "#0000FF"
-        luckyColorImageUrl:
-          type: string
-          description: "URL of the lucky color image"
-          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/lucky-color.png"
-        luckyNumber:
-          type: integer
-          description: "Lucky number"
-          example: 7
+          description: "Total fortune score"
+          example: 60
         positiveScore:
           type: integer
           description: "Positive score"
@@ -1208,19 +1203,56 @@ components:
           type: integer
           description: "Negative score"
           example: 20
-        totalScore:
-          type: integer
-          description: "Total score"
-          example: 60
-        todayMenu:
+        tips:
+          type: array
+          items:
+            $ref: "#/components/schemas/FortuneTip"
+          description: "List of fortune tips (today's menu, lucky color, jinxed color, jinxed menu)"
+        cardInfo:
+          $ref: "#/components/schemas/FortuneCard"
+          description: "Fortune card information"
+
+    FortuneTip:
+      type: object
+      required:
+        - image
+        - title
+        - description
+      properties:
+        image:
           type: string
-          description: "Recommended food for today"
-          example: "샐러드"
-        todayMenuImageUrl:
-          type: string
-          description: "URL of the recommended food image"
+          description: "URL of the tip image"
           example: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/today-menu.png"
-        luckyColorType:
-          $ref: "#/components/schemas/FortuneColor"
-        jinxedColorType:
-          $ref: "#/components/schemas/FortuneColor"
+        title:
+          type: string
+          description: "Tip title"
+          example: "오늘의 추천메뉴"
+        description:
+          type: string
+          description: "Tip description"
+          example: "샐러드"
+        hexColor:
+          type: string
+          description: "Hex color code (only for color-related tips)"
+          example: "#0000FF"
+          nullable: true
+
+    FortuneCard:
+      type: object
+      required:
+        - image
+        - title
+        - subTitle
+      properties:
+        image:
+          type: string
+          description: "URL of the fortune card image"
+          example: "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+        title:
+          type: string
+          description: "Fortune card title"
+          example: "최고의 날"
+        subTitle:
+          type: string
+          description: "Fortune card subtitle"
+          example: "네잎클로버"
