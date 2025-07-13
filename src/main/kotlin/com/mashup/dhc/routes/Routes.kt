@@ -28,6 +28,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import java.math.BigDecimal
+import kotlin.math.abs
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -198,7 +199,7 @@ private fun Route.home(
             HomeViewResponse(
                 longTermMission = user.longTermMission?.let { MissionResponse.from(it) },
                 todayDailyMissionList = user.todayDailyMissionList.map { MissionResponse.from(it) },
-                todayDailyFortune = todayDailyFortune?.let { FortuneResponse.from(it) }, // FortuneResponse로 변환
+                todayDailyFortune = todayDailyFortune.let { FortuneResponse.from(it) }, // FortuneResponse로 변환
                 todayDone = todayPastRoutines.isNotEmpty()
             )
         )
@@ -361,7 +362,7 @@ private fun User.resolveAnimalCard(format: ImageFormat = ImageFormat.SVG): Anima
             .date
     val nowDays = this.birthDate.date
 
-    val daysFromEpoch = (nowDays - epochStart).days
+    val daysFromEpoch = abs((nowDays - epochStart).days)
 
     val middle = COLOR.entries[daysFromEpoch % COLOR.entries.size]
     val last = ANIMAL.entries[daysFromEpoch % ANIMAL.entries.size]
