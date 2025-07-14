@@ -133,7 +133,7 @@ data class DailyFortuneResponse(
     val cardInfo: FortuneCard
 )
 
-fun DailyFortune.toResponse(): DailyFortuneResponse {
+fun DailyFortune.toTips(): List<FortuneTip> {
     val jinxedColor =
         FortuneTip(
             image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(ImageFormat.SVG),
@@ -164,12 +164,17 @@ fun DailyFortune.toResponse(): DailyFortuneResponse {
             hexColor = luckyColorHex
         )
 
+    val tips = listOf(todayMenu, luckyColor, jinxedColor, jinxedMenu)
+    return tips
+}
+
+fun DailyFortune.toResponse(): DailyFortuneResponse {
     return DailyFortuneResponse(
         date = date,
         fortuneTitle = fortuneTitle,
         fortuneDetail = fortuneDetail,
         totalScore = totalScore,
-        tips = listOf(todayMenu, luckyColor, jinxedColor, jinxedMenu),
+        tips = this.toTips(),
         cardInfo =
             FortuneCard(
                 image =

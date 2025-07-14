@@ -1,10 +1,13 @@
 package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.DailyFortune
+import com.mashup.dhc.domain.model.FortuneCard
+import com.mashup.dhc.domain.model.FortuneTip
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
+import com.mashup.dhc.domain.model.toTips
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Image
@@ -148,12 +151,12 @@ data class UploadResponse(
 data class FortuneResponse(
     val date: String,
     val fortuneTitle: String,
+    val fortuneDetail: String,
+    val totalScore: Int,
     val positiveScore: Int,
     val negativeScore: Int,
-    val totalScore: Int,
-    val fortuneCardImage: Image,
-    val fortuneCardTitle: String,
-    val fortuneCardSubTitle: String
+    val tips: List<FortuneTip>,
+    val cardInfo: FortuneCard
 ) {
     companion object {
         fun from(
@@ -163,12 +166,19 @@ data class FortuneResponse(
             FortuneResponse(
                 date = dailyFortune.date,
                 fortuneTitle = dailyFortune.fortuneTitle,
+                fortuneDetail = dailyFortune.fortuneDetail,
                 positiveScore = dailyFortune.positiveScore,
                 negativeScore = dailyFortune.negativeScore,
                 totalScore = dailyFortune.totalScore,
-                fortuneCardImage = getFourLeafClover(), // TODO: 디자인 작업 완료 후 교체
-                fortuneCardTitle = "네잎클로버", // TODO: 디자인 작업 완료 후 교체
-                fortuneCardSubTitle = "최고의 날" // TODO: 디자인 작업 완료 후 교체
+                tips = dailyFortune.toTips(),
+                cardInfo = FortuneCard(
+                    image =
+                        Image.custom(
+                            "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+                        ),
+                    title = "최고의 날",
+                    subTitle = "네잎클로버"
+                )
             )
     }
 }
