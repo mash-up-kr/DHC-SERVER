@@ -98,7 +98,7 @@ data class DailyFortune(
     // 총점 계산 (직렬화에 포함됨)
     @SerialName("total_score")
     val totalScore: Int
-        get() = positiveScore - negativeScore
+        get() = 50 + (positiveScore - negativeScore) / 2
     val luckyColorType: FortuneColor
         get() = FortuneColor.fromKor(luckyColor)
     val jinxedColorType: FortuneColor

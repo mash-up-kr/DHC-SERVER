@@ -182,7 +182,7 @@ private fun Route.home(
     get("/home") {
         val userId = call.pathParameters["userId"] ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
-        val user = userService.getUserById(userId)
+        var user = userService.getUserById(userId)
 
         val now =
             Clock.System
@@ -193,6 +193,15 @@ private fun Route.home(
         val todayPastRoutines = userService.getTodayPastRoutines(userId, now)
 
         val todayDailyFortune = fortuneService.queryDailyFortune(userId, now)
+
+        val isAlreadyAllDone = user.todayDailyMissionList.all { it.endDate!! <= now }
+        if(isAlreadyAllDone){
+            userService.summaryTodayMission(
+                userId,
+                user.todayDailyMissionList.random().endDate!!
+            )
+            user = userService.getUserById(userId) // 유저 정보 갱신
+        }
 
         call.respond(
             HttpStatusCode.OK,
@@ -542,9 +551,20 @@ private fun Route.getDailyFortune(fortuneService: FortuneService) {
             call.request.queryParameters["date"]
                 ?.let { dateStr -> LocalDate.parse(dateStr) } ?: now()
 
+        val formatParam = call.request.queryParameters["format"] ?: "svg"
+        val format =
+            try {
+                ImageFormat.valueOf(formatParam.uppercase())
+            } catch (e: IllegalArgumentException) {
+                ImageFormat.SVG
+            }
+
         call.respond(
             HttpStatusCode.OK,
-            fortuneService.queryDailyFortune(userId, requestDate).toResponse()
+            FortuneResponse.from(
+                fortuneService.queryDailyFortune(userId, requestDate),
+                format
+            )
         )
     }
 }
