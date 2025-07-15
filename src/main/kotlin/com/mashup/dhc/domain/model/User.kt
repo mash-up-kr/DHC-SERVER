@@ -28,7 +28,7 @@ data class User(
     val todayDailyMissionList: List<Mission> = listOf(),
     val pastRoutineHistoryIds: List<ObjectId> = listOf(),
     val dailyFortune: DailyFortune? = null,
-    val dailyFortunes: List<DailyFortune>? = null,
+    val dailyFortunes: List<DailyFortune> = listOf(),
     val currentAmulet: Amulet? = null,
     val totalSavedMoney: Money = Money(BigDecimal.ZERO),
     @Transient val deleted: Boolean = false
