@@ -114,6 +114,7 @@ class GeminiBatchProcessor(
                             is DailyBatchRequest -> {
                                 logger.info("하루치 배치 처리 시작")
                                 val response = geminiService.requestDailyBatchFortune(request.requests)
+                                logger.info("응답 $response")
                                 val dailyFortunesByUserId = response.results.associate { it.userId to it.fortune }
 
                                 request.dailyFortunesHandler(dailyFortunesByUserId)
@@ -123,7 +124,7 @@ class GeminiBatchProcessor(
                     }
 
                 processedCount += 1
-                logger.info("{} 건 처리 중 진행시간 {}", processedCount, processingTimeMillis)
+                logger.info("{} 건 처리 중 진행시간 {}", processedCount, processingTimeMillis / 1000)
             } catch (e: Exception) {
                 logger.error("배치 처리 중 실패. 요청: {}", request, e)
             }
