@@ -16,6 +16,7 @@ import kotlinx.serialization.Serializable
 import org.bson.BsonValue
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
+import org.slf4j.LoggerFactory
 
 // MongoDB 캐시 모델
 data class MonthlyFortune(
@@ -29,6 +30,8 @@ data class MonthlyFortune(
 class FortuneRepository(
     private val database: MongoDatabase
 ) {
+    private val logger = LoggerFactory.getLogger(this::class.java)
+
     suspend fun insertDailyOne(dailyFortune: DailyFortune): BsonValue? {
         try {
             val result =
@@ -88,6 +91,8 @@ class FortuneRepository(
                         update = set(User::dailyFortunes.name, dailyFortunes),
                         options = UpdateOptions().upsert(false)
                     )
+
+            logger.info("업데이트 ${result.upsertedId}, ${result.modifiedCount}")
 
             if (result.matchedCount == 0L) {
                 throw IllegalArgumentException("사용자를 찾을 수 없습니다: $userId")
