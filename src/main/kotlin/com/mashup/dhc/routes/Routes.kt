@@ -202,7 +202,7 @@ private fun Route.home(
             user = userService.getUserById(userId) // 유저 정보 갱신
         }
 
-        if (user.dailyFortune == null || user.dailyFortunes!!.all { LocalDate.parse(it.date) < now }) {
+        if (user.dailyFortunes == null || user.dailyFortunes!!.all { LocalDate.parse(it.date) < now }) {
             fortuneService.enqueueGenerateDailyFortuneTask(
                 user.id.toString(),
                 user.toGeminiFortuneRequest()
