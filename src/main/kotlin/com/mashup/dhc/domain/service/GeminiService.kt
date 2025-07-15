@@ -69,7 +69,6 @@ class GeminiService(
 
     suspend fun generateDailyFortuneBatch(requests: List<Pair<String, GeminiFortuneRequest>>) {
         batchProcessor.generateDailyFortune(requests) { map ->
-            logger.info("batch callback 실행")
             for ((userId, dailyFortunes) in map.entries) {
                 fortuneRepository.upsertDailyFortunes(userId, dailyFortunes)
             }

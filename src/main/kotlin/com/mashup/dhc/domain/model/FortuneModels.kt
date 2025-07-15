@@ -92,8 +92,6 @@ class FortuneRepository(
                         options = UpdateOptions().upsert(false)
                     )
 
-            logger.info("업데이트 ${result.upsertedId}, ${result.modifiedCount}")
-
             if (result.matchedCount == 0L) {
                 throw IllegalArgumentException("사용자를 찾을 수 없습니다: $userId")
             }
