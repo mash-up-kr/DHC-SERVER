@@ -78,7 +78,7 @@ class FortuneService(
 
         mutexManager.withLock(lockKey) {
             val user = userService.getUserById(userId)
-            if (user.dailyFortunes.findDailyFortune(requestDate) != null) {
+            if (user.dailyFortunes?.findDailyFortune(requestDate) != null) {
                 throw RuntimeException("Fortune Cache already exists")
             }
 
@@ -101,8 +101,8 @@ class FortuneService(
         requestDate: LocalDate
     ): DailyFortune {
         var user = userService.getUserById(userId)
-        if (user.dailyFortunes.findDailyFortune(requestDate) != null) {
-            return user.dailyFortunes.findDailyFortune(requestDate)!!
+        if (user.dailyFortunes?.findDailyFortune(requestDate) != null) {
+            return user.dailyFortunes?.findDailyFortune(requestDate)!!
         }
 
         if (user.dailyFortune?.date != requestDate.toYearMonthDayString()) {
