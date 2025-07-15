@@ -42,30 +42,30 @@ import kotlinx.datetime.toLocalDateTime
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
         Generation.TEENAGERS to
-                mapOf(
-                    Gender.MALE to Money(resolveSpendMoney(22000)),
-                    Gender.FEMALE to Money(resolveSpendMoney(31000))
-                ),
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(22000)),
+                Gender.FEMALE to Money(resolveSpendMoney(31000))
+            ),
         Generation.TWENTIES to
-                mapOf(
-                    Gender.MALE to Money(resolveSpendMoney(64000)),
-                    Gender.FEMALE to Money(resolveSpendMoney(55000))
-                ),
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(64000)),
+                Gender.FEMALE to Money(resolveSpendMoney(55000))
+            ),
         Generation.THIRTIES to
-                mapOf(
-                    Gender.MALE to Money(resolveSpendMoney(76000)),
-                    Gender.FEMALE to Money(resolveSpendMoney(62000))
-                ),
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(76000)),
+                Gender.FEMALE to Money(resolveSpendMoney(62000))
+            ),
         Generation.FORTIES to
-                mapOf(
-                    Gender.MALE to Money(resolveSpendMoney(86000)),
-                    Gender.FEMALE to Money(resolveSpendMoney(72000))
-                ),
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(86000)),
+                Gender.FEMALE to Money(resolveSpendMoney(72000))
+            ),
         Generation.UNKNOWN to
-                mapOf(
-                    Gender.MALE to Money(resolveSpendMoney(86000)),
-                    Gender.FEMALE to Money(resolveSpendMoney(72000))
-                )
+            mapOf(
+                Gender.MALE to Money(resolveSpendMoney(86000)),
+                Gender.FEMALE to Money(resolveSpendMoney(72000))
+            )
     )
 
 private fun resolveSpendMoney(value: Int): Int =
@@ -469,7 +469,7 @@ private fun Route.calendarView(userService: UserService) {
                         .filter { it.missions.isNotEmpty() }
                         .sumOf {
                             100 * it.missions.filter { mission -> mission.finished }.size /
-                                    (it.missions.size)
+                                (it.missions.size)
                         }
 
                 val calendarDayMissionViews =
