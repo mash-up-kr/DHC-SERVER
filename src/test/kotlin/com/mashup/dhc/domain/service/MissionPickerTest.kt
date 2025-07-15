@@ -59,9 +59,13 @@ class MissionPickerTest {
             } returns
                 listOf(expectedMission)
 
-            // When
+            // When - difficulty 2는 MIDDLE(34-67) 범위에 포함되도록 luckTotalScore를 50으로 설정
             val result =
-                missionPicker.pickMission(preferredMissionCategoryList = preferredCategories, session = session)
+                missionPicker.pickMission(
+                    preferredMissionCategoryList = preferredCategories,
+                    luckTotalScore = 50,
+                    session = session
+                )
 
             // Then
             assertEquals(expectedMission, result)
@@ -124,13 +128,14 @@ class MissionPickerTest {
             } returns
                 listOf(shoppingMission)
 
-            // When
+            // When - difficulty 1,2는 각각 EASY(0-33), MIDDLE(34-67) 범위에 포함되도록 점수 설정
             val actual =
                 (0..10)
                     .map {
                         missionPicker
                             .pickMission(
                                 preferredMissionCategoryList = preferredCategories,
+                                luckTotalScore = if (it % 2 == 0) 20 else 50, // EASY와 MIDDLE 범위 번갈아가며
                                 session = session
                             ).category
                     }.toSet()
@@ -208,9 +213,13 @@ class MissionPickerTest {
             } returns
                 listOf(shoppingMission)
 
-            // When
+            // When - 모든 difficulty 범위를 포함하는 점수로 설정
             val result =
-                missionPicker.pickMission(preferredMissionCategoryList = preferredCategories, session = session)
+                missionPicker.pickMission(
+                    preferredMissionCategoryList = preferredCategories,
+                    luckTotalScore = 50, // MIDDLE 범위에 포함되는 점수
+                    session = session
+                )
 
             // Then
             assertTrue(

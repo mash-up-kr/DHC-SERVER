@@ -118,6 +118,22 @@ class UserServiceTest {
                         Amulet(
                             totalPiece = 0,
                             remainPiece = 0
+                        ),
+                    dailyFortune =
+                        com.mashup.dhc.domain.model.DailyFortune(
+                            date = "2025-01-01",
+                            fortuneTitle = "테스트 운세",
+                            fortuneDetail = "테스트 상세",
+                            jinxedColor = "빨간색",
+                            jinxedColorHex = "#FF0000",
+                            jinxedMenu = "매운음식",
+                            jinxedNumber = 13,
+                            luckyColor = "파란색",
+                            luckyColorHex = "#0000FF",
+                            luckyNumber = 7,
+                            positiveScore = 70,
+                            negativeScore = 20,
+                            todayMenu = "과일"
                         )
                 )
 
