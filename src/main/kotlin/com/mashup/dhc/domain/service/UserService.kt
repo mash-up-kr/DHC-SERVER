@@ -224,7 +224,7 @@ class UserService(
                             .pickMission(
                                 existingMission = todayMission,
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
-                                luckTotalScore = user.dailyFortune!!.totalScore,
+                                luckTotalScore = user.dailyFortune?.totalScore ?: 50, // null일 경우 기본값 50
                                 session = session
                             ).copy(
                                 endDate = now().plus(1, DateTimeUnit.DAY),
@@ -247,7 +247,7 @@ class UserService(
                                 existingMission = it,
                                 type = MissionType.LONG_TERM,
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
-                                luckTotalScore = user.dailyFortune!!.totalScore,
+                                luckTotalScore = user.dailyFortune?.totalScore ?: 50, // null일 경우 기본값 50
                                 session
                             ).copy(endDate = now().plus(14, DateTimeUnit.DAY), switchCount = it.switchCount + 1)
                     }
@@ -315,7 +315,7 @@ class MissionPicker(
         session: ClientSession
     ): Mission {
         val peekMissionCategory = preferredMissionCategoryList.random()
-        val randomPeekMission =
+        val availableMissions =
             missionRepository
                 .findByCategory(type, peekMissionCategory, session)
                 .filter { it.id != existingMission?.id }
@@ -323,9 +323,23 @@ class MissionPicker(
                     Difficulty.entries[it.difficulty - 1].let { difficulty: Difficulty ->
                         luckTotalScore in difficulty.minValue..difficulty.maxValue
                     }
-                }.random()
+                }
 
-        return randomPeekMission
+        if (availableMissions.isEmpty()) {
+            // 필터링된 미션이 없으면 기존 미션 제외하고 다시 검색
+            val fallbackMissions =
+                missionRepository
+                    .findByCategory(type, peekMissionCategory, session)
+                    .filter { it.id != existingMission?.id }
+
+            if (fallbackMissions.isEmpty()) {
+                throw IllegalStateException("No missions available for category $peekMissionCategory and type $type")
+            }
+
+            return fallbackMissions.random()
+        }
+
+        return availableMissions.random()
     }
 }
 
