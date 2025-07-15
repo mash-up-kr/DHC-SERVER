@@ -226,7 +226,10 @@ class UserService(
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
                                 luckTotalScore = user.dailyFortune!!.totalScore,
                                 session = session
-                            ).copy(switchCount = todayMission.switchCount + 1)
+                            ).copy(
+                                endDate = now().plus(1, DateTimeUnit.DAY),
+                                switchCount = todayMission.switchCount + 1
+                            )
                     }
                 }
 
@@ -246,7 +249,7 @@ class UserService(
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
                                 luckTotalScore = user.dailyFortune!!.totalScore,
                                 session
-                            ).copy(switchCount = it.switchCount + 1)
+                            ).copy(endDate = now().plus(14, DateTimeUnit.DAY), switchCount = it.switchCount + 1)
                     }
                 }
 
