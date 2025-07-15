@@ -141,7 +141,7 @@ class GeminiService(
             
             $userInfoList
             
-            각 사용자별로 해당 년월의 하루 금전운을 일별로 분석해주세요.
+            각 사용자별로 5일치 하루 금전운을 일별로 분석해주세요.
             응답은 반드시 지정된 JSON 스키마 형식으로 제공하며, results 배열에 각 사용자의 결과를 user_id와 함께 포함해주세요.
             """.trimIndent()
     }
