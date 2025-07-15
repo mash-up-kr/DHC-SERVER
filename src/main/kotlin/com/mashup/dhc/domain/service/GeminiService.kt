@@ -3,6 +3,7 @@ package com.mashup.dhc.domain.service
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
+import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.utils.batch.GeminiBatchProcessor
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -16,7 +17,6 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -31,14 +31,9 @@ class GeminiService(
 ) {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    private val responseSchema: JsonElement by lazy { loadResponseSchema() }
-    private val batchResponseSchema: JsonElement by lazy { loadBatchResponseSchema() }
+    private val monthResponseSchema: JsonElement by lazy { loadMonthResponseSchema() }
+    private val dailyBatchResponseSchema: JsonElement by lazy { loadDailyBatchResponseSchema() }
     private val batchProcessor = GeminiBatchProcessor(this)
-
-    // 배치 프로세서 시작 (서버 시작 시 호출)
-    fun startBatchProcessor(scope: CoroutineScope) {
-        batchProcessor.startBatchProcessor(scope)
-    }
 
     private val client =
         HttpClient(CIO) {
@@ -58,20 +53,31 @@ class GeminiService(
             }
         }
 
-    // 직접 호출용 메소드 (배치 프로세서 우회)
-    suspend fun generateFortuneDirectly(request: GeminiFortuneRequest): GeminiFortuneResponse =
-        generateFortuneInternal(request)
+    // 배치 프로세서 시작 (서버 시작 시 호출)
+    fun startBatchProcessor(scope: CoroutineScope) {
+        batchProcessor.startBatchProcessor(scope)
+    }
 
-    suspend fun generateFortuneWithBatch(
+    suspend fun generateMonthlyFortuneWithBatch(
         userId: String,
         request: GeminiFortuneRequest
     ): GeminiFortuneResponse =
-        batchProcessor.generateFortune(userId, request) { monthlyFortune ->
+        batchProcessor.generateMonthlyFortune(userId, request) { monthlyFortune ->
             fortuneRepository.upsertMonthlyFortune(userId, monthlyFortune)
         }
 
-    suspend fun generateFortuneInternal(request: GeminiFortuneRequest): GeminiFortuneResponse {
-        val geminiRequest = request.toPrompt().toGeminiRequest()
+    suspend fun generateDailyFortuneBatch(requests: List<Pair<String, GeminiFortuneRequest>>) {
+        batchProcessor.generateDailyFortune(requests) { map ->
+            suspend {
+                for ((userId, dailyFortunes) in map.entries) {
+                    fortuneRepository.upsertDailyFortunes(userId, dailyFortunes)
+                }
+            }
+        }
+    }
+
+    suspend fun requestMonthFortune(request: GeminiFortuneRequest): GeminiFortuneResponse {
+        val geminiRequest = request.toMonthPrompt().toGeminiMonthRequest()
         val response =
             client.post(BASE_URL) {
                 parameter("key", apiKey)
@@ -93,18 +99,18 @@ class GeminiService(
         return geminiFortuneResponse
     }
 
-    suspend fun generateBatchFortuneInternal(
-        requests: List<Triple<String, GeminiFortuneRequest, Continuation<GeminiFortuneResponse>>>
+    suspend fun requestDailyBatchFortune(
+        requests: List<Pair<String, GeminiFortuneRequest>>
     ): GeminiBatchFortuneResponse {
-        val batchPrompt = createBatchPrompt(requests.map { it.first to it.second })
-        val geminiRequest = batchPrompt.toGeminiBatchRequest()
+        val batchPrompt = createDailyBatchPrompt(requests.map { it.first to it.second })
+        val geminiRequest = batchPrompt.toGeminiMultiUserDailyBatchRequest()
 
         val response =
             client.post(BASE_URL) {
                 parameter("key", apiKey)
                 contentType(ContentType.Application.Json)
                 setBody(geminiRequest)
-                timeout { requestTimeoutMillis = 600_000 }
+                timeout { requestTimeoutMillis = 100_000 }
             }
 
         val geminiResponse: GeminiApiResponse = response.body()
@@ -112,7 +118,7 @@ class GeminiService(
         return Json.decodeFromString<GeminiBatchFortuneResponse>(responseText)
     }
 
-    private fun createBatchPrompt(requests: List<Pair<String, GeminiFortuneRequest>>): String {
+    private fun createDailyBatchPrompt(requests: List<Pair<String, GeminiFortuneRequest>>): String {
         val userInfoList =
             requests
                 .mapIndexed { index, (userId, request) ->
@@ -133,12 +139,12 @@ class GeminiService(
             
             $userInfoList
             
-            각 사용자별로 해당 년월의 한 달간 금전운을 일별로 분석해주세요.
+            각 사용자별로 해당 년월의 하루 금전운을 일별로 분석해주세요.
             응답은 반드시 지정된 JSON 스키마 형식으로 제공하며, results 배열에 각 사용자의 결과를 user_id와 함께 포함해주세요.
             """.trimIndent()
     }
 
-    private fun GeminiFortuneRequest.toPrompt(): String =
+    private fun GeminiFortuneRequest.toMonthPrompt(): String =
         """
         $systemInstruction
         
@@ -153,23 +159,23 @@ class GeminiService(
         응답은 반드시 지정된 JSON 스키마 형식으로 제공해주세요.
         """.trimIndent()
 
-    private fun String.toGeminiRequest(): GeminiRequest =
+    private fun String.toGeminiMonthRequest(): GeminiRequest =
         GeminiRequest(
             contents = listOf(Content(parts = listOf(Part(this)))),
             generationConfig =
                 GenerationConfig(
                     responseMimeType = "application/json",
-                    responseSchema = responseSchema
+                    responseSchema = monthResponseSchema
                 )
         )
 
-    private fun String.toGeminiBatchRequest(): GeminiRequest =
+    private fun String.toGeminiMultiUserDailyBatchRequest(): GeminiRequest =
         GeminiRequest(
             contents = listOf(Content(parts = listOf(Part(this)))),
             generationConfig =
                 GenerationConfig(
                     responseMimeType = "application/json",
-                    responseSchema = batchResponseSchema
+                    responseSchema = dailyBatchResponseSchema
                 )
         )
 
@@ -188,7 +194,7 @@ class GeminiService(
             ?: throw Exception("Gemini API 응답에 유효한 텍스트가 없습니다.")
     }
 
-    private fun loadResponseSchema(): JsonElement {
+    private fun loadMonthResponseSchema(): JsonElement {
         val schemaResource =
             this::class.java.classLoader
                 .getResourceAsStream("gemini-response-schema.json")
@@ -197,7 +203,7 @@ class GeminiService(
         return Json.parseToJsonElement(schemaResource.bufferedReader().use { it.readText() })
     }
 
-    private fun loadBatchResponseSchema(): JsonElement {
+    private fun loadDailyBatchResponseSchema(): JsonElement {
         val schemaResource =
             this::class.java.classLoader
                 .getResourceAsStream("gemini-batch-response-schema.json")
@@ -299,3 +305,14 @@ data class ApiError(
     val message: String? = null,
     val status: String? = null
 )
+
+fun User.toGeminiFortuneRequest(): GeminiFortuneRequest =
+    now().let {
+        GeminiFortuneRequest(
+            this.gender.name,
+            this.birthDate.toString(),
+            this.birthTime?.toString(),
+            it.year,
+            it.monthNumber
+        )
+    }

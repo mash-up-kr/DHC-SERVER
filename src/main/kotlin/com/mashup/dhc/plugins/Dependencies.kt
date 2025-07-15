@@ -15,6 +15,7 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.config.tryGetString
+import java.util.concurrent.ConcurrentLinkedQueue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -77,8 +78,11 @@ fun Application.configureDependencies(): Dependencies {
             userService = userService,
             geminiService = geminiService,
             fortuneRepository = fortuneRepository,
-            mutexManager = mutexManager
+            mutexManager = mutexManager,
+            dailyBatchQueue = ConcurrentLinkedQueue()
         )
+
+    fortuneService.startDailyBatch()
 
     monitor.subscribe(ApplicationStopped) {
         mongoClient.close()
