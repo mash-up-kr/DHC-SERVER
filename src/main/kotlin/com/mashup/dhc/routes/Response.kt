@@ -12,7 +12,6 @@ import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Image
 import com.mashup.dhc.utils.ImageFormat
-import com.mashup.dhc.utils.ImageUrlMapper.MainCard.getFourLeafClover
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -171,14 +170,15 @@ data class FortuneResponse(
                 negativeScore = dailyFortune.negativeScore,
                 totalScore = dailyFortune.totalScore,
                 tips = dailyFortune.toTips(),
-                cardInfo = FortuneCard(
-                    image =
-                        Image.custom(
-                            "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
-                        ),
-                    title = "최고의 날",
-                    subTitle = "네잎클로버"
-                )
+                cardInfo =
+                    FortuneCard(
+                        image =
+                            Image.custom(
+                                "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+                            ),
+                        title = "최고의 날",
+                        subTitle = "네잎클로버"
+                    )
             )
     }
 }

@@ -60,7 +60,32 @@ class FortuneRepository(
                     .getCollection<User>(USER_COLLECTION)
                     .updateOne(
                         filter = filter,
-                        update = set(User::monthlyFortune.name, monthlyFortune),
+                        update = set(User::dailyFortunes.name, monthlyFortune.dailyFortuneList),
+                        options = UpdateOptions().upsert(false)
+                    )
+
+            if (result.matchedCount == 0L) {
+                throw IllegalArgumentException("사용자를 찾을 수 없습니다: $userId")
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
+    }
+
+    suspend fun upsertDailyFortunes(
+        userId: String,
+        dailyFortunes: List<DailyFortune>
+    ) {
+        try {
+            val filter = Filters.eq("_id", ObjectId(userId))
+
+            val result =
+                database
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(
+                        filter = filter,
+                        update = set(User::dailyFortunes.name, dailyFortunes),
                         options = UpdateOptions().upsert(false)
                     )
 
@@ -168,8 +193,8 @@ fun DailyFortune.toTips(): List<FortuneTip> {
     return tips
 }
 
-fun DailyFortune.toResponse(): DailyFortuneResponse {
-    return DailyFortuneResponse(
+fun DailyFortune.toResponse(): DailyFortuneResponse =
+    DailyFortuneResponse(
         date = date,
         fortuneTitle = fortuneTitle,
         fortuneDetail = fortuneDetail,
@@ -187,7 +212,6 @@ fun DailyFortune.toResponse(): DailyFortuneResponse {
         positiveScore = positiveScore,
         negativeScore = negativeScore
     )
-}
 
 @Serializable
 data class FortuneTip(
