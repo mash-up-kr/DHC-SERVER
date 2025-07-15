@@ -1,37 +1,53 @@
 package com.mashup.dhc.utils.batch
 
+import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.MonthlyFortune
+import com.mashup.dhc.domain.service.GeminiBatchFortuneResponse
 import com.mashup.dhc.domain.service.GeminiFortuneRequest
 import com.mashup.dhc.domain.service.GeminiFortuneResponse
 import com.mashup.dhc.domain.service.GeminiService
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlin.system.measureTimeMillis
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import org.slf4j.LoggerFactory
 
 class GeminiBatchProcessor(
     private val geminiService: GeminiService,
     private val batchIntervalMs: Long = 4000L
 ) {
-    private val pendingRequests = ConcurrentLinkedQueue<BatchRequest>()
+    private val pendingRequests = ConcurrentLinkedQueue<GeminiBatchRequest>()
     private val processingMutex = Mutex()
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    data class BatchRequest(
+    sealed class GeminiBatchRequest(
+        val timestamp: Long = System.currentTimeMillis()
+    )
+
+    class MonthBatchRequest(
         val userId: String,
         val request: GeminiFortuneRequest,
         val continuation: Continuation<GeminiFortuneResponse>,
-        val timestamp: Long = System.currentTimeMillis(),
+        timestamp: Long = System.currentTimeMillis(),
         val monthlyFortuneHandler: suspend (MonthlyFortune) -> Unit
-    )
+    ) : GeminiBatchRequest(timestamp)
+
+    class DailyBatchRequest(
+        val requests: List<Pair<String, GeminiFortuneRequest>>,
+        val continuation: Continuation<GeminiBatchFortuneResponse>,
+        timestamp: Long = System.currentTimeMillis(),
+        val dailyFortunesHandler: suspend (Map<String, List<DailyFortune>>) -> Unit
+    ) : GeminiBatchRequest(timestamp)
 
     // 서버 시작 시 호출하여 배치 프로세서를 상시 실행
     fun startBatchProcessor(scope: CoroutineScope) {
@@ -48,37 +64,72 @@ class GeminiBatchProcessor(
         }
     }
 
-    suspend fun generateFortune(
+    suspend fun generateMonthlyFortune(
         userId: String,
         request: GeminiFortuneRequest,
         monthlyFortuneHandler: suspend (MonthlyFortune) -> Unit
     ): GeminiFortuneResponse =
         suspendCoroutine { continuation ->
-            val batchRequest =
-                BatchRequest(userId, request, continuation, monthlyFortuneHandler = monthlyFortuneHandler)
-            pendingRequests.offer(batchRequest)
+            val monthBatchRequest =
+                MonthBatchRequest(userId, request, continuation, monthlyFortuneHandler = monthlyFortuneHandler)
+            pendingRequests.offer(monthBatchRequest)
         }
 
-    private suspend fun processBatch() {
-        val batch = mutableListOf<BatchRequest>()
-
-        repeat(1) {
-            pendingRequests.poll()?.let { batch.add(it) }
+    suspend fun generateDailyFortune(
+        request: List<Pair<String, GeminiFortuneRequest>>,
+        dailyFortunesHandler: suspend (Map<String, List<DailyFortune>>) -> Unit
+    ): GeminiBatchFortuneResponse =
+        suspendCoroutine { continuation ->
+            val dailyBatchRequest =
+                DailyBatchRequest(request, continuation, dailyFortunesHandler = dailyFortunesHandler)
+            pendingRequests.offer(dailyBatchRequest)
         }
 
-        if (batch.isEmpty()) return
+    private suspend fun processBatch(startInstant: Instant = Clock.System.now()) {
+        val timeoutInstant = startInstant.plus(1.minutes)
 
-        val singleRequest = batch[0]
-        logger.info("배치 처리 시작: userId=${singleRequest.userId}")
+        var processedCount = 0
+        while (pendingRequests.isNotEmpty()) {
+            val requestInstant = Clock.System.now()
+            if (requestInstant > timeoutInstant || processedCount > MAX_PROCESSED_REQUEST_PER_BATCH) {
+                break
+            }
 
-        try {
-            val response = geminiService.generateFortuneInternal(singleRequest.request)
-            val monthlyFortune = response.toMonthlyFortune()
+            val request = pendingRequests.poll()
 
-            singleRequest.monthlyFortuneHandler(monthlyFortune)
-            singleRequest.continuation.resume(response)
-        } catch (e: Exception) {
-            batch.forEach { it.continuation.resumeWithException(e) }
+            try {
+                val processingTimeMillis =
+                    measureTimeMillis {
+                        when (request) {
+                            is MonthBatchRequest -> {
+                                logger.info("한 달 배치 처리 시작: userId=${request.userId}")
+                                val response = geminiService.requestMonthFortune(request.request)
+                                val monthlyFortune = response.toMonthlyFortune()
+
+                                request.monthlyFortuneHandler(monthlyFortune)
+                                request.continuation.resume(response)
+                            }
+
+                            is DailyBatchRequest -> {
+                                logger.info("하루치 배치 처리 시작")
+                                val response = geminiService.requestDailyBatchFortune(request.requests)
+                                val dailyFortunesByUserId = response.results.associate { it.userId to it.fortune }
+
+                                request.dailyFortunesHandler(dailyFortunesByUserId)
+                                request.continuation.resume(response)
+                            }
+                        }
+                    }
+
+                processedCount += 1
+                logger.info("{} 건 처리 중 진행시간 {}", processedCount, processingTimeMillis)
+            } catch (e: Exception) {
+                logger.error("배치 처리 중 실패. 요청: {}", request, e)
+            }
         }
+    }
+
+    companion object {
+        const val MAX_PROCESSED_REQUEST_PER_BATCH = 15
     }
 }

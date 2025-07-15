@@ -7,11 +7,11 @@ import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.model.calculateSpendMoney
-import com.mashup.dhc.domain.model.toResponse
 import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
 import com.mashup.dhc.domain.service.now
+import com.mashup.dhc.domain.service.toGeminiFortuneRequest
 import com.mashup.dhc.utils.Image
 import com.mashup.dhc.utils.ImageFormat
 import com.mashup.dhc.utils.ImageUrlMapper
@@ -89,7 +89,6 @@ fun Route.userRoutes(
         endToday(userService)
         logout(userService)
         searchUser(userService)
-        generateDailyFortune(fortuneService)
         getDailyFortune(fortuneService)
     }
     route("/view/users/{userId}") {
@@ -195,13 +194,18 @@ private fun Route.home(
         val todayDailyFortune = fortuneService.queryDailyFortune(userId, now)
 
         val isAlreadyAllDone = user.todayDailyMissionList.all { it.endDate!! <= now }
-        if(isAlreadyAllDone){
+        if (isAlreadyAllDone) {
             userService.summaryTodayMission(
                 userId,
                 user.todayDailyMissionList.random().endDate!!
             )
             user = userService.getUserById(userId) // 유저 정보 갱신
         }
+
+        fortuneService.enqueueGenerateDailyFortuneTask(
+            user.id.toString(),
+            user.toGeminiFortuneRequest()
+        )
 
         call.respond(
             HttpStatusCode.OK,
@@ -212,46 +216,6 @@ private fun Route.home(
                 todayDone = todayPastRoutines.isNotEmpty()
             )
         )
-    }
-}
-
-private fun Route.generateDailyFortune(fortuneService: FortuneService) {
-    post("/{userId}/fortune/generate") {
-        val userId =
-            call.pathParameters["userId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
-        val requestDate: LocalDate =
-            call.request.queryParameters["date"]
-                ?.let { dateStr -> LocalDate.parse(dateStr) } ?: now()
-
-        try {
-            // fortune 생성 작업을 백그라운드에서 실행
-            fortuneService.enqueueGenerateFortuneTask(userId, requestDate)
-
-            call.respond(
-                HttpStatusCode.Accepted,
-                mapOf("message" to "Fortune 생성 작업이 시작되었습니다.", "userId" to userId, "date" to requestDate.toString())
-            )
-        } catch (e: RuntimeException) {
-            when (e.message) {
-                "Lock key is using" -> {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        mapOf("error" to "해당 사용자의 fortune 생성이 이미 진행 중입니다.")
-                    )
-                }
-
-                "Fortune Cache already exists" -> {
-                    call.respond(
-                        HttpStatusCode.Conflict,
-                        mapOf("error" to "해당 날짜의 fortune이 이미 존재합니다.")
-                    )
-                }
-
-                else -> throw e
-            }
-        }
     }
 }
 
