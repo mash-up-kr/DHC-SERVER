@@ -169,7 +169,7 @@ data class FortuneResponse(
                 positiveScore = dailyFortune.positiveScore,
                 negativeScore = dailyFortune.negativeScore,
                 totalScore = dailyFortune.totalScore,
-                tips = dailyFortune.toTips(),
+                tips = dailyFortune.toTips(format),
                 cardInfo =
                     FortuneCard(
                         image =

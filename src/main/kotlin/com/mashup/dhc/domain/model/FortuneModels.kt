@@ -161,10 +161,10 @@ data class DailyFortuneResponse(
     val cardInfo: FortuneCard
 )
 
-fun DailyFortune.toTips(): List<FortuneTip> {
+fun DailyFortune.toTips(format: ImageFormat = ImageFormat.SVG): List<FortuneTip> {
     val jinxedColor =
         FortuneTip(
-            image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(ImageFormat.SVG),
+            image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(format),
             title = "피해야 할 색상",
             description = jinxedColor,
             hexColor = jinxedColorHex
@@ -172,21 +172,21 @@ fun DailyFortune.toTips(): List<FortuneTip> {
 
     val jinxedMenu =
         FortuneTip(
-            image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(ImageFormat.SVG),
+            image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(format),
             title = "피해야 할 음식",
             description = jinxedMenu
         )
 
     val todayMenu =
         FortuneTip(
-            image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(ImageFormat.SVG),
+            image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(format),
             title = "오늘의 추천메뉴",
             description = todayMenu
         )
 
     val luckyColor =
         FortuneTip(
-            image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(ImageFormat.SVG),
+            image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(format),
             title = "행운의 색상",
             description = luckyColor,
             hexColor = luckyColorHex
