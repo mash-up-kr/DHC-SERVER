@@ -2,6 +2,7 @@ package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneCard
+import com.mashup.dhc.domain.model.FortuneScoreRange
 import com.mashup.dhc.domain.model.FortuneTip
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
@@ -12,6 +13,7 @@ import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Image
 import com.mashup.dhc.utils.ImageFormat
+import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -161,8 +163,10 @@ data class FortuneResponse(
         fun from(
             dailyFortune: DailyFortune,
             format: ImageFormat = ImageFormat.SVG
-        ): FortuneResponse =
-            FortuneResponse(
+        ): FortuneResponse {
+            val scoreRange = FortuneScoreRange.fromScore(dailyFortune.totalScore)
+
+            return FortuneResponse(
                 date = dailyFortune.date,
                 fortuneTitle = dailyFortune.fortuneTitle,
                 fortuneDetail = dailyFortune.fortuneDetail,
@@ -173,13 +177,15 @@ data class FortuneResponse(
                 cardInfo =
                     FortuneCard(
                         image =
-                            Image.custom(
-                                "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+                            ImageUrlMapper.MainCard.getFortuneCardByScore(
+                                dailyFortune.totalScore,
+                                ImageFormat.PNG
                             ),
-                        title = "최고의 날",
-                        subTitle = "네잎클로버"
+                        title = scoreRange.title,
+                        subTitle = scoreRange.subTitle
                     )
             )
+        }
     }
 }
 
