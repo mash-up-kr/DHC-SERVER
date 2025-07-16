@@ -309,10 +309,15 @@ class UserService(
             
             // 사용자의 선호 카테고리에서 미션 선택
             val preferredCategories = user.preferredMissionCategoryList
-            
+
+            val now = now()
             julyData.forEach { (day, completedCount) ->
                 val date = LocalDate(year, 7, day)
-                
+
+                if (date >= now) {
+                    return@forEach
+                }
+
                 // 이미 존재하는지 확인
                 val existing = pastRoutineHistoryRepository.findByUserIdAndDate(ObjectId(userId), date, session)
                 if (existing != null) {
