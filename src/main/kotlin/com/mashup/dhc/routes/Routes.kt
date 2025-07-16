@@ -90,6 +90,7 @@ fun Route.userRoutes(
         logout(userService)
         searchUser(userService)
         getDailyFortune(fortuneService)
+        addJulyPastRoutineHistory(userService)
     }
     route("/view/users/{userId}") {
         home(userService, fortuneService)
@@ -530,6 +531,49 @@ private fun Route.getDailyFortune(fortuneService: FortuneService) {
             FortuneResponse.from(
                 fortuneService.queryDailyFortune(userId, requestDate),
                 format
+            )
+        )
+    }
+}
+
+private fun Route.addJulyPastRoutineHistory(userService: UserService) {
+    post("/{userId}/add-july-history") {
+        val userId = call.pathParameters["userId"] ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        val currentYear = now().year
+        val july = 7
+
+        val user = userService.getUserById(userId)
+
+        // 7월 데이터를 추가할 날짜들과 완료 상태
+        val julyData = mapOf(
+            1 to 3,   // 1일: 3개 모두 완료
+            2 to 3,   // 2일: 3개 모두 완료
+            3 to 3,   // 3일: 3개 모두 완료
+            4 to 1,   // 4일: 1개 완료
+            7 to 3,   // 7일: 3개 모두 완료
+            8 to 2,   // 8일: 2개 완료
+            11 to 3,  // 11일: 3개 모두 완료
+            14 to 3,  // 14일: 3개 모두 완료
+            15 to 3,  // 15일: 3개 모두 완료
+            17 to 3,  // 17일: 3개 모두 완료
+            18 to 3   // 18일: 3개 모두 완료
+        )
+
+        val addedHistories = userService.addJulyPastRoutineHistories(userId, currentYear, julyData)
+
+        call.respond(
+            HttpStatusCode.Created,
+            AddJulyHistoryResponse(
+                userId = userId,
+                year = currentYear,
+                month = july,
+                addedDays = addedHistories.size,
+                totalSavedMoney = addedHistories
+                    .flatMap { it.missions }
+                    .filter { it.finished }
+                    .map { it.cost }
+                    .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
             )
         )
     }

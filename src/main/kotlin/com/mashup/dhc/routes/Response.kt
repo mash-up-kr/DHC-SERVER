@@ -237,3 +237,12 @@ data class ValidationErrorResponse(
             )
     }
 }
+
+@Serializable
+data class AddJulyHistoryResponse(
+    val userId: String,
+    val year: Int,
+    val month: Int,
+    val addedDays: Int,
+    val totalSavedMoney: Money
+)
