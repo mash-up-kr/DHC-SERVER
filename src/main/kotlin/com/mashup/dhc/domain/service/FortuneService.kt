@@ -109,7 +109,10 @@ class FortuneService(
 
             val dailyFortune = fortuneRepository.retrieveArbitraryDailyFortune()
             if (dailyFortune != null) {
-                user = userService.updateUserDailyFortune(user.id!!.toHexString(), dailyFortune)
+                user = userService.updateUserDailyFortune(
+                    user.id!!.toHexString(),
+                    dailyFortune.copy(date = requestDate.toYearMonthDayString())
+                )
             }
         }
 
