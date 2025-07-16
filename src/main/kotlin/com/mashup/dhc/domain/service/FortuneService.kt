@@ -30,7 +30,7 @@ class FortuneService(
                     delay(1.minutes)
 
                     val requests = mutableListOf<Pair<String, GeminiFortuneRequest>>()
-                    val batchSize = 15
+                    val batchSize = 5
 
                     repeat(batchSize) {
                         // poll()은 큐가 비어있으면 null 반환
