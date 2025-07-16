@@ -470,7 +470,7 @@ private fun Route.calendarView(userService: UserService) {
                         .filter { it.missions.isNotEmpty() }
                         .sumOf {
                             100 * it.missions.filter { mission -> mission.finished }.size /
-                                (it.missions.size)
+                                it.missions.size
                         }
 
                 val calendarDayMissionViews =
@@ -483,20 +483,16 @@ private fun Route.calendarView(userService: UserService) {
                         )
                     }
 
-                val monthlyTotalPercentage =
-                    if (addMonth == 0) {
-                        (1..now.dayOfMonth).sum()
+                val days =
+                    if (currentMonthLocalDate.month == now.month) {
+                        now.dayOfMonth
                     } else {
                         val isLeapYear = currentMonthLocalDate.isLeapYear()
-                        (1..currentMonthLocalDate.month.length(isLeapYear)).sum()
+                        currentMonthLocalDate.month.length(isLeapYear)
                     }
 
-                application.log.info(
-                    "monthlyTotalPercentage $monthlyTotalPercentage, monthlyFinishedPercentage $monthlyFinishedPercentage"
-                )
+                val averageSucceedProbability : Int = monthlyFinishedPercentage / days
 
-                val averageSucceedProbability =
-                    if (monthlyTotalPercentage == 0) 0 else monthlyFinishedPercentage * 100 / monthlyTotalPercentage
                 AnalysisMonthViewResponse(
                     month = currentMonthLocalDate.month.value,
                     averageSucceedProbability = averageSucceedProbability,
