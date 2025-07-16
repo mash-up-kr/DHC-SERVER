@@ -247,6 +247,50 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/users/{userId}/add-july-history:
+    post:
+      summary: "Add July Past Routine History"
+      description: "Add past routine history for July with predefined mission completion status. This API can only be called once per user."
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "201":
+          description: "July history added successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddJulyHistoryResponse"
+              example:
+                userId: "507f1f77bcf86cd799439011"
+                year: 2024
+                month: 7
+                addedDays: 11
+                totalSavedMoney: "350.00"
+        "409":
+          description: "July history already exists for this user"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 409
+                message: "Conflict - July history already exists"
+        "404":
+          description: "User not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                message: "User not found"
+
   /api/mission-categories:
     get:
       summary: "Get Mission Categories"
@@ -673,6 +717,36 @@ components:
           type: string
           description: "Total money saved today (Money type as string)"
           example: "25.50"
+
+    AddJulyHistoryResponse:
+      type: object
+      required:
+        - userId
+        - year
+        - month
+        - addedDays
+        - totalSavedMoney
+      properties:
+        userId:
+          type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+        year:
+          type: integer
+          description: "Year of the added history"
+          example: 2024
+        month:
+          type: integer
+          description: "Month of the added history (always 7 for July)"
+          example: 7
+        addedDays:
+          type: integer
+          description: "Number of days with history added"
+          example: 11
+        totalSavedMoney:
+          type: string
+          description: "Total money saved from all added missions (Money type as string)"
+          example: "350.00"
 
     HomeViewResponse:
       type: object
