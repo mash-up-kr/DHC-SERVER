@@ -102,18 +102,22 @@ class FortuneService(
     ): DailyFortune {
         var user = userService.getUserById(userId)
 
-        if (user.dailyFortune?.date != requestDate.toYearMonthDayString()) {
+        if (user.dailyFortune == null
+            || user.dailyFortune.date != requestDate.toYearMonthDayString()
+        ) {
             if (user.dailyFortunes?.findDailyFortune(requestDate) != null) {
-                return user.dailyFortunes?.findDailyFortune(requestDate)!!
+                return user.dailyFortunes.findDailyFortune(requestDate)!!
             }
 
-            val dailyFortune = fortuneRepository.retrieveArbitraryDailyFortune()
-            if (dailyFortune != null) {
-                user = userService.updateUserDailyFortune(user.id!!.toHexString(), dailyFortune)
-            }
+            val dailyFortune = fortuneRepository.retrieveArbitraryDailyFortune()!!
+            user = userService.updateUserDailyFortune(
+                user.id!!.toHexString(),
+                dailyFortune.copy(date = requestDate.toYearMonthDayString())
+            )
+            return user.dailyFortune!!
         }
 
-        return user.dailyFortune?.copy(date = requestDate.toYearMonthDayString())!!
+        return user.dailyFortune
     }
 }
 
