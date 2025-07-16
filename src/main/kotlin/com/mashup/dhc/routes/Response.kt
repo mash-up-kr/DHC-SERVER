@@ -112,7 +112,7 @@ data class AnimalCard(
 data class AnalysisViewResponse(
     val totalSavedMoney: Money,
     @Deprecated("안씀") val weeklySavedMoney: Money,
-    val weeklySpendMoney : Money,
+    val weeklySpendMoney: Money,
     val monthlySpendMoney: Money,
     val generationMoneyViewResponse: GenerationMoneyViewResponse
 )

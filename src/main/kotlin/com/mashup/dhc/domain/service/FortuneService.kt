@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.datetime.LocalDate
 import org.slf4j.LoggerFactory
 
@@ -43,7 +44,11 @@ class FortuneService(
                         logger.info("Processing batch of ${requests.size} fortune requests")
 
                         try {
-                            geminiService.generateDailyFortuneBatch(requests)
+                            supervisorScope {
+                                launch {
+                                    geminiService.generateDailyFortuneBatch(requests)
+                                }
+                            }
                             logger.info("Successfully processed ${requests.size} fortune requests")
                         } catch (e: Exception) {
                             logger.error("Failed to process batch fortune requests", e)
@@ -102,18 +107,19 @@ class FortuneService(
     ): DailyFortune {
         var user = userService.getUserById(userId)
 
-        if (user.dailyFortune == null
-            || user.dailyFortune.date != requestDate.toYearMonthDayString()
+        if (user.dailyFortune == null ||
+            user.dailyFortune.date != requestDate.toYearMonthDayString()
         ) {
             if (user.dailyFortunes?.findDailyFortune(requestDate) != null) {
                 return user.dailyFortunes.findDailyFortune(requestDate)!!
             }
 
             val dailyFortune = fortuneRepository.retrieveArbitraryDailyFortune()!!
-            user = userService.updateUserDailyFortune(
-                user.id!!.toHexString(),
-                dailyFortune.copy(date = requestDate.toYearMonthDayString())
-            )
+            user =
+                userService.updateUserDailyFortune(
+                    user.id!!.toHexString(),
+                    dailyFortune.copy(date = requestDate.toYearMonthDayString())
+                )
             return user.dailyFortune!!
         }
 

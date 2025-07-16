@@ -296,17 +296,19 @@ class UserService(
         julyData: Map<Int, Int>
     ): List<PastRoutineHistory> =
         transactionService.executeInTransaction { session ->
-            val user = userRepository.findById(ObjectId(userId), session)
-                ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
-            
+            val user =
+                userRepository.findById(ObjectId(userId), session)
+                    ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
+
             val addedHistories = mutableListOf<PastRoutineHistory>()
             val allMissions = missionRepository.findAll()
-            
+
             // 카테고리별 미션 그룹화
-            val missionsByCategory = allMissions
-                .filter { it.type == MissionType.DAILY }
-                .groupBy { it.category }
-            
+            val missionsByCategory =
+                allMissions
+                    .filter { it.type == MissionType.DAILY }
+                    .groupBy { it.category }
+
             // 사용자의 선호 카테고리에서 미션 선택
             val preferredCategories = user.preferredMissionCategoryList
 
@@ -323,10 +325,10 @@ class UserService(
                 if (existing != null) {
                     return@forEach
                 }
-                
+
                 // 3개의 미션을 랜덤하게 선택
                 val selectedMissions = mutableListOf<Mission>()
-                
+
                 // 각 선호 카테고리에서 미션을 선택
                 preferredCategories.take(3).forEach { category ->
                     val categoryMissions = missionsByCategory[category] ?: emptyList()
@@ -334,47 +336,51 @@ class UserService(
                         selectedMissions.add(categoryMissions.random())
                     }
                 }
-                
+
                 // 선호 카테고리가 3개 미만인 경우 랜덤하게 추가
                 while (selectedMissions.size < 3) {
-                    val randomCategory = MissionCategory.entries
-                        .filter { it != MissionCategory.SELF_REFLECTION }
-                        .random()
+                    val randomCategory =
+                        MissionCategory.entries
+                            .filter { it != MissionCategory.SELF_REFLECTION }
+                            .random()
                     val categoryMissions = missionsByCategory[randomCategory] ?: emptyList()
                     if (categoryMissions.isNotEmpty()) {
                         selectedMissions.add(categoryMissions.random())
                     }
                 }
-                
+
                 // 완료된 미션 설정
-                val missionsWithStatus = selectedMissions.take(3).mapIndexed { index, mission ->
-                    mission.copy(
-                        id = ObjectId(),
-                        finished = index < completedCount,
-                        endDate = date
+                val missionsWithStatus =
+                    selectedMissions.take(3).mapIndexed { index, mission ->
+                        mission.copy(
+                            id = ObjectId(),
+                            finished = index < completedCount,
+                            endDate = date
+                        )
+                    }
+
+                val pastRoutineHistory =
+                    PastRoutineHistory(
+                        id = null,
+                        userId = ObjectId(userId),
+                        date = date,
+                        missions = missionsWithStatus
                     )
-                }
-                
-                val pastRoutineHistory = PastRoutineHistory(
-                    id = null,
-                    userId = ObjectId(userId),
-                    date = date,
-                    missions = missionsWithStatus
-                )
-                
+
                 val insertedId = pastRoutineHistoryRepository.insertOne(pastRoutineHistory, session)
                 if (insertedId != null) {
                     addedHistories.add(pastRoutineHistory.copy(id = insertedId.asObjectId().value))
-                    
+
                     // user의 pastRoutineHistoryIds 업데이트
-                    val updatedUser = user.copy(
-                        pastRoutineHistoryIds = user.pastRoutineHistoryIds + insertedId.asObjectId().value,
-                        totalSavedMoney = user.totalSavedMoney + missionsWithStatus.calculateSavedMoney()
-                    )
+                    val updatedUser =
+                        user.copy(
+                            pastRoutineHistoryIds = user.pastRoutineHistoryIds + insertedId.asObjectId().value,
+                            totalSavedMoney = user.totalSavedMoney + missionsWithStatus.calculateSavedMoney()
+                        )
                     userRepository.updateOne(user.id!!, updatedUser, session)
                 }
             }
-            
+
             addedHistories
         }
 

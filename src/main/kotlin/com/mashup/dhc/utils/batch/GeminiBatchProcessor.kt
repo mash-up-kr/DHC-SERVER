@@ -9,6 +9,7 @@ import com.mashup.dhc.domain.service.GeminiService
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 import kotlin.system.measureTimeMillis
 import kotlin.time.Duration.Companion.minutes
@@ -16,6 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
@@ -104,11 +106,20 @@ class GeminiBatchProcessor(
                         when (request) {
                             is MonthBatchRequest -> {
                                 logger.info("한 달 배치 처리 시작: userId=${request.userId}")
-                                val response = geminiService.requestMonthFortune(request.request)
-                                val monthlyFortune = response.toMonthlyFortune()
+                                supervisorScope {
+                                    launch {
+                                        try {
+                                            val response = geminiService.requestMonthFortune(request.request)
+                                            val monthlyFortune = response.toMonthlyFortune()
 
-                                request.monthlyFortuneHandler(monthlyFortune)
-                                request.continuation.resume(response)
+                                            request.monthlyFortuneHandler(monthlyFortune)
+                                            request.continuation.resume(response)
+                                        } catch (ex: Exception) {
+                                            logger.error(ex.message, ex)
+                                            request.continuation.resumeWithException(ex)
+                                        }
+                                    }
+                                }
                             }
 
                             is DailyBatchRequest -> {
