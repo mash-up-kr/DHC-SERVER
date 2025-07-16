@@ -421,6 +421,11 @@ private fun Route.analysisView(userService: UserService) {
                 .map { it.missions.calculateSavedMoney() }
                 .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
 
+        val weeklySpendMoney =
+            weeklyPastRoutines
+                .map { it.missions.calculateSpendMoney() }
+                .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+
         val monthlyPastRoutines = userService.getMonthlyPastRoutines(userId = userId, date = baseYearMonth)
 
         val monthlySpendMoney =
@@ -433,6 +438,7 @@ private fun Route.analysisView(userService: UserService) {
             AnalysisViewResponse(
                 totalSavedMoney = user.totalSavedMoney,
                 weeklySavedMoney = weeklySavedMoney,
+                weeklySpendMoney = weeklySpendMoney,
                 monthlySpendMoney = monthlySpendMoney,
                 generationMoneyViewResponse =
                     GenerationMoneyViewResponse(

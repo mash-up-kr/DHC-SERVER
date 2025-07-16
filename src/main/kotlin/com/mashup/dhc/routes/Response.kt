@@ -111,7 +111,8 @@ data class AnimalCard(
 @Serializable
 data class AnalysisViewResponse(
     val totalSavedMoney: Money,
-    val weeklySavedMoney: Money,
+    @Deprecated("안씀") val weeklySavedMoney: Money,
+    val weeklySpendMoney : Money,
     val monthlySpendMoney: Money,
     val generationMoneyViewResponse: GenerationMoneyViewResponse
 )
