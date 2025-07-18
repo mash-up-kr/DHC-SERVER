@@ -161,8 +161,8 @@ class UserService(
                 missionUpdatedUser.id!!,
                 missionUpdatedUser.copy(
                     pastRoutineHistoryIds = (
-                        missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
-                    ),
+                            missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
+                            ),
                     totalSavedMoney = user.totalSavedMoney + todaySavedMoney
                 ),
                 session
@@ -180,7 +180,11 @@ class UserService(
         val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory)
         val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory, session)
 
-        val today = now()
+        val today: LocalDate = if (!user.todayDailyMissionList.isEmpty()) {
+            user.todayDailyMissionList.first().endDate
+        } else {
+            null
+        } ?: now()
 
         val updatedUser =
             user.copy(
