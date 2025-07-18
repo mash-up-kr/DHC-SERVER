@@ -197,7 +197,7 @@ class UserService(
         val updatedUser =
             user.copy(
                 longTermMission =
-                    if (user.longTermMission?.expired() == true) {
+                    if (user.longTermMission == null || user.longTermMission.expired() == true) {
                         longTermCategoryMissions
                             .random()
                             .copy(endDate = today.plus(14, DateTimeUnit.DAY))
