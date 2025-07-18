@@ -137,16 +137,23 @@ class UserService(
     ): Money =
         transactionService.executeInTransaction { session ->
             val user = userRepository.findById(ObjectId(userId), session)!!
-            val todayMissionList = user.todayDailyMissionList
+            val longTermMission =
+                if (user.longTermMission?.expired() == true) {
+                    listOf(user.longTermMission)
+                } else {
+                    listOf<Mission>()
+                }
 
-            val todaySavedMoney = todayMissionList.calculateSavedMoney()
+            val endMissionList = user.todayDailyMissionList + longTermMission
+
+            val todaySavedMoney = endMissionList.calculateSavedMoney()
 
             val pastRoutineHistory =
                 PastRoutineHistory(
                     id = null,
                     userId = ObjectId(userId),
                     date = date,
-                    missions = todayMissionList
+                    missions = endMissionList
                 )
 
             if (pastRoutineHistoryRepository.findByUserIdAndDate(ObjectId(userId), date, session) != null) {
@@ -161,8 +168,8 @@ class UserService(
                 missionUpdatedUser.id!!,
                 missionUpdatedUser.copy(
                     pastRoutineHistoryIds = (
-                            missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
-                            ),
+                        missionUpdatedUser.pastRoutineHistoryIds + insertedPastRoutineHistoryId.asObjectId().value
+                    ),
                     totalSavedMoney = user.totalSavedMoney + todaySavedMoney
                 ),
                 session
@@ -180,16 +187,17 @@ class UserService(
         val dailyCategoryMissions = missionRepository.findDailyByCategory(resolvedCategory)
         val longTermCategoryMissions = missionRepository.findLongTermByCategory(resolvedCategory, session)
 
-        val today: LocalDate = if (!user.todayDailyMissionList.isEmpty()) {
-            user.todayDailyMissionList.first().endDate
-        } else {
-            null
-        } ?: now()
+        val today: LocalDate =
+            if (!user.todayDailyMissionList.isEmpty()) {
+                user.todayDailyMissionList.first().endDate
+            } else {
+                null
+            } ?: now()
 
         val updatedUser =
             user.copy(
                 longTermMission =
-                    if (user.longTermMission == null || user.longTermMission.finished) {
+                    if (user.longTermMission?.expired() == true) {
                         longTermCategoryMissions
                             .random()
                             .copy(endDate = today.plus(14, DateTimeUnit.DAY))
@@ -457,3 +465,7 @@ fun now() =
         .date
 
 fun LocalDate.isLeapYear(): Boolean = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+
+private fun LocalDate.expired() = this < now()
+
+private fun Mission.expired() = this.finished == true || this.endDate?.expired() == true
