@@ -1,28 +1,57 @@
-variable "ncp_access_key" {
-  description = "NCP 액세스 키"
+# =============================================================================
+# OCI 인증 변수
+# =============================================================================
+
+variable "tenancy_ocid" {
+  description = "OCI Tenancy OCID"
   type        = string
   sensitive   = true
 }
 
-variable "ncp_secret_key" {
-  description = "NCP 시크릿 키"
+variable "user_ocid" {
+  description = "OCI User OCID"
   type        = string
   sensitive   = true
+}
+
+variable "fingerprint" {
+  description = "OCI API Key Fingerprint"
+  type        = string
+  sensitive   = true
+}
+
+variable "private_key_path" {
+  description = "OCI API 개인 키 파일 경로"
+  type        = string
+  default     = "~/.oci/oci_api_key.pem"
 }
 
 variable "region" {
-  description = "NCP 리전"
+  description = "OCI 리전"
   type        = string
-  default     = "KR"
+  default     = "ap-seoul-1" # 서울 리전
 }
+
+variable "compartment_id" {
+  description = "OCI Compartment OCID (리소스 그룹)"
+  type        = string
+}
+
+# =============================================================================
+# 프로젝트 설정
+# =============================================================================
 
 variable "project_name" {
   description = "프로젝트 이름"
   type        = string
 }
 
-variable "vpc_cidr" {
-  description = "VPC CIDR"
+# =============================================================================
+# 네트워크 설정
+# =============================================================================
+
+variable "vcn_cidr" {
+  description = "VCN CIDR 블록"
   type        = string
   default     = "192.168.0.0/16"
 }
@@ -33,23 +62,55 @@ variable "public_subnet_cidr" {
   default     = "192.168.1.0/24"
 }
 
-variable "zone" {
-  description = "NCP 가용 구역"
+# =============================================================================
+# Compute 설정
+# =============================================================================
+
+variable "instance_shape" {
+  description = "Compute 인스턴스 Shape"
   type        = string
-  default     = "KR-1"
+  default     = "VM.Standard.E4.Flex" # AMD EPYC, Free Tier 호환
 }
 
-variable "server_image_code" {
-  description = "서버 이미지 코드"
-  type        = string
-  default     = "SW.VSVR.OS.LNX64.ROCKY.0810.B050" # Rocky Linux 8.10
+variable "instance_ocpus" {
+  description = "인스턴스 OCPU 수"
+  type        = number
+  default     = 2
 }
 
-variable "server_product_code" {
-  description = "서버 제품 코드"
-  type        = string
-  default     = "SVR.VSVR.HICPU.C002.M004.NET.SSD.B050.G002" # 2vCPU, 4GB RAM (High-CPU)
+variable "instance_memory_in_gbs" {
+  description = "인스턴스 메모리 (GB)"
+  type        = number
+  default     = 4
 }
+
+variable "boot_volume_size_in_gbs" {
+  description = "부트 볼륨 크기 (GB)"
+  type        = number
+  default     = 100
+}
+
+variable "instance_image_ocid" {
+  description = "인스턴스 이미지 OCID (Oracle Linux 8)"
+  type        = string
+  default     = "" # 자동으로 최신 Oracle Linux 8 이미지 사용
+}
+
+variable "ssh_public_key" {
+  description = "SSH 공개 키 (인스턴스 접속용)"
+  type        = string
+  default     = ""
+}
+
+variable "ssh_public_key_path" {
+  description = "SSH 공개 키 파일 경로"
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
+}
+
+# =============================================================================
+# Object Storage 설정
+# =============================================================================
 
 variable "object_storage_public_read" {
   description = "Object Storage 버킷 공개 읽기 권한"
@@ -61,28 +122,4 @@ variable "object_storage_versioning" {
   description = "Object Storage 버전 관리 활성화"
   type        = bool
   default     = false
-}
-
-variable "object_storage_cors_enabled" {
-  description = "Object Storage CORS 활성화"
-  type        = bool
-  default     = false
-}
-
-variable "object_storage_cors_origins" {
-  description = "Object Storage CORS 허용 출처"
-  type        = list(string)
-  default     = ["*"]
-}
-
-variable "object_storage_lifecycle_enabled" {
-  description = "Object Storage 라이프사이클 규칙 활성화"
-  type        = bool
-  default     = false
-}
-
-variable "object_storage_lifecycle_days" {
-  description = "Object Storage 객체 만료 일수"
-  type        = number
-  default     = 90
 }

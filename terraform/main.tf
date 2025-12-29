@@ -1,111 +1,118 @@
-# VPC 모듈
-module "vpc" {
-  source = "./modules/vpc"
+# =============================================================================
+# Data Sources
+# =============================================================================
 
-  vpc_name = "${var.project_name}-vpc"
-  vpc_cidr = var.vpc_cidr
-  zone     = var.zone
+# Availability Domains 조회
+data "oci_identity_availability_domains" "ads" {
+  compartment_id = var.tenancy_ocid
+}
+
+# =============================================================================
+# VCN 모듈
+# =============================================================================
+
+module "vcn" {
+  source = "./modules/vcn"
+
+  compartment_id = var.compartment_id
+  vcn_name       = "${var.project_name}-vcn"
+  vcn_cidr       = var.vcn_cidr
+  vcn_dns_label  = replace(lower(var.project_name), "-", "")
 
   providers = {
-    ncloud = ncloud
+    oci = oci
   }
 }
 
-# Public Subnet
-module "public_subnet" {
-  source = "./modules/subnet"
+# =============================================================================
+# Security List 모듈
+# =============================================================================
 
-  vpc_id         = module.vpc.vpc_id
-  subnet_name    = "${var.project_name}-subnet"
-  subnet_cidr    = var.public_subnet_cidr
-  zone           = var.zone
-  network_acl_id = module.vpc.network_acl_id
-  subnet_type    = "PUBLIC"
-  usage_type     = "GEN"
+module "security_list" {
+  source = "./modules/security_list"
 
-  providers = {
-    ncloud = ncloud
-  }
-
-  # VPC 생성 후 서브넷 생성
-  depends_on = [module.vpc]
-}
-
-# ACG + 네트워크 ACL
-module "acg" {
-  source = "./modules/acg"
-
-  vpc_id         = module.vpc.vpc_id
-  network_acl_id = module.vpc.network_acl_id
+  compartment_id = var.compartment_id
+  vcn_id         = module.vcn.vcn_id
   project_name   = var.project_name
 
   providers = {
-    ncloud = ncloud
+    oci = oci
   }
 
-  # VPC 생성 후 보안 모듈 생성
-  depends_on = [module.vpc]
+  depends_on = [module.vcn]
 }
 
-# 서버 제품 정보 조회
-module "server_info" {
-  source = "./modules/server/spec"
+# =============================================================================
+# Public Subnet 모듈
+# =============================================================================
 
-  output_json = true
-  output_path = "./modules/server/spec"
+module "public_subnet" {
+  source = "./modules/subnet"
+
+  compartment_id             = var.compartment_id
+  vcn_id                     = module.vcn.vcn_id
+  subnet_name                = "${var.project_name}-public-subnet"
+  subnet_cidr                = var.public_subnet_cidr
+  subnet_dns_label           = "pubsubnet"
+  route_table_id             = module.vcn.public_route_table_id
+  security_list_ids          = [module.security_list.security_list_id]
+  prohibit_public_ip_on_vnic = false # Public Subnet
 
   providers = {
-    ncloud = ncloud
+    oci = oci
   }
+
+  depends_on = [module.vcn, module.security_list]
 }
 
-# 서버 모듈
-module "server" {
-  source = "./modules/server"
+# =============================================================================
+# Compute Instance 모듈
+# =============================================================================
 
-  subnet_id                 = module.public_subnet.subnet_id
-  server_name               = var.project_name
-  server_image_product_code = var.server_image_code
-  server_product_code       = var.server_product_code
-  block_storage_size        = 100
-  acg_ids                   = [module.acg.server_acg_id]
-  assign_public_ip          = true
+module "compute" {
+  source = "./modules/compute"
+
+  compartment_id          = var.compartment_id
+  availability_domain     = data.oci_identity_availability_domains.ads.availability_domains[0].name
+  subnet_id               = module.public_subnet.subnet_id
+  instance_name           = var.project_name
+  instance_shape          = var.instance_shape
+  instance_ocpus          = var.instance_ocpus
+  instance_memory_in_gbs  = var.instance_memory_in_gbs
+  boot_volume_size_in_gbs = var.boot_volume_size_in_gbs
+  image_ocid              = var.instance_image_ocid
+  ssh_public_key          = var.ssh_public_key
+  ssh_public_key_path     = var.ssh_public_key_path
+  assign_public_ip        = true
+  generate_ssh_key        = true # SSH 키 자동 생성
 
   providers = {
-    ncloud = ncloud
+    oci = oci
   }
 
-  # 서브넷, 보안 모듈, 서버 정보 조회 후 서버 생성
-  depends_on = [
-    module.public_subnet,
-    module.acg,
-    module.server_info
-  ]
+  depends_on = [module.public_subnet]
 }
 
-# Object Storage 모듈 - Container Registry와 정적 파일 호스팅 지원
+# =============================================================================
+# Object Storage 모듈
+# =============================================================================
+
 module "object_storage" {
   source = "./modules/object_storage"
 
-  project_name              = var.project_name
-  bucket_name               = "${var.project_name}-object-storage"
-  bucket_public_read        = var.object_storage_public_read
-  versioning                = var.object_storage_versioning
-  enable_container_registry = true
-  enable_static_hosting     = true
+  compartment_id     = var.compartment_id
+  project_name       = var.project_name
+  bucket_name        = "${var.project_name}-storage"
+  bucket_access_type = var.object_storage_public_read ? "ObjectRead" : "NoPublicAccess"
+  versioning         = var.object_storage_versioning ? "Enabled" : "Disabled"
+  storage_tier       = "Standard"
 
-  # CORS와 라이프사이클은 NCP ncloud provider에서 직접 지원하지 않으므로
-  # AWS CLI를 통해 별도로 설정해야 함
-  cors_rules      = []
-  lifecycle_rules = []
-
-  tags = {
-    Project   = var.project_name
-    ManagedBy = "Terraform"
-    Purpose   = "Container Registry and Static Files"
+  freeform_tags = {
+    Project = var.project_name
+    Purpose = "Application Storage"
   }
 
   providers = {
-    ncloud = ncloud
+    oci = oci
   }
 }
