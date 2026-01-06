@@ -29,7 +29,7 @@ variable "private_key_path" {
 variable "region" {
   description = "OCI 리전"
   type        = string
-  default     = "ap-seoul-1" # 서울 리전
+  default     = "ap-chuncheon-1" # 춘천 리전
 }
 
 variable "compartment_id" {

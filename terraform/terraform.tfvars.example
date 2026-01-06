@@ -15,9 +15,9 @@ compartment_id = "ocid1.compartment.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 # =============================================================================
 # 리전 설정
 # =============================================================================
-# 서울: ap-seoul-1, 춘천: ap-chuncheon-1, 도쿄: ap-tokyo-1
+# 춘천: ap-chuncheon-1, 서울: ap-seoul-1, 도쿄: ap-tokyo-1
 
-region = "ap-seoul-1"
+region = "ap-chuncheon-1"
 
 # =============================================================================
 # 프로젝트 설정
