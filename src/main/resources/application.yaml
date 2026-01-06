@@ -12,12 +12,15 @@ db:
       name: "dhc"
     maxPoolSize: 20
 
-ncp:
-  accessKey: $NCP_ACCESS_KEY
-  secretKey: $NCP_SECRET_KEY
+# OCI Object Storage (S3 호환 API)
+oci:
+  accessKey: $OCI_ACCESS_KEY
+  secretKey: $OCI_SECRET_KEY
+  namespace: $OCI_NAMESPACE
   bucketName: $BUCKET_NAME
-  region: "kr-standard"
-  endpoint: "https://kr.object.ncloudstorage.com"
+  region: $OCI_REGION
+  # S3 호환 엔드포인트: https://{namespace}.compat.objectstorage.{region}.oraclecloud.com
+  endpoint: "https://${OCI_NAMESPACE}.compat.objectstorage.${OCI_REGION}.oraclecloud.com"
 
 gemini:
   api:
