@@ -21,25 +21,25 @@ variable "instance_name" {
 variable "instance_shape" {
   description = "인스턴스 Shape"
   type        = string
-  default     = "VM.Standard.E4.Flex"
+  default     = "VM.Standard.E2.1.Micro" # AMD Free Tier
 }
 
 variable "instance_ocpus" {
-  description = "OCPU 수"
+  description = "OCPU 수 (Flex Shape에서만 사용)"
   type        = number
-  default     = 2
+  default     = 1
 }
 
 variable "instance_memory_in_gbs" {
-  description = "메모리 크기 (GB)"
+  description = "메모리 크기 GB (Flex Shape에서만 사용)"
   type        = number
-  default     = 4
+  default     = 1
 }
 
 variable "boot_volume_size_in_gbs" {
   description = "부트 볼륨 크기 (GB)"
   type        = number
-  default     = 100
+  default     = 50
 }
 
 variable "image_ocid" {

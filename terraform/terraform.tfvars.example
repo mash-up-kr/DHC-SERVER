@@ -36,11 +36,19 @@ public_subnet_cidr = "192.168.1.0/24"
 # Compute 인스턴스 설정
 # =============================================================================
 
-# Free Tier 호환 Shape
-instance_shape         = "VM.Standard.E4.Flex"
-instance_ocpus         = 2
-instance_memory_in_gbs = 4
-boot_volume_size_in_gbs = 100
+# Free Tier (AMD) - 기본값
+instance_shape          = "VM.Standard.E2.1.Micro"  # 1 OCPU, 1GB RAM (2개까지 무료)
+boot_volume_size_in_gbs = 50                        # 총 200GB까지 무료
+
+# Free Tier (ARM) - 더 좋은 스펙 원하면 아래 사용
+# instance_shape         = "VM.Standard.A1.Flex"    # 최대 4 OCPU, 24GB RAM 무료
+# instance_ocpus         = 2
+# instance_memory_in_gbs = 12
+
+# 유료 옵션 (더 좋은 스펙 필요시)
+# instance_shape         = "VM.Standard.E4.Flex"
+# instance_ocpus         = 2
+# instance_memory_in_gbs = 4
 
 # SSH 키 설정 (아래 중 하나 선택)
 # 옵션 1: 기존 SSH 키 사용

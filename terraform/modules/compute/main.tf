@@ -35,6 +35,8 @@ locals {
     var.ssh_public_key != "" ? var.ssh_public_key : file(var.ssh_public_key_path)
   )
   image_ocid = var.image_ocid != "" ? var.image_ocid : data.oci_core_images.oracle_linux.images[0].id
+  # Flex Shape 여부 확인
+  is_flex_shape = length(regexall("Flex$", var.instance_shape)) > 0
 }
 
 # Compute Instance 생성
@@ -44,10 +46,13 @@ resource "oci_core_instance" "main" {
   display_name        = var.instance_name
   shape               = var.instance_shape
 
-  # Flex Shape 설정
-  shape_config {
-    ocpus         = var.instance_ocpus
-    memory_in_gbs = var.instance_memory_in_gbs
+  # Flex Shape일 때만 shape_config 설정
+  dynamic "shape_config" {
+    for_each = local.is_flex_shape ? [1] : []
+    content {
+      ocpus         = var.instance_ocpus
+      memory_in_gbs = var.instance_memory_in_gbs
+    }
   }
 
   # 부트 볼륨 설정
