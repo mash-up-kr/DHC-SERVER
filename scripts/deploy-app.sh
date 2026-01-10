@@ -73,12 +73,7 @@ set -a
 source .env.production
 set +a
 
-# OCI 인증 정보 확인
-if [ -z "$OCI_ACCESS_KEY" ] || [ -z "$OCI_SECRET_KEY" ]; then
-    echo -e "${RED}OCI 인증 정보가 설정되지 않았습니다${NC}"
-    exit 1
-fi
-
+# 레지스트리 정보 확인
 if [ -z "$REGISTRY" ] || [ -z "$IMAGE_TAG" ]; then
     echo -e "${RED}레지스트리 또는 이미지 태그가 설정되지 않았습니다${NC}"
     exit 1
@@ -91,14 +86,19 @@ if [ -z "$DB_SERVER_IP" ]; then
 fi
 
 echo -e "${GREEN}DB 서버 IP: ${DB_SERVER_IP}${NC}"
+echo -e "${GREEN}레지스트리: ${REGISTRY}:${IMAGE_TAG}${NC}"
 
-# 1. OCI Container Registry 로그인
-echo -e "${GREEN}OCI Container Registry 로그인 중...${NC}"
-echo "$OCI_SECRET_KEY" | docker login "${OCI_REGION}.ocir.io" -u "${OCI_NAMESPACE}/${OCI_ACCESS_KEY}" --password-stdin
+# 1. GitHub Container Registry 로그인 (GHCR_TOKEN이 있는 경우)
+if [ -n "$GHCR_TOKEN" ]; then
+    echo -e "${GREEN}GitHub Container Registry 로그인 중...${NC}"
+    echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}레지스트리 로그인 실패${NC}"
-    exit 1
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}레지스트리 로그인 실패${NC}"
+        exit 1
+    fi
+else
+    echo -e "${YELLOW}GHCR_TOKEN이 설정되지 않음. Public 이미지로 가정합니다.${NC}"
 fi
 
 # 2. 현재 상태 확인
