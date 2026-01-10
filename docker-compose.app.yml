@@ -9,12 +9,6 @@ services:
     container_name: dhc-app
     network_mode: host
     environment:
-      # OCI Object Storage (S3 호환)
-      - OCI_ACCESS_KEY=${OCI_ACCESS_KEY}
-      - OCI_SECRET_KEY=${OCI_SECRET_KEY}
-      - OCI_NAMESPACE=${OCI_NAMESPACE}
-      - OCI_REGION=${OCI_REGION}
-      - BUCKET_NAME=${BUCKET_NAME}
       # MongoDB (DB 서버 private IP)
       - MONGO_CONNECTION_STRING=mongodb://${DB_SERVER_IP}:27017/dhc?replicaSet=rs0
       # Gemini API
