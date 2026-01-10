@@ -140,7 +140,7 @@ jobs:
 
       - name: 프로덕션 환경 파일 생성
         run: |
-          # .env.production 파일 생성
+          # .env.production 파일 생성 (2서버 아키텍처)
           cat > .env.production <<EOF
           # Docker Registry (OCI Container Registry)
           REGISTRY=${{ env.REGISTRY }}/${{ env.OCI_NAMESPACE }}
@@ -153,8 +153,8 @@ jobs:
           BUCKET_NAME=${{ secrets.BUCKET_NAME }}
           OCI_REGION=${{ secrets.OCI_REGION }}
 
-          # MongoDB Settings
-          MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc?replicaSet=rs0
+          # DB Server (Private IP)
+          DB_SERVER_IP=${{ secrets.DB_SERVER_PRIVATE_IP }}
 
           # Gemini Settings
           GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
@@ -166,7 +166,7 @@ jobs:
           host: ${{ secrets.OCI_SERVER_HOST }}
           username: ${{ secrets.OCI_SERVER_USER }}
           key: ${{ secrets.OCI_SERVER_SSH_KEY }}
-          source: "docker-compose.deploy.yml,.env.production,scripts/"
+          source: "docker-compose.app.yml,.env.production,scripts/"
           target: "/home/opc/dhc-deployment"
 
       - name: 배포 실행
@@ -179,22 +179,11 @@ jobs:
             cd /home/opc/dhc-deployment
 
             # 실행 권한 부여
-            chmod +x scripts/deploy.sh
+            chmod +x scripts/deploy-app.sh
             chmod +x scripts/install-docker-oracle-linux.sh
-            chmod +x scripts/init-replica-set.sh
 
-            # 배포 스크립트 실행
-            ./scripts/deploy.sh
-
-      - name: MongoDB Replica Set 상태 확인
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.OCI_SERVER_HOST }}
-          username: ${{ secrets.OCI_SERVER_USER }}
-          key: ${{ secrets.OCI_SERVER_SSH_KEY }}
-          script: |
-            echo "MongoDB Replica Set 상태 확인 중..."
-            docker exec mongodb mongosh --quiet --eval "rs.status().members.forEach(m => print(m.name + ': ' + m.stateStr))"
+            # App 서버 배포 스크립트 실행
+            ./scripts/deploy-app.sh
 
       - name: 헬스 체크
         run: |
