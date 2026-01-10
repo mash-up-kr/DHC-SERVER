@@ -5,7 +5,7 @@ version: '3.8'
 
 services:
   dhc-app:
-    image: ${REGISTRY}/dhc-ktor-app:${IMAGE_TAG}
+    image: ${REGISTRY}:${IMAGE_TAG}
     container_name: dhc-app
     network_mode: host
     environment:
