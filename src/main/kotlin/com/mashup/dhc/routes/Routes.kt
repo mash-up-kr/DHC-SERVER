@@ -97,9 +97,30 @@ fun Route.userRoutes(
         myPage(userService)
         analysisView(userService)
         calendarView(userService)
+        rewardProgress()
     }
     route("/api") {
         missionCategoriesRoutes()
+    }
+}
+
+fun Route.rewardProgress() {
+    get("/reward-progress") {
+        call.respond(
+            HttpStatusCode.OK,
+            RewardProgressViewResponse(
+                RewardUserResponse(
+                    "testUrl",
+                    RewardUserResponse.RewardLevel.LV1,
+                    100
+                ),
+                listOf(
+                    AvailableRewardResponse(1, "1년 운세"),
+                    AvailableRewardResponse(2, "전반적 사주"),
+                    AvailableRewardResponse(3, "복합 사주")
+                )
+            )
+        )
     }
 }
 

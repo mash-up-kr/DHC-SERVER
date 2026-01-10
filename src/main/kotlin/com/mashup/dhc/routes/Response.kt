@@ -37,6 +37,41 @@ data class HomeViewResponse(
 )
 
 @Serializable
+data class RewardProgressViewResponse(
+    val user: RewardUserResponse,
+    val rewardList: List<AvailableRewardResponse>
+)
+
+@Serializable
+data class RewardUserResponse(
+    val rewardImageUrl: String,
+    val rewardLevel: RewardLevel,
+    val totalExp: Int
+) {
+    enum class RewardLevel(
+        val level: Int,
+        val title: String
+    ) {
+        LV1(1, "새싹"),
+        LV2(2, "흙"),
+        LV3(3, "돌"),
+        LV4(4, "동"),
+        LV5(5, "은"),
+        LV6(6, "금"),
+        LV7(7, "백금"),
+        LV8(8, "다이아"),
+        LV9(9, "루비"),
+        LV10(10, "프리미엄")
+    }
+}
+
+@Serializable
+data class AvailableRewardResponse(
+    val id: Long,
+    val title: String
+)
+
+@Serializable
 data class MissionResponse(
     val missionId: String,
     val category: String,
