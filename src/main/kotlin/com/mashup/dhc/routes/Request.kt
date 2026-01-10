@@ -98,3 +98,27 @@ data class ToggleMissionRequest(
         }
     }
 }
+
+@Serializable
+data class LoveTestRequest(
+    val me: LoveTestMe,
+    val you: LoveTestYou,
+    val loveDate: LocalDate
+) {
+    @Serializable
+    data class LoveTestMe(
+        val gender: Gender,
+        val name: String,
+        val birthDate: BirthDate,
+        val birthTime: BirthTime?
+    )
+
+    @Serializable
+    data class LoveTestYou(
+        val gender: Gender,
+        val name: String,
+        val birthDate: BirthDate?,
+        val birthTime: BirthTime?,
+        val additional: String?
+    )
+}

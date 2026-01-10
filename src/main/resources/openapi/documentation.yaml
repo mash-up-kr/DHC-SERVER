@@ -323,6 +323,71 @@ paths:
                     displayName: "사교·모임"
                     imageUrl: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/social.png"
 
+  /api/love-test:
+    post:
+      summary: "Love Compatibility Test"
+      description: "Calculate love compatibility score between two people based on their birth information"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoveTestRequest"
+            example:
+              me:
+                gender: "MALE"
+                name: "홍길동"
+                birthDate:
+                  date: "1995-05-15"
+                  calendarType: "SOLAR"
+                birthTime: "14:30:00"
+              you:
+                gender: "FEMALE"
+                name: "김영희"
+                birthDate:
+                  date: "1997-08-20"
+                  calendarType: "SOLAR"
+                birthTime: "09:00:00"
+                additional: "추가 정보"
+              loveDate: "2024-01-15"
+      responses:
+        "200":
+          description: "Love compatibility test result"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoveTestViewResponse"
+              example:
+                score: 85
+                fortuneDetail: "궁합운 설명"
+                fortuneCard:
+                  image: "https://kr.object.ncloudstorage.com/dhc-object-storage/logos/mainCard/png/fourLeafClover.png"
+                  title: "궁합운"
+                  subTitle: "결혼까지 꿈꿔볼 수 있을 것 같아요 놓치기전에 먼저 고백해보세요!"
+                fortuneTips:
+                  - image: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-color.svg"
+                    title: "피해야 할 색상"
+                    description: "흰색"
+                    hexColor: "#ffffff"
+                  - image: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/jinxed-menu.svg"
+                    title: "이 음식은 조심해!"
+                    description: "치킨, 닭"
+                  - image: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/today-menu.svg"
+                    title: "행운의 메뉴"
+                    description: "카레"
+                  - image: "https://kr.object.ncloudstorage.com/dhc-object-storage/uploads/lucky-color.svg"
+                    title: "행운의 색상"
+                    description: "연두색"
+                    hexColor: "#81c147"
+                confessDate: "2026-10-04"
+                confessLocation: "학교 근처 놀이터에서"
+        "400":
+          description: "Bad request"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /view/users/{userId}/home:
     get:
       summary: "Get Home View"
@@ -1434,3 +1499,107 @@ components:
         - LV10
       description: "Reward level (LV1: 새싹, LV2: 흙, LV3: 돌, LV4: 동, LV5: 은, LV6: 금, LV7: 백금, LV8: 다이아, LV9: 루비, LV10: 프리미엄)"
       example: "LV1"
+
+    LoveTestRequest:
+      type: object
+      required:
+        - me
+        - you
+        - loveDate
+      properties:
+        me:
+          $ref: "#/components/schemas/LoveTestMe"
+          description: "My information"
+        you:
+          $ref: "#/components/schemas/LoveTestYou"
+          description: "Partner's information"
+        loveDate:
+          type: string
+          format: date
+          description: "Date for love compatibility test in YYYY-MM-DD format"
+          example: "2024-01-15"
+
+    LoveTestMe:
+      type: object
+      required:
+        - gender
+        - name
+        - birthDate
+      properties:
+        gender:
+          $ref: "#/components/schemas/Gender"
+        name:
+          type: string
+          description: "My name"
+          example: "홍길동"
+        birthDate:
+          $ref: "#/components/schemas/BirthDate"
+        birthTime:
+          type: string
+          format: time
+          description: "Birth time in HH:mm:ss format"
+          example: "14:30:00"
+          nullable: true
+
+    LoveTestYou:
+      type: object
+      required:
+        - gender
+        - name
+      properties:
+        gender:
+          $ref: "#/components/schemas/Gender"
+        name:
+          type: string
+          description: "Partner's name"
+          example: "김영희"
+        birthDate:
+          $ref: "#/components/schemas/BirthDate"
+          nullable: true
+        birthTime:
+          type: string
+          format: time
+          description: "Birth time in HH:mm:ss format"
+          example: "09:00:00"
+          nullable: true
+        additional:
+          type: string
+          description: "Additional information about partner"
+          example: "추가 정보"
+          nullable: true
+
+    LoveTestViewResponse:
+      type: object
+      required:
+        - score
+        - fortuneDetail
+        - fortuneCard
+        - fortuneTips
+        - confessDate
+        - confessLocation
+      properties:
+        score:
+          type: integer
+          description: "Love compatibility score (0-100)"
+          example: 85
+        fortuneDetail:
+          type: string
+          description: "Detailed fortune description for the couple"
+          example: "궁합운 설명"
+        fortuneCard:
+          $ref: "#/components/schemas/FortuneCard"
+          description: "Fortune card information"
+        fortuneTips:
+          type: array
+          items:
+            $ref: "#/components/schemas/FortuneTip"
+          description: "List of fortune tips for the couple"
+        confessDate:
+          type: string
+          format: date
+          description: "Recommended confession date in YYYY-MM-DD format"
+          example: "2026-10-04"
+        confessLocation:
+          type: string
+          description: "Recommended confession location"
+          example: "학교 근처 놀이터에서"

@@ -1,5 +1,7 @@
 package com.mashup.dhc.routes
 
+import com.mashup.dhc.domain.model.FortuneCard
+import com.mashup.dhc.domain.model.FortuneTip
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Generation
 import com.mashup.dhc.domain.model.Mission
@@ -101,6 +103,52 @@ fun Route.userRoutes(
     }
     route("/api") {
         missionCategoriesRoutes()
+        loveTest()
+    }
+}
+
+fun Route.loveTest() {
+    post("/love-test") {
+        val request = call.receive<LoveTestRequest>()
+
+        call.respond(
+            HttpStatusCode.OK,
+            LoveTestViewResponse(
+                85,
+                "궁합운 설명",
+                FortuneCard(
+                    ImageUrlMapper.MainCard.getFortuneCardByScore(85, ImageFormat.PNG),
+                    "궁합운",
+                    "결혼까지 꿈꿔볼 수 있을 것 같아요 놓치기전에 먼저 고백해보세요!"
+                ),
+                listOf(
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(ImageFormat.SVG),
+                        title = "피해야 할 색상",
+                        description = "흰색",
+                        hexColor = "#ffffff"
+                    ),
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(ImageFormat.SVG),
+                        title = "이 음식은 조심해!",
+                        description = "치킨, 닭"
+                    ),
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(ImageFormat.SVG),
+                        title = "행운의 메뉴",
+                        description = "카레"
+                    ),
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(ImageFormat.SVG),
+                        title = "행운의 색상",
+                        description = "연두색",
+                        hexColor = "#81c147"
+                    )
+                ),
+                LocalDate.parse("2026-10-04"),
+                "학교 근처 놀이터에서"
+            )
+        )
     }
 }
 

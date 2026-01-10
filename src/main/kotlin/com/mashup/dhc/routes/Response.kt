@@ -282,3 +282,13 @@ data class AddJulyHistoryResponse(
     val addedDays: Int,
     val totalSavedMoney: Money
 )
+
+data class LoveTestViewResponse(
+    val score: Int,
+    val fortuneDetail: String,
+    val fortuneCard: FortuneCard,
+    val fortuneTips: List<FortuneTip>,
+    // TODO: 위험요소 확인 필요
+    val confessDate: LocalDate,
+    val confessLocation: String
+)
