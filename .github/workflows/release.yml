@@ -153,6 +153,13 @@ jobs:
 
           # Gemini Settings
           GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
+          # OCI Object Storage
+          OCI_ACCESS_KEY=${{ secrets.OCI_ACCESS_KEY }}
+          OCI_SECRET_KEY=${{ secrets.OCI_SECRET_KEY }}
+          OCI_NAMESPACE=${{ secrets.OCI_NAMESPACE }}
+          BUCKET_NAME=${{ secrets.OCI_BUCKET_NAME }}
+          OCI_REGION=${{ secrets.OCI_REGION }}
           EOF
 
       - name: 배포 파일 복사

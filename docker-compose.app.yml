@@ -13,6 +13,12 @@ services:
       - MONGO_CONNECTION_STRING=mongodb://${DB_SERVER_IP}:27017/dhc?replicaSet=rs0
       # Gemini API
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # OCI Object Storage
+      - OCI_ACCESS_KEY=${OCI_ACCESS_KEY}
+      - OCI_SECRET_KEY=${OCI_SECRET_KEY}
+      - OCI_NAMESPACE=${OCI_NAMESPACE}
+      - BUCKET_NAME=${BUCKET_NAME}
+      - OCI_REGION=${OCI_REGION}
       - TZ=Asia/Seoul
     volumes:
       - ./logs:/app/logs
