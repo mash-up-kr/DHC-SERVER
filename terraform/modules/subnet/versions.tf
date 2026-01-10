@@ -1,9 +1,9 @@
 terraform {
   required_providers {
-    ncloud = {
-      source                = "NaverCloudPlatform/ncloud"
-      version               = "~> 3.3.1"
-      configuration_aliases = [ncloud]
+    oci = {
+      source                = "oracle/oci"
+      version               = "~> 5.46"
+      configuration_aliases = [oci]
     }
   }
 }

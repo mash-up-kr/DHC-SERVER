@@ -11,8 +11,9 @@ on:
         type: string
 
 env:
-  REGISTRY: ${{ secrets.NCP_CONTAINER_REGISTRY }}
-  IMAGE_NAME: dhc-ktor-app
+  # GitHub Container Registry (GHCR) 설정
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/dhc-ktor-app
 
 jobs:
   build:
@@ -70,12 +71,12 @@ jobs:
       - name: Docker Buildx 설정
         uses: docker/setup-buildx-action@v3
 
-      - name: NCP 레지스트리 로그인
+      - name: GitHub Container Registry 로그인
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.NCP_ACCESS_KEY }}
-          password: ${{ secrets.NCP_SECRET_KEY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 메타데이터 추출
         id: meta
@@ -134,83 +135,76 @@ jobs:
           echo "- **버전:** ${{ needs.build.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "- **시작 시간:** $(TZ=Asia/Seoul date +'%Y-%m-%d %H:%M:%S KST')" >> $GITHUB_STEP_SUMMARY
 
+      - name: SSH 키 설정
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.OCI_SERVER_SSH_KEY }}
+
       - name: 프로덕션 환경 파일 생성
         run: |
-          # .env.production 파일 생성
+          # .env.production 파일 생성 (2서버 아키텍처)
           cat > .env.production <<EOF
-          # Docker Registry
-          REGISTRY=${{ env.REGISTRY }}
+          # Docker Registry (GitHub Container Registry)
+          REGISTRY=${{ env.REGISTRY }}/${{ github.repository_owner }}/dhc-ktor-app
           IMAGE_TAG=${{ needs.build.outputs.version }}
-          
-          # NCP Settings
-          NCP_ACCESS_KEY=${{ secrets.NCP_ACCESS_KEY }}
-          NCP_SECRET_KEY=${{ secrets.NCP_SECRET_KEY }}
-          BUCKET_NAME=${{ secrets.BUCKET_NAME }}
-          
-          # MongoDB Settings
-          MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc?replicaSet=rs0
-          
+
+          # DB Server (Private IP)
+          DB_SERVER_IP=${{ secrets.DB_SERVER_PRIVATE_IP }}
+
           # Gemini Settings
           GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
+          # OCI Object Storage
+          OCI_ACCESS_KEY=${{ secrets.OCI_ACCESS_KEY }}
+          OCI_SECRET_KEY=${{ secrets.OCI_SECRET_KEY }}
+          OCI_NAMESPACE=${{ secrets.OCI_NAMESPACE }}
+          BUCKET_NAME=${{ secrets.OCI_BUCKET_NAME }}
+          OCI_REGION=${{ secrets.OCI_REGION }}
           EOF
 
       - name: 배포 파일 복사
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.NCP_SERVER_HOST }}
-          username: ${{ secrets.NCP_SERVER_USER }}
-          password: ${{ secrets.NCP_SERVER_PASSWORD }}
-          key: ${{ secrets.NCP_SERVER_SSH_KEY }}
-          source: "docker-compose.deploy.yml,.env.production,scripts/"
-          target: "/home/dhc-deployment"
+          host: ${{ secrets.OCI_SERVER_HOST }}
+          username: ${{ secrets.OCI_SERVER_USER }}
+          key: ${{ secrets.OCI_SERVER_SSH_KEY }}
+          source: "docker-compose.app.yml,.env.production,scripts/"
+          target: "/home/opc/dhc-deployment"
 
       - name: 배포 실행
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.NCP_SERVER_HOST }}
-          username: ${{ secrets.NCP_SERVER_USER }}
-          password: ${{ secrets.NCP_SERVER_PASSWORD }}
-          key: ${{ secrets.NCP_SERVER_SSH_KEY }}
+          host: ${{ secrets.OCI_SERVER_HOST }}
+          username: ${{ secrets.OCI_SERVER_USER }}
+          key: ${{ secrets.OCI_SERVER_SSH_KEY }}
           script: |
-            cd /home/dhc-deployment
-            
-            # 실행 권한 부여
-            chmod +x scripts/deploy.sh
-            chmod +x scripts/install-docker-rocky8.sh
-            chmod +x scripts/init-replica-set.sh
-            
-            # 배포 스크립트 실행
-            ./scripts/deploy.sh
+            cd /home/opc/dhc-deployment
 
-      - name: MongoDB Replica Set 상태 확인
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.NCP_SERVER_HOST }}
-          username: ${{ secrets.NCP_SERVER_USER }}
-          password: ${{ secrets.NCP_SERVER_PASSWORD }}
-          key: ${{ secrets.NCP_SERVER_SSH_KEY }}
-          script: |
-            echo "MongoDB Replica Set 상태 확인 중..."
-            docker exec mongodb mongosh --quiet --eval "rs.status().members.forEach(m => print(m.name + ': ' + m.stateStr))"
+            # 실행 권한 부여
+            chmod +x scripts/deploy-app.sh
+            chmod +x scripts/install-docker-oracle-linux.sh
+
+            # App 서버 배포 스크립트 실행
+            ./scripts/deploy-app.sh
 
       - name: 헬스 체크
         run: |
           echo "애플리케이션 시작 대기중..."
-          
+
           max_retries=30
           retry_count=0
-          
+
           while [ $retry_count -lt $max_retries ]; do
-            if curl -f -s -X GET http://${{ secrets.NCP_SERVER_HOST }}:8080/health; then
+            if curl -f -s -X GET http://${{ secrets.OCI_SERVER_HOST }}:8080/health; then
               echo "헬스 체크 성공"
               exit 0
             fi
-          
+
             retry_count=$((retry_count + 1))
             echo "헬스 체크 재시도 $retry_count/$max_retries"
             sleep 2
           done
-          
+
           echo "헬스 체크 실패"
           exit 1
 
@@ -220,20 +214,20 @@ jobs:
         with:
           script: |
             const deploymentInfo = `
-            
+
             ---
-            
+
             ## 배포 정보
-            
+
             - **상태**: 배포 완료
             - **버전**: ${{ needs.build.outputs.version }}
             - **이미지**: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}
             - **배포 시간**: ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
-            - **서버**: ${{ secrets.NCP_SERVER_HOST }}
+            - **서버**: OCI (Oracle Cloud Infrastructure)
             - **헬스체크**: 정상
             - **배포 방식**: Docker Compose
             `;
-            
+
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,

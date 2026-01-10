@@ -1,3 +1,8 @@
+variable "compartment_id" {
+  description = "OCI Compartment OCID"
+  type        = string
+}
+
 variable "project_name" {
   description = "프로젝트 이름"
   type        = string
@@ -8,55 +13,37 @@ variable "bucket_name" {
   type        = string
 }
 
-variable "bucket_public_read" {
-  description = "버킷 공개 읽기 권한 설정"
-  type        = bool
-  default     = false
-}
-
-variable "cors_rules" {
-  description = "CORS 규칙 설정"
-  type = list(object({
-    allowed_headers = list(string)
-    allowed_methods = list(string)
-    allowed_origins = list(string)
-    expose_headers  = list(string)
-    max_age_seconds = number
-  }))
-  default = []
-}
-
-variable "lifecycle_rules" {
-  description = "라이프사이클 규칙 설정"
-  type = list(object({
-    id                                 = string
-    enabled                            = bool
-    expiration_days                    = number
-    noncurrent_version_expiration_days = number
-  }))
-  default = []
+variable "bucket_access_type" {
+  description = "버킷 접근 타입 (NoPublicAccess, ObjectRead, ObjectReadWithoutList)"
+  type        = string
+  default     = "NoPublicAccess"
 }
 
 variable "versioning" {
   description = "버전 관리 활성화"
-  type        = bool
-  default     = false
+  type        = string
+  default     = "Disabled" # Enabled, Suspended, Disabled
 }
 
-variable "tags" {
-  description = "리소스 태그"
+variable "storage_tier" {
+  description = "스토리지 티어 (Standard, Archive)"
+  type        = string
+  default     = "Standard"
+}
+
+variable "auto_tiering" {
+  description = "자동 티어링 활성화"
+  type        = string
+  default     = "Disabled" # Disabled, InfrequentAccess
+}
+
+variable "freeform_tags" {
+  description = "Freeform 태그"
   type        = map(string)
   default     = {}
 }
 
-variable "enable_container_registry" {
-  description = "Container Registry 지원 활성화"
-  type        = bool
-  default     = true
-}
-
-variable "enable_static_hosting" {
-  description = "정적 파일 호스팅 활성화"
-  type        = bool
-  default     = true
+variable "region" {
+  description = "OCI Region"
+  type        = string
 }

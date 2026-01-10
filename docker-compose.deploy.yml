@@ -35,10 +35,15 @@ services:
     container_name: dhc-app
     network_mode: host
     environment:
-      - NCP_ACCESS_KEY=${NCP_ACCESS_KEY}
-      - NCP_SECRET_KEY=${NCP_SECRET_KEY}
+      # OCI Object Storage (S3 호환)
+      - OCI_ACCESS_KEY=${OCI_ACCESS_KEY}
+      - OCI_SECRET_KEY=${OCI_SECRET_KEY}
+      - OCI_NAMESPACE=${OCI_NAMESPACE}
+      - OCI_REGION=${OCI_REGION}
       - BUCKET_NAME=${BUCKET_NAME}
+      # MongoDB
       - MONGO_CONNECTION_STRING=mongodb://localhost:27017/dhc?replicaSet=rs0
+      # Gemini API
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - TZ=Asia/Seoul
     volumes:

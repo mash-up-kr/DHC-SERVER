@@ -1,81 +1,55 @@
 output "bucket_name" {
   description = "생성된 Object Storage 버킷 이름"
-  value       = ncloud_objectstorage_bucket.bucket.bucket_name
+  value       = oci_objectstorage_bucket.bucket.name
 }
 
 output "bucket_id" {
   description = "생성된 Object Storage 버킷 ID"
-  value       = ncloud_objectstorage_bucket.bucket.id
+  value       = oci_objectstorage_bucket.bucket.bucket_id
 }
 
-output "bucket_creation_date" {
-  description = "버킷 생성 날짜"
-  value       = ncloud_objectstorage_bucket.bucket.creation_date
+output "namespace" {
+  description = "Object Storage Namespace"
+  value       = data.oci_objectstorage_namespace.ns.namespace
 }
 
-output "bucket_domain_name" {
-  description = "Object Storage 버킷 도메인 이름"
-  value       = "${var.bucket_name}.kr.object.ncloudstorage.com"
-}
-
-output "bucket_regional_domain_name" {
-  description = "Object Storage 버킷 지역별 도메인 이름"
-  value       = "${var.bucket_name}.kr.object.ncloudstorage.com"
-}
-
-output "bucket_arn" {
-  description = "Object Storage 버킷 ARN (S3 호환)"
-  value       = "arn:aws:s3:::${var.bucket_name}"
-}
-
-output "bucket_public_read" {
-  description = "버킷 공개 읽기 권한 상태"
-  value       = var.bucket_public_read
+output "bucket_access_type" {
+  description = "버킷 접근 타입"
+  value       = oci_objectstorage_bucket.bucket.access_type
 }
 
 output "versioning_enabled" {
   description = "버전 관리 활성화 상태"
-  value       = var.versioning
+  value       = oci_objectstorage_bucket.bucket.versioning
 }
 
-output "container_registry_endpoint" {
-  description = "Container Registry 엔드포인트"
-  value       = "https://${var.bucket_name}.kr.object.ncloudstorage.com/container-registry"
+output "storage_tier" {
+  description = "스토리지 티어"
+  value       = oci_objectstorage_bucket.bucket.storage_tier
 }
 
-output "static_files_endpoint" {
-  description = "정적 파일 호스팅 엔드포인트"
-  value       = "https://${var.bucket_name}.kr.object.ncloudstorage.com/static-files"
+# S3 호환 엔드포인트
+output "s3_endpoint" {
+  description = "S3 호환 API 엔드포인트"
+  value       = "https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${var.region}.oraclecloud.com"
 }
 
-output "container_registry_path" {
-  description = "Container Registry 경로"
-  value       = "container-registry/"
-}
-
-output "static_files_path" {
-  description = "정적 파일 경로"
-  value       = "static-files/"
-}
-
-output "bucket_acl_rule" {
-  description = "버킷 ACL 규칙"
-  value       = var.bucket_public_read ? "public-read" : "private"
+output "bucket_url" {
+  description = "Object Storage 버킷 URL"
+  value       = "https://objectstorage.${var.region}.oraclecloud.com/n/${data.oci_objectstorage_namespace.ns.namespace}/b/${var.bucket_name}/o/"
 }
 
 output "usage_instructions" {
   description = "Object Storage 사용 방법"
   value = {
-    container_registry = {
-      description      = "Container Registry로 사용하기"
-      example_upload   = "aws s3 cp myapp.tar s3://${ncloud_objectstorage_bucket.bucket.bucket_name}/container-registry/myapp/latest.tar --endpoint-url https://kr.object.ncloudstorage.com"
-      example_download = "aws s3 cp s3://${ncloud_objectstorage_bucket.bucket.bucket_name}/container-registry/myapp/latest.tar myapp.tar --endpoint-url https://kr.object.ncloudstorage.com"
+    s3_compatible = {
+      description = "S3 호환 API 사용 방법"
+      endpoint    = "https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${var.region}.oraclecloud.com"
+      example     = "aws s3 ls s3://${var.bucket_name} --endpoint-url https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${var.region}.oraclecloud.com"
     }
-    static_files = {
-      description    = "정적 파일 호스팅으로 사용하기"
-      example_upload = "aws s3 cp index.html s3://${ncloud_objectstorage_bucket.bucket.bucket_name}/static-files/index.html --endpoint-url https://kr.object.ncloudstorage.com"
-      public_url     = "https://${ncloud_objectstorage_bucket.bucket.bucket_name}.kr.object.ncloudstorage.com/static-files/index.html"
-      note           = var.bucket_public_read ? "버킷이 public-read로 설정되어 있어 모든 파일에 공개 접근 가능" : "개별 파일에 public-read ACL 설정 필요"
+    oci_cli = {
+      description = "OCI CLI 사용 방법"
+      example     = "oci os object list -bn ${var.bucket_name}"
     }
   }
 }

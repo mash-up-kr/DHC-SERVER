@@ -1,9 +1,14 @@
 output "subnet_id" {
   description = "서브넷 ID"
-  value       = ncloud_subnet.main.id
+  value       = oci_core_subnet.main.id
 }
 
-output "subnet_no" {
-  description = "서브넷 번호"
-  value       = ncloud_subnet.main.subnet_no
+output "subnet_cidr" {
+  description = "서브넷 CIDR 블록"
+  value       = oci_core_subnet.main.cidr_block
+}
+
+output "subnet_domain_name" {
+  description = "서브넷 도메인 이름"
+  value       = oci_core_subnet.main.subnet_domain_name
 }

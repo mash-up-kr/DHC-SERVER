@@ -1,0 +1,66 @@
+# =============================================================================
+# OCI 인증 정보
+# =============================================================================
+# OCI 콘솔에서 확인 가능: Identity → Users → API Keys
+
+tenancy_ocid     = "ocid1.tenancy.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+user_ocid        = "ocid1.user.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+fingerprint      = "xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx:xx"
+private_key_path = "~/.oci/oci_api_key.pem"
+
+# Compartment OCID (프로젝트/리소스 그룹)
+# OCI 콘솔에서 확인: Identity → Compartments
+compartment_id = "ocid1.compartment.oc1..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# =============================================================================
+# 리전 설정
+# =============================================================================
+# 춘천: ap-chuncheon-1, 서울: ap-seoul-1, 도쿄: ap-tokyo-1
+
+region = "ap-chuncheon-1"
+
+# =============================================================================
+# 프로젝트 설정
+# =============================================================================
+
+project_name = "dhc"
+
+# =============================================================================
+# 네트워크 설정 (기본값 사용 가능)
+# =============================================================================
+
+vcn_cidr           = "192.168.0.0/16"
+public_subnet_cidr = "192.168.1.0/24"
+
+# =============================================================================
+# Compute 인스턴스 설정
+# =============================================================================
+
+# Free Tier (AMD) - 기본값
+instance_shape          = "VM.Standard.E2.1.Micro"  # 1 OCPU, 1GB RAM (2개까지 무료)
+boot_volume_size_in_gbs = 50                        # 총 200GB까지 무료
+
+# Free Tier (ARM) - 더 좋은 스펙 원하면 아래 사용
+# instance_shape         = "VM.Standard.A1.Flex"    # 최대 4 OCPU, 24GB RAM 무료
+# instance_ocpus         = 2
+# instance_memory_in_gbs = 12
+
+# 유료 옵션 (더 좋은 스펙 필요시)
+# instance_shape         = "VM.Standard.E4.Flex"
+# instance_ocpus         = 2
+# instance_memory_in_gbs = 4
+
+# SSH 키 설정 (아래 중 하나 선택)
+# 옵션 1: 기존 SSH 키 사용
+# ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2E..."
+# ssh_public_key_path = "~/.ssh/id_rsa.pub"
+
+# 옵션 2: Terraform이 SSH 키 자동 생성 (기본값)
+# 생성된 키는 terraform/modules/compute/ 폴더에 저장됨
+
+# =============================================================================
+# Object Storage 설정
+# =============================================================================
+
+object_storage_public_read = false
+object_storage_versioning  = false

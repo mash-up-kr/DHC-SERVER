@@ -1,22 +1,12 @@
-resource "ncloud_subnet" "main" {
-  # vpc_no: 서브넷이 속할 VPC ID를 var.vpc_id 변수에서 가져옴
-  vpc_no = var.vpc_id
-
-  # subnet: 서브넷의 CIDR 블록을 var.subnet_cidr 변수에서 가져옴
-  subnet = var.subnet_cidr
-
-  # zone: 서브넷이 생성될 가용 구역을 var.zone 변수에서 가져옴
-  zone = var.zone
-
-  # network_acl_no: 적용할 네트워크 ACL ID를 var.network_acl_id 변수에서 가져옴
-  network_acl_no = var.network_acl_id
-
-  # subnet_type: 서브넷 타입(PUBLIC/PRIVATE)을 var.subnet_type 변수에서 가져옴
-  subnet_type = var.subnet_type
-
-  # name: 서브넷의 이름을 var.subnet_name 변수에서 가져옴
-  name = var.subnet_name
-
-  # usage_type: 서브넷 사용 유형(GEN/LOADB/BM)을 var.usage_type 변수에서 가져옴
-  usage_type = var.usage_type
+# Subnet 생성
+resource "oci_core_subnet" "main" {
+  compartment_id             = var.compartment_id
+  vcn_id                     = var.vcn_id
+  cidr_block                 = var.subnet_cidr
+  display_name               = var.subnet_name
+  dns_label                  = var.subnet_dns_label
+  route_table_id             = var.route_table_id
+  security_list_ids          = var.security_list_ids
+  availability_domain        = var.availability_domain # null이면 Regional Subnet
+  prohibit_public_ip_on_vnic = var.prohibit_public_ip_on_vnic
 }

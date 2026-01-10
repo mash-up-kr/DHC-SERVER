@@ -1,5 +1,10 @@
-variable "vpc_id" {
-  description = "VPC ID"
+variable "compartment_id" {
+  description = "OCI Compartment OCID"
+  type        = string
+}
+
+variable "vcn_id" {
+  description = "VCN ID"
   type        = string
 }
 
@@ -13,24 +18,30 @@ variable "subnet_cidr" {
   type        = string
 }
 
-variable "zone" {
-  description = "서브넷 AZ"
+variable "subnet_dns_label" {
+  description = "서브넷 DNS 레이블"
+  type        = string
+  default     = "subnet"
+}
+
+variable "route_table_id" {
+  description = "Route Table ID"
   type        = string
 }
 
-variable "network_acl_id" {
-  description = "네트워크 ACL ID"
-  type        = string
+variable "security_list_ids" {
+  description = "Security List ID 목록"
+  type        = list(string)
 }
 
-variable "subnet_type" {
-  description = "서브넷 타입 (PUBLIC/PRIVATE)"
+variable "availability_domain" {
+  description = "Availability Domain (Regional subnet인 경우 null)"
   type        = string
+  default     = null
 }
 
-variable "usage_type" {
-  description = "서브넷 사용 유형 (GEN/LOADB/BM)"
-  type        = string
-  # default: 기본값으로 GEN(일반) 타입 사용
-  default = "GEN"
+variable "prohibit_public_ip_on_vnic" {
+  description = "Public IP 할당 금지 여부 (Private subnet인 경우 true)"
+  type        = bool
+  default     = false # Public Subnet
 }

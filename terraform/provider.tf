@@ -1,7 +1,7 @@
-provider "ncloud" {
-  access_key  = var.ncp_access_key
-  secret_key  = var.ncp_secret_key
-  region      = var.region
-  site        = "public"
-  support_vpc = true
+provider "oci" {
+  tenancy_ocid     = var.tenancy_ocid
+  user_ocid        = var.user_ocid
+  fingerprint      = var.fingerprint
+  private_key_path = var.private_key_path
+  region           = var.region
 }
