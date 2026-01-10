@@ -24,6 +24,11 @@ output "private_key_pem" {
   sensitive   = true
 }
 
+output "public_key_openssh" {
+  description = "생성된 SSH 공개 키 (OpenSSH 형식)"
+  value       = var.generate_ssh_key ? tls_private_key.ssh[0].public_key_openssh : null
+}
+
 output "private_key_path" {
   description = "개인 키 파일 경로"
   value       = var.generate_ssh_key ? local_file.private_key[0].filename : null

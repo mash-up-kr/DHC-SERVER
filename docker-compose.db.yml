@@ -1,0 +1,31 @@
+version: '3.8'
+
+# DB 서버용 docker-compose (1GB RAM 인스턴스)
+# 사용법: docker compose -f docker-compose.db.yml up -d
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    network_mode: host
+    environment:
+      MONGO_INITDB_DATABASE: dhc
+      TZ: Asia/Seoul
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    # 메모리 제한: wiredTigerCacheSizeGB=0.25 (256MB)
+    command: mongod --replSet rs0 --bind_ip_all --wiredTigerCacheSizeGB 0.25
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+    restart: unless-stopped
+    mem_limit: 768m
+    memswap_limit: 1536m
+
+volumes:
+  mongodb_data:
+  mongodb_config:

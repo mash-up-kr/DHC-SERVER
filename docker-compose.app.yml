@@ -1,0 +1,28 @@
+version: '3.8'
+
+# App 서버용 docker-compose (1GB RAM 인스턴스)
+# 사용법: docker compose -f docker-compose.app.yml up -d
+
+services:
+  dhc-app:
+    image: ${REGISTRY}/dhc-ktor-app:${IMAGE_TAG}
+    container_name: dhc-app
+    network_mode: host
+    environment:
+      # OCI Object Storage (S3 호환)
+      - OCI_ACCESS_KEY=${OCI_ACCESS_KEY}
+      - OCI_SECRET_KEY=${OCI_SECRET_KEY}
+      - OCI_NAMESPACE=${OCI_NAMESPACE}
+      - OCI_REGION=${OCI_REGION}
+      - BUCKET_NAME=${BUCKET_NAME}
+      # MongoDB (DB 서버 private IP)
+      - MONGO_CONNECTION_STRING=mongodb://${DB_SERVER_IP}:27017/dhc?replicaSet=rs0
+      # Gemini API
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - TZ=Asia/Seoul
+    volumes:
+      - ./logs:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    mem_limit: 768m
+    memswap_limit: 1536m

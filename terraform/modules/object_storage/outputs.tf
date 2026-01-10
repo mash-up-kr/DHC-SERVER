@@ -31,12 +31,12 @@ output "storage_tier" {
 # S3 호환 엔드포인트
 output "s3_endpoint" {
   description = "S3 호환 API 엔드포인트"
-  value       = "https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${split(":", oci_objectstorage_bucket.bucket.id)[3]}.oraclecloud.com"
+  value       = "https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${var.region}.oraclecloud.com"
 }
 
 output "bucket_url" {
   description = "Object Storage 버킷 URL"
-  value       = "https://objectstorage.${split(":", oci_objectstorage_bucket.bucket.id)[3]}.oraclecloud.com/n/${data.oci_objectstorage_namespace.ns.namespace}/b/${var.bucket_name}/o/"
+  value       = "https://objectstorage.${var.region}.oraclecloud.com/n/${data.oci_objectstorage_namespace.ns.namespace}/b/${var.bucket_name}/o/"
 }
 
 output "usage_instructions" {
@@ -44,8 +44,8 @@ output "usage_instructions" {
   value = {
     s3_compatible = {
       description = "S3 호환 API 사용 방법"
-      endpoint    = "https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${split(":", oci_objectstorage_bucket.bucket.id)[3]}.oraclecloud.com"
-      example     = "aws s3 ls s3://${var.bucket_name} --endpoint-url https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${split(":", oci_objectstorage_bucket.bucket.id)[3]}.oraclecloud.com"
+      endpoint    = "https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${var.region}.oraclecloud.com"
+      example     = "aws s3 ls s3://${var.bucket_name} --endpoint-url https://${data.oci_objectstorage_namespace.ns.namespace}.compat.objectstorage.${var.region}.oraclecloud.com"
     }
     oci_cli = {
       description = "OCI CLI 사용 방법"

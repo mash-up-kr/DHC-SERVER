@@ -9,7 +9,7 @@ data "oci_core_images" "oracle_linux" {
 
   filter {
     name   = "display_name"
-    values = ["^Oracle-Linux-8\\.\\d+-\\d{4}\\.\\d{2}\\.\\d{2}-\\d+$"]
+    values = ["^Oracle-Linux-8\\.\\d+-.*$"]
     regex  = true
   }
 }

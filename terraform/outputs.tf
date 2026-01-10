@@ -18,32 +18,46 @@ output "security_list_id" {
 }
 
 # =============================================================================
-# Compute 출력
+# App Server 출력
 # =============================================================================
 
-output "instance_id" {
-  description = "인스턴스 ID"
-  value       = module.compute.instance_id
+output "app_instance_id" {
+  description = "App 인스턴스 ID"
+  value       = module.compute_app.instance_id
 }
 
-output "instance_private_ip" {
-  description = "인스턴스 사설 IP"
-  value       = module.compute.private_ip
+output "app_private_ip" {
+  description = "App 인스턴스 사설 IP"
+  value       = module.compute_app.private_ip
 }
 
-output "instance_public_ip" {
-  description = "인스턴스 공인 IP"
-  value       = module.compute.public_ip
+output "app_public_ip" {
+  description = "App 인스턴스 공인 IP"
+  value       = module.compute_app.public_ip
 }
 
-output "ssh_connection_command" {
-  description = "SSH 접속 명령어"
-  value       = module.compute.ssh_connection_command
+output "app_ssh_command" {
+  description = "App 서버 SSH 접속 명령어"
+  value       = module.compute_app.ssh_connection_command
+}
+
+# =============================================================================
+# DB Server 출력
+# =============================================================================
+
+output "db_instance_id" {
+  description = "DB 인스턴스 ID"
+  value       = module.compute_db.instance_id
+}
+
+output "db_private_ip" {
+  description = "DB 인스턴스 사설 IP (MongoDB 연결용)"
+  value       = module.compute_db.private_ip
 }
 
 output "ssh_private_key_path" {
   description = "SSH 개인 키 파일 경로"
-  value       = module.compute.private_key_path
+  value       = module.compute_app.private_key_path
 }
 
 # =============================================================================
@@ -82,11 +96,18 @@ output "object_storage_versioning" {
 output "connection_info" {
   description = "서버 접속 정보 요약"
   value = {
-    public_ip   = module.compute.public_ip
-    private_ip  = module.compute.private_ip
-    ssh_user    = "opc" # Oracle Linux 기본 유저
-    ssh_command = module.compute.ssh_connection_command
-    key_file    = module.compute.private_key_path
+    app_server = {
+      public_ip   = module.compute_app.public_ip
+      private_ip  = module.compute_app.private_ip
+      ssh_user    = "opc"
+      ssh_command = module.compute_app.ssh_connection_command
+    }
+    db_server = {
+      private_ip       = module.compute_db.private_ip
+      ssh_user         = "opc"
+      mongo_connection = "mongodb://${module.compute_db.private_ip}:27017/dhc?replicaSet=rs0"
+    }
+    key_file = module.compute_app.private_key_path
   }
 }
 

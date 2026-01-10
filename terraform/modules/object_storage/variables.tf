@@ -42,3 +42,8 @@ variable "freeform_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "region" {
+  description = "OCI Region"
+  type        = string
+}

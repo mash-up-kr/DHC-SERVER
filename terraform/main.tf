@@ -66,16 +66,16 @@ module "public_subnet" {
 }
 
 # =============================================================================
-# Compute Instance 모듈
+# Compute Instance - App Server
 # =============================================================================
 
-module "compute" {
+module "compute_app" {
   source = "./modules/compute"
 
   compartment_id          = var.compartment_id
   availability_domain     = data.oci_identity_availability_domains.ads.availability_domains[0].name
   subnet_id               = module.public_subnet.subnet_id
-  instance_name           = var.project_name
+  instance_name           = "${var.project_name}-app"
   instance_shape          = var.instance_shape
   instance_ocpus          = var.instance_ocpus
   instance_memory_in_gbs  = var.instance_memory_in_gbs
@@ -84,13 +84,41 @@ module "compute" {
   ssh_public_key          = var.ssh_public_key
   ssh_public_key_path     = var.ssh_public_key_path
   assign_public_ip        = true
-  generate_ssh_key        = true # SSH 키 자동 생성
+  generate_ssh_key        = true
 
   providers = {
     oci = oci
   }
 
   depends_on = [module.public_subnet]
+}
+
+# =============================================================================
+# Compute Instance - MongoDB Server
+# =============================================================================
+
+module "compute_db" {
+  source = "./modules/compute"
+
+  compartment_id          = var.compartment_id
+  availability_domain     = data.oci_identity_availability_domains.ads.availability_domains[0].name
+  subnet_id               = module.public_subnet.subnet_id
+  instance_name           = "${var.project_name}-db"
+  instance_shape          = var.instance_shape
+  instance_ocpus          = var.instance_ocpus
+  instance_memory_in_gbs  = var.instance_memory_in_gbs
+  boot_volume_size_in_gbs = var.boot_volume_size_in_gbs
+  image_ocid              = var.instance_image_ocid
+  ssh_public_key          = module.compute_app.public_key_openssh  # app 서버에서 생성한 키 사용
+  ssh_public_key_path     = var.ssh_public_key_path
+  assign_public_ip        = true  # 개발 단계에서는 Public IP 유지
+  generate_ssh_key        = false
+
+  providers = {
+    oci = oci
+  }
+
+  depends_on = [module.public_subnet, module.compute_app]
 }
 
 # =============================================================================
@@ -106,6 +134,7 @@ module "object_storage" {
   bucket_access_type = var.object_storage_public_read ? "ObjectRead" : "NoPublicAccess"
   versioning         = var.object_storage_versioning ? "Enabled" : "Disabled"
   storage_tier       = "Standard"
+  region             = var.region
 
   freeform_tags = {
     Project = var.project_name
