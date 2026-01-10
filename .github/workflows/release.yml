@@ -145,7 +145,7 @@ jobs:
           # .env.production 파일 생성 (2서버 아키텍처)
           cat > .env.production <<EOF
           # Docker Registry (GitHub Container Registry)
-          REGISTRY=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          REGISTRY=${{ env.REGISTRY }}/${{ github.repository_owner }}/dhc-ktor-app
           IMAGE_TAG=${{ needs.build.outputs.version }}
 
           # DB Server (Private IP)
