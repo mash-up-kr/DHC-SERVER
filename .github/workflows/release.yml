@@ -143,13 +143,6 @@ jobs:
           REGISTRY=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           IMAGE_TAG=${{ needs.build.outputs.version }}
 
-          # OCI Object Storage Settings (S3 호환)
-          OCI_ACCESS_KEY=${{ secrets.OCI_ACCESS_KEY }}
-          OCI_SECRET_KEY=${{ secrets.OCI_SECRET_KEY }}
-          OCI_NAMESPACE=${{ secrets.OCI_NAMESPACE }}
-          BUCKET_NAME=${{ secrets.BUCKET_NAME }}
-          OCI_REGION=${{ secrets.OCI_REGION }}
-
           # DB Server (Private IP)
           DB_SERVER_IP=${{ secrets.DB_SERVER_PRIVATE_IP }}
 
