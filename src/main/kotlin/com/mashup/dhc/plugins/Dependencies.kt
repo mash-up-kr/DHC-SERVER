@@ -102,9 +102,17 @@ private data class MongoConfig(
 )
 
 private fun Application.getMongoConfig(): MongoConfig {
-    val host = environment.config.tryGetString("db.mongo.host") ?: "211.188.52.240"
-    val port = environment.config.tryGetString("db.mongo.port") ?: "27017"
+    // connectionString 환경변수 우선 사용
+    val connectionString = environment.config.tryGetString("db.mongo.connectionString")
     val databaseName = environment.config.tryGetString("db.mongo.database.name") ?: "dhc"
+
+    if (connectionString != null) {
+        return MongoConfig(connectionString, databaseName)
+    }
+
+    // fallback: host/port 방식
+    val host = environment.config.tryGetString("db.mongo.host") ?: "localhost"
+    val port = environment.config.tryGetString("db.mongo.port") ?: "27017"
 
     return MongoConfig("mongodb://$host:$port", databaseName)
 }
