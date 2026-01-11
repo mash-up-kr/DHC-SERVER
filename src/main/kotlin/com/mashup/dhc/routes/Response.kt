@@ -283,6 +283,7 @@ data class AddJulyHistoryResponse(
     val totalSavedMoney: Money
 )
 
+@Serializable
 data class LoveTestViewResponse(
     val score: Int,
     val fortuneDetail: String,
