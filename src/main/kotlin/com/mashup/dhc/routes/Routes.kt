@@ -260,13 +260,14 @@ private fun Route.home(
                 .toLocalDateTime(TimeZone.currentSystemDefault())
                 .date
 
-        // 2일 이상 미접속 여부 계산 (lastAccessDate 업데이트 전에 계산)
+        // 2일 이상 미접속 여부 및 첫 접속 여부 계산 (lastAccessDate 업데이트 전에 계산)
         val lastAccess = user.lastAccessDate
+        val isFirstAccess = lastAccess == null
         val daysSinceLastAccess =
             if (lastAccess != null) {
                 (now.toEpochDays() - lastAccess.toEpochDays()).toInt()
             } else {
-                0 // 첫 접속 또는 기존 사용자
+                0 // 첫 접속
             }
         val longAbsence = daysSinceLastAccess >= 2
 
@@ -311,7 +312,8 @@ private fun Route.home(
                 todayDailyFortune = todayDailyFortune.let { FortuneResponse.from(it) },
                 todayDone = todayPastRoutines.isNotEmpty(),
                 yesterdayMissionSuccess = yesterdayMissionSuccess,
-                longAbsence = longAbsence
+                longAbsence = longAbsence,
+                isFirstAccess = isFirstAccess
             )
         )
     }

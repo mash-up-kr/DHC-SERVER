@@ -449,6 +449,7 @@ paths:
                 todayDone: false
                 yesterdayMissionSuccess: true
                 longAbsence: false
+                isFirstAccess: false
 
   /view/users/{userId}/myPage:
     get:
@@ -878,6 +879,10 @@ components:
         longAbsence:
           type: boolean
           description: "Whether user has been absent for 2 or more days"
+          example: false
+        isFirstAccess:
+          type: boolean
+          description: "Whether this is user's first access (lastAccessDate was null)"
           example: false
 
     MissionCategoriesResponse:
