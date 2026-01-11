@@ -33,7 +33,9 @@ data class HomeViewResponse(
     val longTermMission: MissionResponse?,
     val todayDailyMissionList: List<MissionResponse>,
     val todayDailyFortune: FortuneResponse?,
-    val todayDone: Boolean
+    val todayDone: Boolean,
+    val yesterdayMissionSuccess: Boolean,
+    val longAbsence: Boolean
 )
 
 @Serializable
