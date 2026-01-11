@@ -35,7 +35,8 @@ data class HomeViewResponse(
     val todayDailyFortune: FortuneResponse?,
     val todayDone: Boolean,
     val yesterdayMissionSuccess: Boolean,
-    val longAbsence: Boolean
+    val longAbsence: Boolean,
+    val isFirstAccess: Boolean
 )
 
 @Serializable
