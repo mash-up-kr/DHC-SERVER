@@ -447,6 +447,8 @@ paths:
                   fortuneCardTitle: "네잎클로버"
                   fortuneCardSubTitle: "최고의 날"
                 todayDone: false
+                yesterdayMissionSuccess: true
+                longAbsence: false
 
   /view/users/{userId}/myPage:
     get:
@@ -868,6 +870,14 @@ components:
         todayDone:
           type: boolean
           description: "Whether today's missions are completed"
+          example: false
+        yesterdayMissionSuccess:
+          type: boolean
+          description: "Whether user completed any daily missions yesterday (DAILY type only)"
+          example: true
+        longAbsence:
+          type: boolean
+          description: "Whether user has been absent for 2 or more days"
           example: false
 
     MissionCategoriesResponse:

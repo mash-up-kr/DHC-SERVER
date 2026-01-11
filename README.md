@@ -59,14 +59,17 @@ com.mashup.dhc
 
 ---
 
+## API 문서
+
+- OpenAPI 3.0 스펙 문서: [`src/main/resources/openapi/documentation.yaml`](src/main/resources/openapi/documentation.yaml)
+
+---
+
 ## 테스트
 
 - [Kotest](https://kotest.io/)를 사용하여 테스트를 작성할 수 있습니다.
-- 테스트 실행:  
+- 테스트 실행:
   ```
   ./gradlew test
   ```
-
-`
-````
 
