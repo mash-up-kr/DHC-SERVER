@@ -69,6 +69,19 @@ resource "oci_core_security_list" "server" {
     }
   }
 
+  # MongoDB 내부 접근 허용 (VCN 내부에서만)
+  ingress_security_rules {
+    protocol    = "6" # TCP
+    source      = "192.168.1.0/24"
+    source_type = "CIDR_BLOCK"
+    description = "MongoDB 내부 접근"
+
+    tcp_options {
+      min = 27017
+      max = 27017
+    }
+  }
+
   # 모든 아웃바운드 트래픽 허용
   egress_security_rules {
     protocol         = "all"
