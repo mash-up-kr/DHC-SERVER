@@ -12,6 +12,7 @@ import com.mongodb.kotlin.client.coroutine.ClientSession
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import java.math.BigDecimal
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Transient
 import org.bson.BsonValue
 import org.bson.codecs.pojo.annotations.BsonId
@@ -31,6 +32,7 @@ data class User(
     val dailyFortunes: List<DailyFortune>? = listOf(),
     val currentAmulet: Amulet? = null,
     val totalSavedMoney: Money = Money(BigDecimal.ZERO),
+    val lastAccessDate: LocalDate? = null,
     @Transient val deleted: Boolean = false
 ) {
     private val age: Int
@@ -141,6 +143,24 @@ class UserRepository(
             return result.modifiedCount
         } catch (e: MongoException) {
             System.err.println("Unable to update due to an error: $e")
+        }
+        return 0
+    }
+
+    suspend fun updateLastAccessDate(
+        objectId: ObjectId,
+        date: LocalDate
+    ): Long {
+        try {
+            val query = Filters.eq("_id", objectId)
+            val updates = Updates.set(User::lastAccessDate.name, date)
+            val result =
+                mongoDatabase
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(query, updates)
+            return result.modifiedCount
+        } catch (e: MongoException) {
+            System.err.println("Unable to update lastAccessDate: $e")
         }
         return 0
     }

@@ -6,6 +6,7 @@ import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Generation
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
+import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.model.calculateSpendMoney
@@ -259,10 +260,20 @@ private fun Route.home(
                 .toLocalDateTime(TimeZone.currentSystemDefault())
                 .date
 
-        val todayPastRoutines = userService.getTodayPastRoutines(userId, now)
+        // 2일 이상 미접속 여부 계산 (lastAccessDate 업데이트 전에 계산)
+        val lastAccess = user.lastAccessDate
+        val daysSinceLastAccess =
+            if (lastAccess != null) {
+                (now.toEpochDays() - lastAccess.toEpochDays()).toInt()
+            } else {
+                0 // 첫 접속 또는 기존 사용자
+            }
+        val longAbsence = daysSinceLastAccess >= 2
 
-        val todayDailyFortune = fortuneService.queryDailyFortune(userId, now)
+        // lastAccessDate 업데이트
+        userService.updateLastAccessDate(userId, now)
 
+        // summaryTodayMission이 어제 날짜로 PastRoutineHistory를 생성할 수 있으므로 먼저 실행
         val isAlreadyAllDone = user.todayDailyMissionList.any { it.endDate?.run { this <= now } ?: false }
         if (isAlreadyAllDone) {
             userService.summaryTodayMission(
@@ -271,6 +282,19 @@ private fun Route.home(
             )
             user = userService.getUserById(userId) // 유저 정보 갱신
         }
+
+        // summaryTodayMission 이후에 조회해야 정확한 기록을 얻을 수 있음
+        val todayPastRoutines = userService.getTodayPastRoutines(userId, now)
+        val yesterdayPastRoutines = userService.getYesterdayPastRoutines(userId, now)
+
+        // 어제 일일 미션 성공 여부 (DAILY 타입만 체크)
+        val yesterdayMissionSuccess =
+            yesterdayPastRoutines
+                .flatMap { it.missions }
+                .filter { it.type == MissionType.DAILY }
+                .any { it.finished }
+
+        val todayDailyFortune = fortuneService.queryDailyFortune(userId, now)
 
         if (user.dailyFortunes == null || user.dailyFortunes.all { LocalDate.parse(it.date) < now }) {
             fortuneService.enqueueGenerateDailyFortuneTask(
@@ -284,8 +308,10 @@ private fun Route.home(
             HomeViewResponse(
                 longTermMission = user.longTermMission?.let { MissionResponse.from(it) },
                 todayDailyMissionList = user.todayDailyMissionList.map { MissionResponse.from(it) },
-                todayDailyFortune = todayDailyFortune.let { FortuneResponse.from(it) }, // FortuneResponse로 변환
-                todayDone = todayPastRoutines.isNotEmpty()
+                todayDailyFortune = todayDailyFortune.let { FortuneResponse.from(it) },
+                todayDone = todayPastRoutines.isNotEmpty(),
+                yesterdayMissionSuccess = yesterdayMissionSuccess,
+                longAbsence = longAbsence
             )
         )
     }
