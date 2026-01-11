@@ -86,6 +86,7 @@ class GeminiService(
             }
 
         val geminiResponse: GeminiApiResponse = response.body()
+        logTokenUsage("MonthFortune", geminiResponse.usageMetadata)
         val responseText = geminiResponse.validateAndExtractText()
         val geminiFortuneResponse = Json.decodeFromString<GeminiFortuneResponse>(responseText)
 
@@ -113,8 +114,26 @@ class GeminiService(
             }
 
         val geminiResponse: GeminiApiResponse = response.body()
+        logTokenUsage("DailyBatchFortune", geminiResponse.usageMetadata)
         val responseText = geminiResponse.validateAndExtractText()
         return Json.decodeFromString<GeminiBatchFortuneResponse>(responseText)
+    }
+
+    private fun logTokenUsage(
+        requestType: String,
+        usage: UsageMetadata?
+    ) {
+        if (usage != null) {
+            logger.info(
+                "[Gemini Token Usage] type={}, promptTokens={}, responseTokens={}, totalTokens={}",
+                requestType,
+                usage.promptTokenCount ?: 0,
+                usage.candidatesTokenCount ?: 0,
+                usage.totalTokenCount ?: 0
+            )
+        } else {
+            logger.warn("[Gemini Token Usage] type={}, usageMetadata is null", requestType)
+        }
     }
 
     private fun createDailyBatchPrompt(requests: List<Pair<String, GeminiFortuneRequest>>): String {
@@ -278,7 +297,15 @@ data class GenerationConfig(
 @Serializable
 data class GeminiApiResponse(
     val candidates: List<Candidate>? = null,
-    val error: ApiError? = null
+    val error: ApiError? = null,
+    val usageMetadata: UsageMetadata? = null
+)
+
+@Serializable
+data class UsageMetadata(
+    val promptTokenCount: Int? = null,
+    val candidatesTokenCount: Int? = null,
+    val totalTokenCount: Int? = null
 )
 
 @Serializable
