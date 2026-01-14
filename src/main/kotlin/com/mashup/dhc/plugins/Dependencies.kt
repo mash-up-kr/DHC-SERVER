@@ -3,12 +3,14 @@ package com.mashup.dhc.plugins
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MissionRepository
 import com.mashup.dhc.domain.model.PastRoutineHistoryRepository
+import com.mashup.dhc.domain.model.ShareRepository
 import com.mashup.dhc.domain.model.UserRepository
 import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.GeminiService
 import com.mashup.dhc.domain.service.MissionPicker
 import com.mashup.dhc.domain.service.MutexManager
 import com.mashup.dhc.domain.service.TransactionService
+import com.mashup.dhc.domain.service.ShareService
 import com.mashup.dhc.domain.service.UserService
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
@@ -24,6 +26,7 @@ import kotlinx.coroutines.cancel
 data class Dependencies(
     val userService: UserService,
     val fortuneService: FortuneService,
+    val shareService: ShareService,
     val mongoClient: MongoClient,
     val mongoDatabase: MongoDatabase
 )
@@ -57,6 +60,7 @@ fun Application.configureDependencies(): Dependencies {
     val missionRepository = MissionRepository(mongoDatabase)
     val pastRoutineHistoryRepository = PastRoutineHistoryRepository(mongoDatabase)
     val fortuneRepository = FortuneRepository(mongoDatabase)
+    val shareRepository = ShareRepository(mongoDatabase)
 
     // Service 생성
     val transactionService = TransactionService(mongoClient)
@@ -84,6 +88,16 @@ fun Application.configureDependencies(): Dependencies {
 
     fortuneService.startDailyBatch()
 
+    // Share 서비스 생성
+    val shareBaseUrl =
+        environment.config.tryGetString("share.baseUrl") ?: "https://dhc.mashup.com"
+    val shareService =
+        ShareService(
+            shareRepository = shareRepository,
+            userRepository = userRepository,
+            baseUrl = shareBaseUrl
+        )
+
     monitor.subscribe(ApplicationStopped) {
         mongoClient.close()
     }
@@ -91,6 +105,7 @@ fun Application.configureDependencies(): Dependencies {
     return Dependencies(
         userService = userService,
         fortuneService = fortuneService,
+        shareService = shareService,
         mongoClient = mongoClient,
         mongoDatabase = mongoDatabase
     )

@@ -296,3 +296,15 @@ data class LoveTestViewResponse(
     val confessDate: LocalDate,
     val confessLocation: String
 )
+
+@Serializable
+data class CreateShareUrlResponse(
+    val shareCode: String,
+    val shareUrl: String
+)
+
+@Serializable
+data class CompleteShareResponse(
+    val shareCode: String,
+    val alreadyCompleted: Boolean
+)

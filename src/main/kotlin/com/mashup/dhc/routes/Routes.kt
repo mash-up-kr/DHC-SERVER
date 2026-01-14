@@ -11,6 +11,7 @@ import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.model.calculateSpendMoney
 import com.mashup.dhc.domain.service.FortuneService
+import com.mashup.dhc.domain.service.ShareService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
 import com.mashup.dhc.domain.service.now
@@ -84,7 +85,8 @@ private fun Int.minusTenPercent() = this * 9 / 10
 
 fun Route.userRoutes(
     userService: UserService,
-    fortuneService: FortuneService
+    fortuneService: FortuneService,
+    shareService: ShareService
 ) {
     route("/api/users") {
         register(userService)
@@ -94,6 +96,7 @@ fun Route.userRoutes(
         searchUser(userService)
         getDailyFortune(fortuneService)
         addJulyPastRoutineHistory(userService)
+        createShareUrl(shareService)
     }
     route("/view/users/{userId}") {
         home(userService, fortuneService)
@@ -105,6 +108,9 @@ fun Route.userRoutes(
     route("/api") {
         missionCategoriesRoutes()
         loveTest()
+    }
+    route("/api/share") {
+        completeShare(shareService)
     }
 }
 
@@ -675,6 +681,42 @@ private fun Route.addJulyPastRoutineHistory(userService: UserService) {
                         .filter { it.finished }
                         .map { it.cost }
                         .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+            )
+        )
+    }
+}
+
+private fun Route.createShareUrl(shareService: ShareService) {
+    post("/{userId}/share") {
+        val userId =
+            call.pathParameters["userId"]
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        val result = shareService.createShareUrl(userId)
+
+        call.respond(
+            HttpStatusCode.Created,
+            CreateShareUrlResponse(
+                shareCode = result.shareCode,
+                shareUrl = result.shareUrl
+            )
+        )
+    }
+}
+
+private fun Route.completeShare(shareService: ShareService) {
+    post("/{shareCode}/complete") {
+        val shareCode =
+            call.pathParameters["shareCode"]
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        val result = shareService.completeShare(shareCode)
+
+        call.respond(
+            HttpStatusCode.OK,
+            CompleteShareResponse(
+                shareCode = result.shareCode,
+                alreadyCompleted = result.alreadyCompleted
             )
         )
     }

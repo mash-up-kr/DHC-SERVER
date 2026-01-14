@@ -45,6 +45,7 @@ enum class ErrorCode(
     USER_ALREADY_EXISTS(2001, "이미 존재하는 사용자입니다", HttpStatusCode.Conflict),
     USER_NOT_FOUND(2002, "사용자를 찾을 수 없습니다", HttpStatusCode.NotFound),
     MISSION_NOT_FOUND(2003, "미션을 찾을 수 없습니다", HttpStatusCode.NotFound),
+    SHARE_NOT_FOUND(2004, "공유 정보를 찾을 수 없습니다", HttpStatusCode.NotFound),
 
     // Auth Errors - 3xxx
     UNAUTHORIZED(3001, "인증이 필요합니다", HttpStatusCode.Unauthorized),
