@@ -57,6 +57,19 @@ enum class MissionType {
     LOVE
 }
 
+/**
+ * 난이도별 포인트 계산
+ * - Easy (difficulty 1): 50pt
+ * - Medium (difficulty 2): 100pt
+ * - Hard (difficulty 3+): 200pt
+ */
+fun Mission.calculatePoint(): Long =
+    when (difficulty) {
+        1 -> 50L
+        2 -> 100L
+        else -> 200L
+    }
+
 class MissionRepository(
     private val mongoDatabase: MongoDatabase
 ) {
