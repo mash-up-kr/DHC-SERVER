@@ -37,7 +37,7 @@ data class HomeViewResponse(
     val yesterdayMissionSuccess: Boolean,
     val longAbsence: Boolean,
     val isFirstAccess: Boolean,
-    val loveMission: LoveMissionResponse? = null
+    val point: Long
 )
 
 @Serializable
@@ -85,7 +85,9 @@ data class MissionResponse(
     val cost: Money,
     val endDate: LocalDate?,
     val title: String,
-    val switchCount: Int
+    val switchCount: Int,
+    val dayNumber: Int? = null,
+    val remainingDays: Int? = null
 ) {
     companion object {
         fun from(mission: Mission): MissionResponse =
@@ -99,6 +101,25 @@ data class MissionResponse(
                 endDate = mission.endDate,
                 title = mission.title,
                 switchCount = mission.switchCount
+            )
+
+        fun fromLoveMission(
+            mission: Mission,
+            dayNumber: Int,
+            remainingDays: Int
+        ): MissionResponse =
+            MissionResponse(
+                missionId = mission.id.toString(),
+                category = mission.category.displayName,
+                difficulty = mission.difficulty,
+                type = mission.type,
+                finished = mission.finished,
+                cost = mission.cost,
+                endDate = mission.endDate,
+                title = mission.title,
+                switchCount = mission.switchCount,
+                dayNumber = dayNumber,
+                remainingDays = remainingDays
             )
     }
 }

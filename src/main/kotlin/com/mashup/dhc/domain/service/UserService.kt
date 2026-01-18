@@ -292,6 +292,11 @@ class UserService(
         userRepository.updateLastAccessDate(ObjectId(userId), date)
     }
 
+    suspend fun addPoint(
+        userId: String,
+        pointToAdd: Long
+    ): Long = userRepository.addPoint(ObjectId(userId), pointToAdd)
+
     suspend fun getWeekPastRoutines(
         userId: String,
         date: LocalDate

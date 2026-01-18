@@ -32,6 +32,7 @@ data class User(
     val dailyFortunes: List<DailyFortune>? = listOf(),
     val currentAmulet: Amulet? = null,
     val totalSavedMoney: Money = Money(BigDecimal.ZERO),
+    val point: Long = 0L,
     val lastAccessDate: LocalDate? = null,
     val loveMissionStatus: LoveMissionStatus? = null,
     @Transient val deleted: Boolean = false
@@ -180,6 +181,24 @@ class UserRepository(
             return result.modifiedCount
         } catch (e: MongoException) {
             System.err.println("Unable to update loveMissionStatus: $e")
+        }
+        return 0
+    }
+
+    suspend fun addPoint(
+        objectId: ObjectId,
+        pointToAdd: Long
+    ): Long {
+        try {
+            val query = Filters.eq("_id", objectId)
+            val updates = Updates.inc(User::point.name, pointToAdd)
+            val result =
+                mongoDatabase
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(query, updates)
+            return result.modifiedCount
+        } catch (e: MongoException) {
+            System.err.println("Unable to add point: $e")
         }
         return 0
     }
