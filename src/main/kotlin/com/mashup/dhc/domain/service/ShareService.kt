@@ -9,10 +9,9 @@ import org.bson.types.ObjectId
 
 class ShareService(
     private val shareRepository: ShareRepository,
-    private val userRepository: UserRepository,
-    private val baseUrl: String
+    private val userRepository: UserRepository
 ) {
-    suspend fun createShareUrl(userId: String): ShareUrlResult {
+    suspend fun createShareCode(userId: String): ShareCodeResult {
         val userObjectId =
             try {
                 ObjectId(userId)
@@ -27,11 +26,8 @@ class ShareService(
         val share = Share.create(user.id!!)
         shareRepository.insertOne(share)
 
-        val shareUrl = "$baseUrl/share/${share.shareCode}"
-
-        return ShareUrlResult(
-            shareCode = share.shareCode,
-            shareUrl = shareUrl
+        return ShareCodeResult(
+            shareCode = share.shareCode
         )
     }
 
@@ -61,9 +57,8 @@ class ShareService(
     }
 }
 
-data class ShareUrlResult(
-    val shareCode: String,
-    val shareUrl: String
+data class ShareCodeResult(
+    val shareCode: String
 )
 
 data class ShareCompleteResult(

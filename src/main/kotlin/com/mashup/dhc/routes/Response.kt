@@ -36,7 +36,8 @@ data class HomeViewResponse(
     val todayDone: Boolean,
     val yesterdayMissionSuccess: Boolean,
     val longAbsence: Boolean,
-    val isFirstAccess: Boolean
+    val isFirstAccess: Boolean,
+    val loveMission: LoveMissionResponse? = null
 )
 
 @Serializable
@@ -298,13 +299,21 @@ data class LoveTestViewResponse(
 )
 
 @Serializable
-data class CreateShareUrlResponse(
-    val shareCode: String,
-    val shareUrl: String
+data class CreateShareCodeResponse(
+    val shareCode: String
 )
 
 @Serializable
 data class CompleteShareResponse(
     val shareCode: String,
     val alreadyCompleted: Boolean
+)
+
+@Serializable
+data class LoveMissionResponse(
+    val missionId: String,
+    val dayNumber: Int,
+    val title: String,
+    val finished: Boolean,
+    val remainingDays: Int
 )

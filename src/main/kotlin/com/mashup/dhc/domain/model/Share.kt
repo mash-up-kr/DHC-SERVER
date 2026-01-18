@@ -64,6 +64,17 @@ class ShareRepository(
         return shares
     }
 
+    suspend fun hasCompletedShare(userId: ObjectId): Boolean =
+        mongoDatabase
+            .getCollection<Share>(SHARE_COLLECTION)
+            .find(
+                Filters.and(
+                    Filters.eq("userId", userId),
+                    Filters.eq("completed", true)
+                )
+            )
+            .firstOrNull() != null
+
     suspend fun markAsCompleted(shareCode: String): Long {
         try {
             val query = Filters.eq("shareCode", shareCode)

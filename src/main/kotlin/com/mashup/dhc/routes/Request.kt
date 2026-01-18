@@ -122,3 +122,4 @@ data class LoveTestRequest(
         val additional: String?
     )
 }
+

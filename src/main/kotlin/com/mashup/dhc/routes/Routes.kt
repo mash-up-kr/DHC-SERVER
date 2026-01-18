@@ -11,6 +11,7 @@ import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.model.calculateSpendMoney
 import com.mashup.dhc.domain.service.FortuneService
+import com.mashup.dhc.domain.service.LoveMissionService
 import com.mashup.dhc.domain.service.ShareService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
@@ -42,6 +43,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
+import org.bson.types.ObjectId
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
@@ -86,20 +88,21 @@ private fun Int.minusTenPercent() = this * 9 / 10
 fun Route.userRoutes(
     userService: UserService,
     fortuneService: FortuneService,
-    shareService: ShareService
+    shareService: ShareService,
+    loveMissionService: LoveMissionService
 ) {
     route("/api/users") {
         register(userService)
-        changeMissionStatus(userService)
+        changeMissionStatus(userService, loveMissionService)
         endToday(userService)
         logout(userService)
         searchUser(userService)
         getDailyFortune(fortuneService)
         addJulyPastRoutineHistory(userService)
-        createShareUrl(shareService)
+        createShareCode(shareService)
     }
     route("/view/users/{userId}") {
-        home(userService, fortuneService)
+        home(userService, fortuneService, loveMissionService)
         myPage(userService)
         analysisView(userService)
         calendarView(userService)
@@ -253,7 +256,8 @@ private fun Route.register(userService: UserService) {
 
 private fun Route.home(
     userService: UserService,
-    fortuneService: FortuneService
+    fortuneService: FortuneService,
+    loveMissionService: LoveMissionService
 ) {
     get("/home") {
         val userId = call.pathParameters["userId"] ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
@@ -310,6 +314,18 @@ private fun Route.home(
             )
         }
 
+        // 러브미션 확인 및 활성화 (완료된 공유가 있으면 자동 활성화)
+        val loveMissionInfo = loveMissionService.checkAndGetTodayLoveMission(user, now)
+        val loveMissionResponse = loveMissionInfo?.let {
+            LoveMissionResponse(
+                missionId = it.missionId,
+                dayNumber = it.dayNumber,
+                title = it.title,
+                finished = it.finished,
+                remainingDays = it.remainingDays
+            )
+        }
+
         call.respond(
             HttpStatusCode.OK,
             HomeViewResponse(
@@ -319,7 +335,8 @@ private fun Route.home(
                 todayDone = todayPastRoutines.isNotEmpty(),
                 yesterdayMissionSuccess = yesterdayMissionSuccess,
                 longAbsence = longAbsence,
-                isFirstAccess = isFirstAccess
+                isFirstAccess = isFirstAccess,
+                loveMission = loveMissionResponse
             )
         )
     }
@@ -358,7 +375,7 @@ private fun Route.endToday(userService: UserService) {
     }
 }
 
-private fun Route.changeMissionStatus(userService: UserService) {
+private fun Route.changeMissionStatus(userService: UserService, loveMissionService: LoveMissionService) {
     put("/{userId}/missions/{missionId}") {
         val userId =
             call.pathParameters["userId"]
@@ -379,12 +396,30 @@ private fun Route.changeMissionStatus(userService: UserService) {
             return@put
         }
 
-        val updated =
+        // 러브미션인지 확인
+        val user = userService.getUserById(userId)
+        val isLoveMission = user.loveMissionStatus?.findMissionById(missionId) != null
+
+        val updated = if (isLoveMission) {
+            // 러브미션은 완료만 가능 (switch 불가)
+            if (request.finished != null) {
+                loveMissionService.updateLoveMissionFinished(
+                    ObjectId(userId),
+                    missionId,
+                    request.finished
+                ) ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+            } else {
+                // 러브미션은 switch 불가
+                throw BusinessException(ErrorCode.INVALID_REQUEST)
+            }
+        } else {
+            // 일반 미션
             if (request.finished != null) {
                 userService.updateTodayMission(userId, missionId, request.finished)
             } else {
                 userService.switchTodayMission(userId, missionId)
             }
+        }
 
         val longTermMission =
             if (updated.longTermMission != null) {
@@ -686,19 +721,18 @@ private fun Route.addJulyPastRoutineHistory(userService: UserService) {
     }
 }
 
-private fun Route.createShareUrl(shareService: ShareService) {
+private fun Route.createShareCode(shareService: ShareService) {
     post("/{userId}/share") {
         val userId =
             call.pathParameters["userId"]
                 ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
 
-        val result = shareService.createShareUrl(userId)
+        val result = shareService.createShareCode(userId)
 
         call.respond(
             HttpStatusCode.Created,
-            CreateShareUrlResponse(
-                shareCode = result.shareCode,
-                shareUrl = result.shareUrl
+            CreateShareCodeResponse(
+                shareCode = result.shareCode
             )
         )
     }
@@ -721,3 +755,4 @@ private fun Route.completeShare(shareService: ShareService) {
         )
     }
 }
+

@@ -33,6 +33,7 @@ data class User(
     val currentAmulet: Amulet? = null,
     val totalSavedMoney: Money = Money(BigDecimal.ZERO),
     val lastAccessDate: LocalDate? = null,
+    val loveMissionStatus: LoveMissionStatus? = null,
     @Transient val deleted: Boolean = false
 ) {
     private val age: Int
@@ -161,6 +162,24 @@ class UserRepository(
             return result.modifiedCount
         } catch (e: MongoException) {
             System.err.println("Unable to update lastAccessDate: $e")
+        }
+        return 0
+    }
+
+    suspend fun updateLoveMissionStatus(
+        objectId: ObjectId,
+        loveMissionStatus: LoveMissionStatus
+    ): Long {
+        try {
+            val query = Filters.eq("_id", objectId)
+            val updates = Updates.set(User::loveMissionStatus.name, loveMissionStatus)
+            val result =
+                mongoDatabase
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(query, updates)
+            return result.modifiedCount
+        } catch (e: MongoException) {
+            System.err.println("Unable to update loveMissionStatus: $e")
         }
         return 0
     }
