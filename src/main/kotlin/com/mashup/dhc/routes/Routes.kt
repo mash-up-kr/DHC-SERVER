@@ -8,6 +8,7 @@ import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.domain.model.User
+import com.mashup.dhc.domain.model.calculatePoint
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.model.calculateSpendMoney
 import com.mashup.dhc.domain.service.FortuneService
@@ -316,28 +317,36 @@ private fun Route.home(
 
         // 러브미션 확인 및 활성화 (완료된 공유가 있으면 자동 활성화)
         val loveMissionInfo = loveMissionService.checkAndGetTodayLoveMission(user, now)
-        val loveMissionResponse =
-            loveMissionInfo?.let {
-                LoveMissionResponse(
-                    missionId = it.missionId,
-                    dayNumber = it.dayNumber,
-                    title = it.title,
-                    finished = it.finished,
-                    remainingDays = it.remainingDays
-                )
+
+        // 포인트 적립 후 최신 user 정보 다시 가져오기
+        val latestUser = userService.getUserById(userId)
+
+        // todayDailyMissionList 구성 (러브미션이 있으면 맨 앞에 추가)
+        val dailyMissions = latestUser.todayDailyMissionList.map { MissionResponse.from(it) }
+        val todayMissions =
+            if (loveMissionInfo != null) {
+                val loveMissionResponse =
+                    MissionResponse.fromLoveMission(
+                        loveMissionInfo.mission,
+                        loveMissionInfo.dayNumber,
+                        loveMissionInfo.remainingDays
+                    )
+                listOf(loveMissionResponse) + dailyMissions
+            } else {
+                dailyMissions
             }
 
         call.respond(
             HttpStatusCode.OK,
             HomeViewResponse(
-                longTermMission = user.longTermMission?.let { MissionResponse.from(it) },
-                todayDailyMissionList = user.todayDailyMissionList.map { MissionResponse.from(it) },
+                longTermMission = latestUser.longTermMission?.let { MissionResponse.from(it) },
+                todayDailyMissionList = todayMissions,
                 todayDailyFortune = todayDailyFortune.let { FortuneResponse.from(it) },
                 todayDone = todayPastRoutines.isNotEmpty(),
                 yesterdayMissionSuccess = yesterdayMissionSuccess,
                 longAbsence = longAbsence,
                 isFirstAccess = isFirstAccess,
-                loveMission = loveMissionResponse
+                point = latestUser.point
             )
         )
     }
@@ -402,7 +411,14 @@ private fun Route.changeMissionStatus(
 
         // 러브미션인지 확인
         val user = userService.getUserById(userId)
-        val isLoveMission = user.loveMissionStatus?.findMissionById(missionId) != null
+        val loveMission = user.loveMissionStatus?.findMissionById(missionId)
+        val isLoveMission = loveMission != null
+
+        // 일반 미션 찾기 (포인트 계산용)
+        val regularMission =
+            (user.todayDailyMissionList + user.longTermMission)
+                .filterNotNull()
+                .find { it.id.toString() == missionId }
 
         val updated =
             if (isLoveMission) {
@@ -425,6 +441,15 @@ private fun Route.changeMissionStatus(
                     userService.switchTodayMission(userId, missionId)
                 }
             }
+
+        // 미션 완료 시 포인트 적립 (finished = true이고, 이전에 완료되지 않았던 경우)
+        if (request.finished == true) {
+            val mission = loveMission ?: regularMission
+            if (mission != null && !mission.finished) {
+                val pointToAdd = mission.calculatePoint()
+                userService.addPoint(userId, pointToAdd)
+            }
+        }
 
         val longTermMission =
             if (updated.longTermMission != null) {

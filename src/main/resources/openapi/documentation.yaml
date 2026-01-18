@@ -75,7 +75,7 @@ paths:
   /api/users/{userId}/missions/{missionId}:
     put:
       summary: "Change Mission Status"
-      description: "Change the completion status of a specific mission for a user or switch to a new mission. This API also supports love missions - use the missionId from loveMission in HomeViewResponse. Note: Love missions only support 'finished' action (switch is not available)."
+      description: "Change the completion status of a specific mission for a user or switch to a new mission. This API also supports love missions (type=LOVE in todayDailyMissionList). Note: Love missions only support 'finished' action (switch is not available). When a mission is completed (finished=true), points are awarded based on difficulty: Easy(1)=50pt, Medium(2)=100pt, Hard(3+)=200pt."
       parameters:
         - name: userId
           in: path
@@ -419,6 +419,17 @@ paths:
                   title: "여행 가기 위해 돈 모으기"
                   switchCount: 0
                 todayDailyMissionList:
+                  - missionId: "507f1f77bcf86cd799439066"
+                    category: "사교·모임"
+                    difficulty: 2
+                    type: "LOVE"
+                    finished: false
+                    cost: "0.00"
+                    endDate: "2024-01-15"
+                    title: "상대방에게 좋아하는 점 3가지 말하기"
+                    switchCount: 0
+                    dayNumber: 1
+                    remainingDays: 13
                   - missionId: "507f1f77bcf86cd799439044"
                     category: "식음료"
                     difficulty: 2
@@ -450,12 +461,7 @@ paths:
                 yesterdayMissionSuccess: true
                 longAbsence: false
                 isFirstAccess: false
-                loveMission:
-                  missionId: "507f1f77bcf86cd799439066"
-                  dayNumber: 1
-                  title: "상대방에게 좋아하는 점 3가지 말하기"
-                  finished: false
-                  remainingDays: 13
+                point: 150
 
   /view/users/{userId}/myPage:
     get:
@@ -934,7 +940,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Mission"
-          description: "List of today's daily missions"
+          description: "List of today's missions including love mission (if active) at the top. Love missions have type=LOVE and include dayNumber, remainingDays fields."
         todayDailyFortune:
           $ref: "#/components/schemas/FortuneResponse"
           nullable: true
@@ -954,10 +960,11 @@ components:
           type: boolean
           description: "Whether this is user's first access (lastAccessDate was null)"
           example: false
-        loveMission:
-          $ref: "#/components/schemas/LoveMissionResponse"
-          nullable: true
-          description: "Today's love mission (if active)"
+        point:
+          type: integer
+          format: int64
+          description: "User's total accumulated points"
+          example: 150
 
     MissionCategoriesResponse:
       type: object
@@ -1105,7 +1112,7 @@ components:
           type: integer
           minimum: 1
           maximum: 5
-          description: "Mission difficulty level"
+          description: "Mission difficulty level (1=Easy: 50pt, 2=Medium: 100pt, 3+=Hard: 200pt)"
           example: 3
         type:
           $ref: "#/components/schemas/MissionType"
@@ -1131,6 +1138,18 @@ components:
           type: integer
           description: "Number of times mission has been switched"
           example: 0
+        dayNumber:
+          type: integer
+          minimum: 1
+          maximum: 14
+          description: "Love mission day number (1-14). Only present for LOVE type missions."
+          example: 1
+          nullable: true
+        remainingDays:
+          type: integer
+          description: "Number of remaining days for love mission. Only present for LOVE type missions."
+          example: 13
+          nullable: true
 
     DailyFortune:
       type: object
@@ -1248,7 +1267,8 @@ components:
       enum:
         - LONG_TERM
         - DAILY
-      description: "Mission type"
+        - LOVE
+      description: "Mission type. LOVE missions appear at the top of todayDailyMissionList and have additional dayNumber, remainingDays fields."
       example: "DAILY"
 
     UploadResponse:
@@ -1723,34 +1743,3 @@ components:
           example: "Share completed successfully"
           nullable: true
 
-    LoveMissionResponse:
-      type: object
-      required:
-        - missionId
-        - dayNumber
-        - title
-        - finished
-        - remainingDays
-      properties:
-        missionId:
-          type: string
-          description: "Mission ID (can be used with existing mission API)"
-          example: "507f1f77bcf86cd799439066"
-        dayNumber:
-          type: integer
-          minimum: 1
-          maximum: 14
-          description: "Current love mission day number (1-14)"
-          example: 1
-        title:
-          type: string
-          description: "Love mission title"
-          example: "상대방에게 좋아하는 점 3가지 말하기"
-        finished:
-          type: boolean
-          description: "Whether today's love mission is completed"
-          example: false
-        remainingDays:
-          type: integer
-          description: "Number of remaining days for love mission (including today)"
-          example: 13

@@ -12,10 +12,8 @@ import kotlinx.datetime.LocalDate
 import org.bson.types.ObjectId
 
 data class LoveMissionInfo(
-    val missionId: String,
+    val mission: Mission,
     val dayNumber: Int,
-    val title: String,
-    val finished: Boolean,
     val remainingDays: Int
 )
 
@@ -103,10 +101,8 @@ class LoveMissionService(
         val todayMission = status.getTodayMission(today) ?: return null
 
         return LoveMissionInfo(
-            missionId = todayMission.id.toString(),
+            mission = todayMission,
             dayNumber = dayNumber,
-            title = todayMission.title,
-            finished = todayMission.finished,
             remainingDays = status.remainingDays(today)
         )
     }
