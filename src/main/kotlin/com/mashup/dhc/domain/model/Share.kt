@@ -8,10 +8,6 @@ import java.util.UUID
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
 import org.bson.BsonValue
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
@@ -27,7 +23,12 @@ data class Share(
     companion object {
         fun create(userId: ObjectId): Share =
             Share(
-                shareCode = UUID.randomUUID().toString().replace("-", "").take(12),
+                shareCode =
+                    UUID
+                        .randomUUID()
+                        .toString()
+                        .replace("-", "")
+                        .take(12),
                 userId = userId
             )
     }
@@ -72,8 +73,7 @@ class ShareRepository(
                     Filters.eq("userId", userId),
                     Filters.eq("completed", true)
                 )
-            )
-            .firstOrNull() != null
+            ).firstOrNull() != null
 
     suspend fun markAsCompleted(shareCode: String): Long {
         try {

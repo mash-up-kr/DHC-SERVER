@@ -316,15 +316,16 @@ private fun Route.home(
 
         // 러브미션 확인 및 활성화 (완료된 공유가 있으면 자동 활성화)
         val loveMissionInfo = loveMissionService.checkAndGetTodayLoveMission(user, now)
-        val loveMissionResponse = loveMissionInfo?.let {
-            LoveMissionResponse(
-                missionId = it.missionId,
-                dayNumber = it.dayNumber,
-                title = it.title,
-                finished = it.finished,
-                remainingDays = it.remainingDays
-            )
-        }
+        val loveMissionResponse =
+            loveMissionInfo?.let {
+                LoveMissionResponse(
+                    missionId = it.missionId,
+                    dayNumber = it.dayNumber,
+                    title = it.title,
+                    finished = it.finished,
+                    remainingDays = it.remainingDays
+                )
+            }
 
         call.respond(
             HttpStatusCode.OK,
@@ -375,7 +376,10 @@ private fun Route.endToday(userService: UserService) {
     }
 }
 
-private fun Route.changeMissionStatus(userService: UserService, loveMissionService: LoveMissionService) {
+private fun Route.changeMissionStatus(
+    userService: UserService,
+    loveMissionService: LoveMissionService
+) {
     put("/{userId}/missions/{missionId}") {
         val userId =
             call.pathParameters["userId"]
@@ -400,26 +404,27 @@ private fun Route.changeMissionStatus(userService: UserService, loveMissionServi
         val user = userService.getUserById(userId)
         val isLoveMission = user.loveMissionStatus?.findMissionById(missionId) != null
 
-        val updated = if (isLoveMission) {
-            // 러브미션은 완료만 가능 (switch 불가)
-            if (request.finished != null) {
-                loveMissionService.updateLoveMissionFinished(
-                    ObjectId(userId),
-                    missionId,
-                    request.finished
-                ) ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val updated =
+            if (isLoveMission) {
+                // 러브미션은 완료만 가능 (switch 불가)
+                if (request.finished != null) {
+                    loveMissionService.updateLoveMissionFinished(
+                        ObjectId(userId),
+                        missionId,
+                        request.finished
+                    ) ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+                } else {
+                    // 러브미션은 switch 불가
+                    throw BusinessException(ErrorCode.INVALID_REQUEST)
+                }
             } else {
-                // 러브미션은 switch 불가
-                throw BusinessException(ErrorCode.INVALID_REQUEST)
+                // 일반 미션
+                if (request.finished != null) {
+                    userService.updateTodayMission(userId, missionId, request.finished)
+                } else {
+                    userService.switchTodayMission(userId, missionId)
+                }
             }
-        } else {
-            // 일반 미션
-            if (request.finished != null) {
-                userService.updateTodayMission(userId, missionId, request.finished)
-            } else {
-                userService.switchTodayMission(userId, missionId)
-            }
-        }
 
         val longTermMission =
             if (updated.longTermMission != null) {
@@ -755,4 +760,3 @@ private fun Route.completeShare(shareService: ShareService) {
         )
     }
 }
-

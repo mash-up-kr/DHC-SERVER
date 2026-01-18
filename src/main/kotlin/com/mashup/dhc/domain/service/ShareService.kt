@@ -51,10 +51,9 @@ class ShareService(
         )
     }
 
-    suspend fun getShareByCode(shareCode: String): Share {
-        return shareRepository.findByShareCode(shareCode)
+    suspend fun getShareByCode(shareCode: String): Share =
+        shareRepository.findByShareCode(shareCode)
             ?: throw BusinessException(ErrorCode.SHARE_NOT_FOUND)
-    }
 }
 
 data class ShareCodeResult(

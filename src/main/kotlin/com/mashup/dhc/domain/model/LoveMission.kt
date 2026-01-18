@@ -32,7 +32,10 @@ data class LoveMissionStatus(
     val missions: List<Mission> = listOf()
 ) {
     companion object {
-        fun create(startDate: LocalDate, missions: List<Mission>): LoveMissionStatus =
+        fun create(
+            startDate: LocalDate,
+            missions: List<Mission>
+        ): LoveMissionStatus =
             LoveMissionStatus(
                 startDate = startDate,
                 endDate = LocalDate.fromEpochDays(startDate.toEpochDays() + 13),
@@ -52,8 +55,7 @@ data class LoveMissionStatus(
     /**
      * 해당 날짜가 유효 기간 내인지 확인
      */
-    fun isActive(today: LocalDate): Boolean =
-        today >= startDate && today <= endDate
+    fun isActive(today: LocalDate): Boolean = today >= startDate && today <= endDate
 
     /**
      * 오늘의 미션 가져오기
@@ -66,14 +68,12 @@ data class LoveMissionStatus(
     /**
      * missionId로 미션 찾기
      */
-    fun findMissionById(missionId: String): Mission? =
-        missions.find { it.id.toString() == missionId }
+    fun findMissionById(missionId: String): Mission? = missions.find { it.id.toString() == missionId }
 
     /**
      * 남은 일수 계산
      */
-    fun remainingDays(today: LocalDate): Int =
-        (endDate.toEpochDays() - today.toEpochDays()).toInt().coerceAtLeast(0)
+    fun remainingDays(today: LocalDate): Int = (endDate.toEpochDays() - today.toEpochDays()).toInt().coerceAtLeast(0)
 }
 
 class LoveMissionRepository(

@@ -8,7 +8,6 @@ import com.mashup.dhc.domain.model.MissionType
 import com.mashup.dhc.domain.model.ShareRepository
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.UserRepository
-import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
 import org.bson.types.ObjectId
 
@@ -66,20 +65,21 @@ class LoveMissionService(
     private suspend fun activateLoveMission(startDate: LocalDate): LoveMissionStatus {
         val loveMissionTemplates = loveMissionRepository.findAll().shuffled()
 
-        val missions = loveMissionTemplates.mapIndexed { index, template ->
-            val dayNumber = index + 1
-            Mission(
-                id = ObjectId(),
-                category = MissionCategory.SOCIAL, // 러브미션은 사교 카테고리로 분류
-                difficulty = template.difficulty,
-                type = MissionType.LOVE,
-                finished = false,
-                title = template.title,
-                cost = template.cost,
-                switchCount = 0,
-                endDate = LocalDate.fromEpochDays(startDate.toEpochDays() + dayNumber - 1)
-            )
-        }
+        val missions =
+            loveMissionTemplates.mapIndexed { index, template ->
+                val dayNumber = index + 1
+                Mission(
+                    id = ObjectId(),
+                    category = MissionCategory.SOCIAL, // 러브미션은 사교 카테고리로 분류
+                    difficulty = template.difficulty,
+                    type = MissionType.LOVE,
+                    finished = false,
+                    title = template.title,
+                    cost = template.cost,
+                    switchCount = 0,
+                    endDate = LocalDate.fromEpochDays(startDate.toEpochDays() + dayNumber - 1)
+                )
+            }
 
         return LoveMissionStatus.create(startDate, missions)
     }
@@ -129,13 +129,14 @@ class LoveMissionService(
         val targetMission = status.findMissionById(missionId) ?: return null
 
         // 업데이트된 미션 리스트 생성
-        val updatedMissions = status.missions.map { mission ->
-            if (mission.id.toString() == missionId) {
-                mission.copy(finished = finished)
-            } else {
-                mission
+        val updatedMissions =
+            status.missions.map { mission ->
+                if (mission.id.toString() == missionId) {
+                    mission.copy(finished = finished)
+                } else {
+                    mission
+                }
             }
-        }
 
         val updatedStatus = status.copy(missions = updatedMissions)
         userRepository.updateLoveMissionStatus(userId, updatedStatus)
