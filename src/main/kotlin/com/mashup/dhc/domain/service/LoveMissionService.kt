@@ -60,22 +60,24 @@ class LoveMissionService(
 
     /**
      * 러브미션을 활성화합니다.
-     * 14개의 LoveMission 템플릿으로부터 Mission 인스턴스를 생성합니다.
+     * 14개의 LoveMission 템플릿을 랜덤하게 셔플하여 Mission 인스턴스를 생성합니다.
+     * 각 사용자마다 다른 순서로 미션이 배정됩니다.
      */
     private suspend fun activateLoveMission(startDate: LocalDate): LoveMissionStatus {
-        val loveMissionTemplates = loveMissionRepository.findAll().sortedBy { it.dayNumber }
+        val loveMissionTemplates = loveMissionRepository.findAll().shuffled()
 
-        val missions = loveMissionTemplates.map { template ->
+        val missions = loveMissionTemplates.mapIndexed { index, template ->
+            val dayNumber = index + 1
             Mission(
                 id = ObjectId(),
                 category = MissionCategory.SOCIAL, // 러브미션은 사교 카테고리로 분류
-                difficulty = 1,
+                difficulty = template.difficulty,
                 type = MissionType.LOVE,
                 finished = false,
                 title = template.title,
-                cost = Money(0), // 러브미션은 비용 없음
+                cost = template.cost,
                 switchCount = 0,
-                endDate = LocalDate.fromEpochDays(startDate.toEpochDays() + template.dayNumber - 1)
+                endDate = LocalDate.fromEpochDays(startDate.toEpochDays() + dayNumber - 1)
             )
         }
 

@@ -1,22 +1,23 @@
 package com.mashup.dhc.domain.model
 
-import com.mongodb.client.model.Filters
+import com.mashup.dhc.utils.Money
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.datetime.LocalDate
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
 /**
- * 러브미션 엔티티
- * - dayNumber: 1~14 (몇 번째 날 미션인지)
+ * 러브미션 템플릿 엔티티
  * - title: 미션 제목
+ * - difficulty: 난이도 (1~5)
+ * - cost: 예상 절약금액
  */
 data class LoveMission(
     @BsonId val id: ObjectId? = null,
-    val dayNumber: Int,
-    val title: String
+    val title: String,
+    val difficulty: Int,
+    val cost: Money
 )
 
 /**
@@ -78,12 +79,6 @@ data class LoveMissionStatus(
 class LoveMissionRepository(
     private val mongoDatabase: MongoDatabase
 ) {
-    suspend fun findByDayNumber(dayNumber: Int): LoveMission? =
-        mongoDatabase
-            .getCollection<LoveMission>(LOVE_MISSION_COLLECTION)
-            .find(Filters.eq("dayNumber", dayNumber))
-            .firstOrNull()
-
     suspend fun findAll(): List<LoveMission> =
         mongoDatabase
             .getCollection<LoveMission>(LOVE_MISSION_COLLECTION)
