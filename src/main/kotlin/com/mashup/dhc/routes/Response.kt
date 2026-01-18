@@ -126,7 +126,9 @@ data class MissionResponse(
 
 @Serializable
 data class EndTodayMissionResponse(
-    val todaySavedMoney: Money
+    val todaySavedMoney: Money,
+    val missionSuccess: Boolean,
+    val earnedPoint: Long
 )
 
 @Serializable
