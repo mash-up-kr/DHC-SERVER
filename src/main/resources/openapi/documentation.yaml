@@ -75,7 +75,7 @@ paths:
   /api/users/{userId}/missions/{missionId}:
     put:
       summary: "Change Mission Status"
-      description: "Change the completion status of a specific mission for a user or switch to a new mission"
+      description: "Change the completion status of a specific mission for a user or switch to a new mission. This API also supports love missions - use the missionId from loveMission in HomeViewResponse. Note: Love missions only support 'finished' action (switch is not available)."
       parameters:
         - name: userId
           in: path
@@ -450,6 +450,12 @@ paths:
                 yesterdayMissionSuccess: true
                 longAbsence: false
                 isFirstAccess: false
+                loveMission:
+                  missionId: "507f1f77bcf86cd799439066"
+                  dayNumber: 1
+                  title: "상대방에게 좋아하는 점 3가지 말하기"
+                  finished: false
+                  remainingDays: 13
 
   /view/users/{userId}/myPage:
     get:
@@ -728,6 +734,70 @@ paths:
                 code: 400
                 message: "키가 필요합니다"
 
+  /api/users/{userId}/share:
+    post:
+      summary: "Create Share Code"
+      description: "Generate a unique share code for the user. If a share code already exists for the user, returns the existing code."
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "Share code created or retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateShareCodeResponse"
+              example:
+                shareCode: "abc123def456"
+                isNew: true
+        "404":
+          description: "User not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                message: "User not found"
+
+  /api/share/{shareCode}/complete:
+    post:
+      summary: "Complete Share"
+      description: "Mark a share as completed when someone accesses the shared link. This triggers love mission activation for the share owner on their next home API call."
+      parameters:
+        - name: shareCode
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Share code from the shared link"
+          example: "abc123def456"
+      responses:
+        "200":
+          description: "Share completed successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CompleteShareResponse"
+              example:
+                success: true
+                message: "Share completed successfully"
+        "404":
+          description: "Share not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 404
+                message: "Share not found"
+
 components:
   schemas:
     RegisterUserRequest:
@@ -884,6 +954,10 @@ components:
           type: boolean
           description: "Whether this is user's first access (lastAccessDate was null)"
           example: false
+        loveMission:
+          $ref: "#/components/schemas/LoveMissionResponse"
+          nullable: true
+          description: "Today's love mission (if active)"
 
     MissionCategoriesResponse:
       type: object
@@ -1618,3 +1692,65 @@ components:
           type: string
           description: "Recommended confession location"
           example: "학교 근처 놀이터에서"
+
+    CreateShareCodeResponse:
+      type: object
+      required:
+        - shareCode
+        - isNew
+      properties:
+        shareCode:
+          type: string
+          description: "Generated share code"
+          example: "abc123def456"
+        isNew:
+          type: boolean
+          description: "Whether a new share code was created (false if existing code was returned)"
+          example: true
+
+    CompleteShareResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: "Whether the share completion was successful"
+          example: true
+        message:
+          type: string
+          description: "Optional message"
+          example: "Share completed successfully"
+          nullable: true
+
+    LoveMissionResponse:
+      type: object
+      required:
+        - missionId
+        - dayNumber
+        - title
+        - finished
+        - remainingDays
+      properties:
+        missionId:
+          type: string
+          description: "Mission ID (can be used with existing mission API)"
+          example: "507f1f77bcf86cd799439066"
+        dayNumber:
+          type: integer
+          minimum: 1
+          maximum: 14
+          description: "Current love mission day number (1-14)"
+          example: 1
+        title:
+          type: string
+          description: "Love mission title"
+          example: "상대방에게 좋아하는 점 3가지 말하기"
+        finished:
+          type: boolean
+          description: "Whether today's love mission is completed"
+          example: false
+        remainingDays:
+          type: integer
+          description: "Number of remaining days for love mission (including today)"
+          example: 13

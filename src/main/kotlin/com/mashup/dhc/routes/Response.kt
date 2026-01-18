@@ -36,7 +36,8 @@ data class HomeViewResponse(
     val todayDone: Boolean,
     val yesterdayMissionSuccess: Boolean,
     val longAbsence: Boolean,
-    val isFirstAccess: Boolean
+    val isFirstAccess: Boolean,
+    val loveMission: LoveMissionResponse? = null
 )
 
 @Serializable
@@ -295,4 +296,24 @@ data class LoveTestViewResponse(
     // TODO: 위험요소 확인 필요
     val confessDate: LocalDate,
     val confessLocation: String
+)
+
+@Serializable
+data class CreateShareCodeResponse(
+    val shareCode: String
+)
+
+@Serializable
+data class CompleteShareResponse(
+    val shareCode: String,
+    val alreadyCompleted: Boolean
+)
+
+@Serializable
+data class LoveMissionResponse(
+    val missionId: String,
+    val dayNumber: Int,
+    val title: String,
+    val finished: Boolean,
+    val remainingDays: Int
 )

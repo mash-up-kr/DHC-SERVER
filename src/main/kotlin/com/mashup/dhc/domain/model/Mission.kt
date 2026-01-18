@@ -53,7 +53,8 @@ enum class MissionCategory(
 
 enum class MissionType {
     LONG_TERM,
-    DAILY
+    DAILY,
+    LOVE
 }
 
 class MissionRepository(

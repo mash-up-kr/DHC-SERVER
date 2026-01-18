@@ -10,7 +10,12 @@ import io.ktor.server.routing.routing
 fun Application.configureRouting(dependencies: Dependencies) {
     routing {
         probeRoute()
-        userRoutes(dependencies.userService, dependencies.fortuneService)
+        userRoutes(
+            dependencies.userService,
+            dependencies.fortuneService,
+            dependencies.shareService,
+            dependencies.loveMissionService
+        )
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
 
         // 정적 파일 제공
