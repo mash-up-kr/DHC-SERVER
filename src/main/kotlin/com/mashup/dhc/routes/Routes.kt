@@ -306,6 +306,13 @@ private fun Route.home(
                 .filter { it.type == MissionType.DAILY }
                 .any { it.finished }
 
+        // 어제 획득한 포인트 계산
+        val yesterdayEarnedPoint =
+            yesterdayPastRoutines
+                .flatMap { it.missions }
+                .filter { it.finished }
+                .sumOf { it.calculatePoint() }
+
         val todayDailyFortune = fortuneService.queryDailyFortune(userId, now)
 
         if (user.dailyFortunes == null || user.dailyFortunes.all { LocalDate.parse(it.date) < now }) {
@@ -346,7 +353,7 @@ private fun Route.home(
                 yesterdayMissionSuccess = yesterdayMissionSuccess,
                 longAbsence = longAbsence,
                 isFirstAccess = isFirstAccess,
-                point = latestUser.point
+                point = yesterdayEarnedPoint
             )
         )
     }
@@ -375,13 +382,33 @@ private fun Route.endToday(userService: UserService) {
 
         request.validate()
 
+        // 미션 정보 먼저 가져오기 (summaryTodayMission 호출 전)
+        val user = userService.getUserById(userId)
+        val todayMissions = user.todayDailyMissionList
+
+        // 미션 성공 여부 (하나라도 완료했으면 성공)
+        val missionSuccess = todayMissions.any { it.finished }
+
+        // 획득 포인트 계산
+        val earnedPoint =
+            todayMissions
+                .filter { it.finished }
+                .sumOf { it.calculatePoint() }
+
         val todaySavedMoney =
             userService.summaryTodayMission(
                 userId,
                 request.date
             )
 
-        call.respond(HttpStatusCode.OK, EndTodayMissionResponse(todaySavedMoney))
+        call.respond(
+            HttpStatusCode.OK,
+            EndTodayMissionResponse(
+                todaySavedMoney = todaySavedMoney,
+                missionSuccess = missionSuccess,
+                earnedPoint = earnedPoint
+            )
+        )
     }
 }
 
