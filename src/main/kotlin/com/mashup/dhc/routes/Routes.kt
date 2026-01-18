@@ -13,6 +13,7 @@ import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.model.calculateSpendMoney
 import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.LoveMissionService
+import com.mashup.dhc.domain.service.PointMultiplierService
 import com.mashup.dhc.domain.service.ShareService
 import com.mashup.dhc.domain.service.UserService
 import com.mashup.dhc.domain.service.isLeapYear
@@ -90,12 +91,13 @@ fun Route.userRoutes(
     userService: UserService,
     fortuneService: FortuneService,
     shareService: ShareService,
-    loveMissionService: LoveMissionService
+    loveMissionService: LoveMissionService,
+    pointMultiplierService: PointMultiplierService
 ) {
     route("/api/users") {
         register(userService)
         changeMissionStatus(userService, loveMissionService)
-        endToday(userService)
+        endToday(userService, pointMultiplierService)
         logout(userService)
         searchUser(userService)
         getDailyFortune(fortuneService)
@@ -103,7 +105,7 @@ fun Route.userRoutes(
         createShareCode(shareService)
     }
     route("/view/users/{userId}") {
-        home(userService, fortuneService, loveMissionService)
+        home(userService, fortuneService, loveMissionService, pointMultiplierService)
         myPage(userService)
         analysisView(userService)
         calendarView(userService)
@@ -258,7 +260,8 @@ private fun Route.register(userService: UserService) {
 private fun Route.home(
     userService: UserService,
     fortuneService: FortuneService,
-    loveMissionService: LoveMissionService
+    loveMissionService: LoveMissionService,
+    pointMultiplierService: PointMultiplierService
 ) {
     get("/home") {
         val userId = call.pathParameters["userId"] ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
@@ -306,12 +309,14 @@ private fun Route.home(
                 .filter { it.type == MissionType.DAILY }
                 .any { it.finished }
 
-        // 어제 획득한 포인트 계산
-        val yesterdayEarnedPoint =
+        // 어제 획득한 포인트 계산 (배율 적용)
+        val basePoint =
             yesterdayPastRoutines
                 .flatMap { it.missions }
                 .filter { it.finished }
                 .sumOf { it.calculatePoint() }
+        val multiplier = pointMultiplierService.calculateMultiplier(user, now, yesterdayPastRoutines)
+        val yesterdayEarnedPoint = basePoint * multiplier
 
         val todayDailyFortune = fortuneService.queryDailyFortune(userId, now)
 
@@ -372,7 +377,10 @@ private fun Mission.toMissionResponse() =
         switchCount = this.switchCount
     )
 
-private fun Route.endToday(userService: UserService) {
+private fun Route.endToday(
+    userService: UserService,
+    pointMultiplierService: PointMultiplierService
+) {
     post("/{userId}/done") {
         val userId =
             call.pathParameters["userId"]
@@ -389,11 +397,19 @@ private fun Route.endToday(userService: UserService) {
         // 미션 성공 여부 (하나라도 완료했으면 성공)
         val missionSuccess = todayMissions.any { it.finished }
 
-        // 획득 포인트 계산
-        val earnedPoint =
+        // 어제 기록 조회 (배율 계산용)
+        val today = now()
+        val yesterdayHistory = userService.getYesterdayPastRoutines(userId, today)
+
+        // 배율 계산
+        val multiplier = pointMultiplierService.calculateMultiplier(user, today, yesterdayHistory)
+
+        // 획득 포인트 계산 (배율 적용)
+        val basePoint =
             todayMissions
                 .filter { it.finished }
                 .sumOf { it.calculatePoint() }
+        val earnedPoint = basePoint * multiplier
 
         val todaySavedMoney =
             userService.summaryTodayMission(

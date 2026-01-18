@@ -14,7 +14,8 @@ fun Application.configureRouting(dependencies: Dependencies) {
             dependencies.userService,
             dependencies.fortuneService,
             dependencies.shareService,
-            dependencies.loveMissionService
+            dependencies.loveMissionService,
+            dependencies.pointMultiplierService
         )
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
 
