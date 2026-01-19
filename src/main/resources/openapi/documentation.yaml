@@ -138,7 +138,7 @@ paths:
   /api/users/{userId}/done:
     post:
       summary: "End Today's Missions"
-      description: "Complete today's missions and calculate total saved money"
+      description: "Complete today's missions and calculate total saved money. The 'earnedPoint' field includes multiplier (2x if yesterday's daily mission failed, 4x if absent for 2+ days)."
       parameters:
         - name: userId
           in: path
@@ -391,7 +391,7 @@ paths:
   /view/users/{userId}/home:
     get:
       summary: "Get Home View"
-      description: "Get user's home view with long-term mission, today's daily missions, and today's fortune"
+      description: "Get user's home view with long-term mission, today's daily missions, and today's fortune. The 'point' field shows yesterday's earned points with multiplier applied (2x if yesterday's daily mission failed, 4x if absent for 2+ days)."
       parameters:
         - name: userId
           in: path
@@ -894,11 +894,22 @@ components:
       type: object
       required:
         - todaySavedMoney
+        - missionSuccess
+        - earnedPoint
       properties:
         todaySavedMoney:
           type: string
           description: "Total money saved today (Money type as string)"
           example: "25.50"
+        missionSuccess:
+          type: boolean
+          description: "Whether at least one mission was completed successfully"
+          example: true
+        earnedPoint:
+          type: integer
+          format: int64
+          description: "Points earned from completed missions with multiplier applied. Base points: Easy(1)=50pt, Medium(2)=100pt, Hard(3+)=200pt. Multipliers: 2x if yesterday's daily mission failed, 4x if absent for 2+ days."
+          example: 150
 
     AddJulyHistoryResponse:
       type: object
@@ -963,7 +974,7 @@ components:
         point:
           type: integer
           format: int64
-          description: "User's total accumulated points"
+          description: "Points earned from yesterday's completed missions with multiplier applied. Base points: Easy(1)=50pt, Medium(2)=100pt, Hard(3+)=200pt. Multipliers: 2x if yesterday's daily mission failed, 4x if absent for 2+ days."
           example: 150
 
     MissionCategoriesResponse:

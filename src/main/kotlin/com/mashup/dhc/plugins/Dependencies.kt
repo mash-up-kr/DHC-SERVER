@@ -11,6 +11,7 @@ import com.mashup.dhc.domain.service.GeminiService
 import com.mashup.dhc.domain.service.LoveMissionService
 import com.mashup.dhc.domain.service.MissionPicker
 import com.mashup.dhc.domain.service.MutexManager
+import com.mashup.dhc.domain.service.PointMultiplierService
 import com.mashup.dhc.domain.service.ShareService
 import com.mashup.dhc.domain.service.TransactionService
 import com.mashup.dhc.domain.service.UserService
@@ -30,6 +31,7 @@ data class Dependencies(
     val fortuneService: FortuneService,
     val shareService: ShareService,
     val loveMissionService: LoveMissionService,
+    val pointMultiplierService: PointMultiplierService,
     val mongoClient: MongoClient,
     val mongoDatabase: MongoDatabase
 )
@@ -107,6 +109,9 @@ fun Application.configureDependencies(): Dependencies {
             loveMissionRepository = loveMissionRepository
         )
 
+    // PointMultiplier 서비스 생성
+    val pointMultiplierService = PointMultiplierService()
+
     monitor.subscribe(ApplicationStopped) {
         mongoClient.close()
     }
@@ -116,6 +121,7 @@ fun Application.configureDependencies(): Dependencies {
         fortuneService = fortuneService,
         shareService = shareService,
         loveMissionService = loveMissionService,
+        pointMultiplierService = pointMultiplierService,
         mongoClient = mongoClient,
         mongoDatabase = mongoDatabase
     )
