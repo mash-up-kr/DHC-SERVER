@@ -37,7 +37,16 @@ data class HomeViewResponse(
     val yesterdayMissionSuccess: Boolean,
     val longAbsence: Boolean,
     val isFirstAccess: Boolean,
-    val point: Long
+    val point: Long,
+    val testBanner: TestBannerResponse?
+)
+
+@Serializable
+data class TestBannerResponse(
+    val title: String,
+    val subTitle: String,
+    val imageUrl: String?,
+    val testUrl: String?
 )
 
 @Serializable

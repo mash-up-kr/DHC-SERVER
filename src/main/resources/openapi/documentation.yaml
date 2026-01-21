@@ -462,6 +462,11 @@ paths:
                 longAbsence: false
                 isFirstAccess: false
                 point: 150
+                testBanner:
+                  title: "궁합 테스트에 참여하고\n스페셜 미션 받아보세요"
+                  subTitle: "지금까지 389명이 참여했어요!"
+                  imageUrl: null
+                  testUrl: null
 
   /view/users/{userId}/myPage:
     get:
@@ -976,6 +981,35 @@ components:
           format: int64
           description: "Points earned from yesterday's completed missions with multiplier applied. Base points: Easy(1)=50pt, Medium(2)=100pt, Hard(3+)=200pt. Multipliers: 2x if yesterday's daily mission failed, 4x if absent for 2+ days."
           example: 150
+        testBanner:
+          $ref: "#/components/schemas/TestBannerResponse"
+          nullable: true
+          description: "Test banner information for compatibility test promotion"
+
+    TestBannerResponse:
+      type: object
+      required:
+        - title
+        - subTitle
+      properties:
+        title:
+          type: string
+          description: "Banner title text"
+          example: "궁합 테스트에 참여하고\n스페셜 미션 받아보세요"
+        subTitle:
+          type: string
+          description: "Banner subtitle text"
+          example: "지금까지 389명이 참여했어요!"
+        imageUrl:
+          type: string
+          description: "URL of the banner graphic image"
+          example: "https://example.com/banner.png"
+          nullable: true
+        testUrl:
+          type: string
+          description: "URL to navigate when clicking the test button"
+          example: "https://example.com/love-test"
+          nullable: true
 
     MissionCategoriesResponse:
       type: object

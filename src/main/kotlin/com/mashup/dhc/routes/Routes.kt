@@ -348,6 +348,15 @@ private fun Route.home(
                 dailyMissions
             }
 
+        // 궁합 테스트 배너 (목 데이터)
+        val testBanner =
+            TestBannerResponse(
+                title = "궁합 테스트에 참여하고\n스페셜 미션 받아보세요",
+                subTitle = "지금까지 389명이 참여했어요!",
+                imageUrl = null,
+                testUrl = null
+            )
+
         call.respond(
             HttpStatusCode.OK,
             HomeViewResponse(
@@ -358,7 +367,8 @@ private fun Route.home(
                 yesterdayMissionSuccess = yesterdayMissionSuccess,
                 longAbsence = longAbsence,
                 isFirstAccess = isFirstAccess,
-                point = yesterdayEarnedPoint
+                point = yesterdayEarnedPoint,
+                testBanner = testBanner
             )
         )
     }
