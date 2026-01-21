@@ -463,6 +463,7 @@ paths:
                 isFirstAccess: false
                 point: 150
                 testBanner:
+                  version: 1
                   title: "궁합 테스트에 참여하고\n스페셜 미션 받아보세요"
                   subTitle: "지금까지 389명이 참여했어요!"
                   imageUrl: null
@@ -989,9 +990,14 @@ components:
     TestBannerResponse:
       type: object
       required:
+        - version
         - title
         - subTitle
       properties:
+        version:
+          type: integer
+          description: "Banner version number. Client can use this to detect content changes and reset dismissed state."
+          example: 1
         title:
           type: string
           description: "Banner title text"

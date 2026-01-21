@@ -351,6 +351,7 @@ private fun Route.home(
         // 궁합 테스트 배너 (목 데이터)
         val testBanner =
             TestBannerResponse(
+                version = 1,
                 title = "궁합 테스트에 참여하고\n스페셜 미션 받아보세요",
                 subTitle = "지금까지 389명이 참여했어요!",
                 imageUrl = null,

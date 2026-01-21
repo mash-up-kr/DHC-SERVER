@@ -43,6 +43,7 @@ data class HomeViewResponse(
 
 @Serializable
 data class TestBannerResponse(
+    val version: Int,
     val title: String,
     val subTitle: String,
     val imageUrl: String?,
