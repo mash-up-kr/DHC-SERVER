@@ -109,7 +109,7 @@ fun Route.userRoutes(
         myPage(userService)
         analysisView(userService)
         calendarView(userService)
-        rewardProgress()
+        rewardProgress(userService)
     }
     route("/api") {
         missionCategoriesRoutes()
@@ -165,15 +165,33 @@ fun Route.loveTest() {
     }
 }
 
-fun Route.rewardProgress() {
+fun Route.rewardProgress(userService: UserService) {
     get("/reward-progress") {
+        val userId =
+            call.pathParameters["userId"]
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        val user = userService.getUserById(userId)
+        val totalPoint = user.point
+
+        val currentLevel = RewardUserResponse.RewardLevel.fromTotalPoint(totalPoint)
+        val nextLevel = RewardUserResponse.RewardLevel.getNextLevel(currentLevel)
+
+        // 현재 레벨 내에서의 포인트 (현재 레벨 시작점부터)
+        val currentLevelPoint = totalPoint - currentLevel.requiredTotalPoint
+
+        // 다음 레벨까지 필요한 포인트 (다음 레벨 시작점 - 현재 레벨 시작점)
+        val nextLevelRequiredPoint = nextLevel?.let { it.requiredTotalPoint - currentLevel.requiredTotalPoint }
+
         call.respond(
             HttpStatusCode.OK,
             RewardProgressViewResponse(
                 RewardUserResponse(
-                    "testUrl",
-                    RewardUserResponse.RewardLevel.LV1,
-                    100
+                    rewardImageUrl = "", // TODO: 레벨별 이미지 URL 설정
+                    rewardLevel = currentLevel,
+                    totalPoint = totalPoint,
+                    currentLevelPoint = currentLevelPoint,
+                    nextLevelRequiredPoint = nextLevelRequiredPoint
                 ),
                 listOf(
                     AvailableRewardResponse(1, "1년 운세"),

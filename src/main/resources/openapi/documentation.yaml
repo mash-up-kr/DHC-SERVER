@@ -635,9 +635,11 @@ paths:
                 $ref: "#/components/schemas/RewardProgressViewResponse"
               example:
                 user:
-                  rewardImageUrl: "testUrl"
-                  rewardLevel: "LV1"
-                  totalExp: 100
+                  rewardImageUrl: ""
+                  rewardLevel: "LV3"
+                  totalPoint: 350
+                  currentLevelPoint: 100
+                  nextLevelRequiredPoint: 150
                 rewardList:
                   - id: 1
                     title: "1년 운세"
@@ -1614,19 +1616,32 @@ components:
       required:
         - rewardImageUrl
         - rewardLevel
-        - totalExp
+        - totalPoint
+        - currentLevelPoint
       properties:
         rewardImageUrl:
           type: string
           description: "URL of the reward image"
-          example: "testUrl"
+          example: ""
         rewardLevel:
           $ref: "#/components/schemas/RewardLevel"
           description: "Current reward level"
-        totalExp:
+        totalPoint:
           type: integer
-          description: "Total experience points"
+          format: int64
+          description: "Total accumulated points"
+          example: 350
+        currentLevelPoint:
+          type: integer
+          format: int64
+          description: "Points earned within current level (from current level threshold)"
           example: 100
+        nextLevelRequiredPoint:
+          type: integer
+          format: int64
+          description: "Points needed to reach next level from current level threshold. Null if max level."
+          example: 150
+          nullable: true
 
     AvailableRewardResponse:
       type: object
@@ -1657,6 +1672,7 @@ components:
         - LV8
         - LV9
         - LV10
+      description: "Reward level. Required points: LV1(0pt), LV2(100pt), LV3(250pt), LV4(400pt), LV5(600pt), LV6(800pt), LV7(1000pt), LV8(1300pt), LV9(1700pt), LV10(2200pt)"
       description: "Reward level (LV1: 새싹, LV2: 흙, LV3: 돌, LV4: 동, LV5: 은, LV6: 금, LV7: 백금, LV8: 다이아, LV9: 루비, LV10: 프리미엄)"
       example: "LV1"
 

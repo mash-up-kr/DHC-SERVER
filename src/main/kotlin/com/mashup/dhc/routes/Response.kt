@@ -60,22 +60,31 @@ data class RewardProgressViewResponse(
 data class RewardUserResponse(
     val rewardImageUrl: String,
     val rewardLevel: RewardLevel,
-    val totalExp: Int
+    val totalPoint: Long,
+    val currentLevelPoint: Long,
+    val nextLevelRequiredPoint: Long?
 ) {
     enum class RewardLevel(
         val level: Int,
-        val title: String
+        val title: String,
+        val requiredTotalPoint: Long
     ) {
-        LV1(1, "새싹"),
-        LV2(2, "흙"),
-        LV3(3, "돌"),
-        LV4(4, "동"),
-        LV5(5, "은"),
-        LV6(6, "금"),
-        LV7(7, "백금"),
-        LV8(8, "다이아"),
-        LV9(9, "루비"),
-        LV10(10, "프리미엄")
+        LV1(1, "새싹", 0),
+        LV2(2, "흙", 100),
+        LV3(3, "돌", 250),
+        LV4(4, "동", 400),
+        LV5(5, "은", 600),
+        LV6(6, "금", 800),
+        LV7(7, "백금", 1000),
+        LV8(8, "다이아", 1300),
+        LV9(9, "루비", 1700),
+        LV10(10, "프리미엄", 2200);
+
+        companion object {
+            fun fromTotalPoint(point: Long): RewardLevel = entries.lastOrNull { point >= it.requiredTotalPoint } ?: LV1
+
+            fun getNextLevel(current: RewardLevel): RewardLevel? = entries.getOrNull(current.ordinal + 1)
+        }
     }
 }
 
