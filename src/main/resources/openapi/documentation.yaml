@@ -1672,8 +1672,7 @@ components:
         - LV8
         - LV9
         - LV10
-      description: "Reward level. Required points: LV1(0pt), LV2(100pt), LV3(250pt), LV4(400pt), LV5(600pt), LV6(800pt), LV7(1000pt), LV8(1300pt), LV9(1700pt), LV10(2200pt)"
-      description: "Reward level (LV1: 새싹, LV2: 흙, LV3: 돌, LV4: 동, LV5: 은, LV6: 금, LV7: 백금, LV8: 다이아, LV9: 루비, LV10: 프리미엄)"
+      description: "Reward level (LV1: 새싹 0pt, LV2: 흙 100pt, LV3: 돌 250pt, LV4: 동 400pt, LV5: 은 600pt, LV6: 금 800pt, LV7: 백금 1000pt, LV8: 다이아 1300pt, LV9: 루비 1700pt, LV10: 프리미엄 2200pt)"
       example: "LV1"
 
     LoveTestRequest:
