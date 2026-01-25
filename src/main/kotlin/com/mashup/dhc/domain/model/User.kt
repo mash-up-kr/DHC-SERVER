@@ -35,6 +35,7 @@ data class User(
     val point: Long = 0L,
     val lastAccessDate: LocalDate? = null,
     val loveMissionStatus: LoveMissionStatus? = null,
+    val yearlyFortuneUsed: Boolean = false,
     @Transient val deleted: Boolean = false
 ) {
     private val age: Int

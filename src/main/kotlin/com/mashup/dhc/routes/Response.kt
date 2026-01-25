@@ -53,7 +53,7 @@ data class TestBannerResponse(
 @Serializable
 data class RewardProgressViewResponse(
     val user: RewardUserResponse,
-    val rewardList: List<AvailableRewardResponse>
+    val rewardList: List<RewardItemResponse>
 )
 
 @Serializable
@@ -89,9 +89,11 @@ data class RewardUserResponse(
 }
 
 @Serializable
-data class AvailableRewardResponse(
+data class RewardItemResponse(
     val id: Long,
-    val title: String
+    val title: String,
+    val isUnlocked: Boolean,
+    val isUsed: Boolean
 )
 
 @Serializable

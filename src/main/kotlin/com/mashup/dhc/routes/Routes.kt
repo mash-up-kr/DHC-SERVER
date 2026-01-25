@@ -194,9 +194,12 @@ fun Route.rewardProgress(userService: UserService) {
                     nextLevelRequiredPoint = nextLevelRequiredPoint
                 ),
                 listOf(
-                    AvailableRewardResponse(1, "1년 운세"),
-                    AvailableRewardResponse(2, "전반적 사주"),
-                    AvailableRewardResponse(3, "복합 사주")
+                    RewardItemResponse(
+                        id = 1,
+                        title = "1년 운세",
+                        isUnlocked = currentLevel.level >= 8,
+                        isUsed = user.yearlyFortuneUsed
+                    )
                 )
             )
         )
