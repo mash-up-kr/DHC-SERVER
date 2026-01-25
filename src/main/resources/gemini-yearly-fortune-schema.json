@@ -1,0 +1,228 @@
+{
+  "type": "object",
+  "properties": {
+    "year": {
+      "type": "integer",
+      "description": "1년 운세 측정 년도"
+    },
+    "total_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "1년 전체 운세 점수 (0-100)"
+    },
+    "summary_title": {
+      "type": "string",
+      "description": "1년 운세 요약 제목 (예: 올 한해는 전반적으로 마음이 들뜨는 날이에요)"
+    },
+    "summary_detail": {
+      "type": "string",
+      "description": "1년 운세 요약 상세 설명"
+    },
+    "fortune_overview": {
+      "type": "object",
+      "description": "한 눈에 보는 운세",
+      "properties": {
+        "money": {
+          "type": "object",
+          "description": "금전운",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "금전운 제목"
+            },
+            "description": {
+              "type": "string",
+              "description": "금전운 상세 설명"
+            }
+          },
+          "required": ["title", "description"]
+        },
+        "love": {
+          "type": "object",
+          "description": "연애운",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "연애운 제목"
+            },
+            "description": {
+              "type": "string",
+              "description": "연애운 상세 설명"
+            }
+          },
+          "required": ["title", "description"]
+        },
+        "study": {
+          "type": "object",
+          "description": "학업운",
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "학업운 제목"
+            },
+            "description": {
+              "type": "string",
+              "description": "학업운 상세 설명"
+            }
+          },
+          "required": ["title", "description"]
+        }
+      },
+      "required": ["money", "love", "study"]
+    },
+    "five_elements": {
+      "type": "object",
+      "description": "내년 내 사주 오행의 균형",
+      "properties": {
+        "dominant_element": {
+          "type": "string",
+          "description": "가장 강한 오행 기운 (예: 화기운)"
+        },
+        "dominant_warning": {
+          "type": "string",
+          "description": "강한 기운에 대한 경고 메시지 (예: 내년엔 화기운이 너무 강해져요! 화기운을 조심해야 해요~)"
+        },
+        "wood": {
+          "type": "object",
+          "description": "목(木) 기운",
+          "properties": {
+            "percentage": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "목 기운 비율"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["BALANCED", "EXCESS", "DEFICIENT"],
+              "description": "목 기운 상태 (BALANCED: 적정, EXCESS: 과다, DEFICIENT: 부족)"
+            }
+          },
+          "required": ["percentage", "status"]
+        },
+        "fire": {
+          "type": "object",
+          "description": "화(火) 기운",
+          "properties": {
+            "percentage": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "화 기운 비율"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["BALANCED", "EXCESS", "DEFICIENT"],
+              "description": "화 기운 상태"
+            }
+          },
+          "required": ["percentage", "status"]
+        },
+        "earth": {
+          "type": "object",
+          "description": "토(土) 기운",
+          "properties": {
+            "percentage": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "토 기운 비율"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["BALANCED", "EXCESS", "DEFICIENT"],
+              "description": "토 기운 상태"
+            }
+          },
+          "required": ["percentage", "status"]
+        },
+        "metal": {
+          "type": "object",
+          "description": "금(金) 기운",
+          "properties": {
+            "percentage": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "금 기운 비율"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["BALANCED", "EXCESS", "DEFICIENT"],
+              "description": "금 기운 상태"
+            }
+          },
+          "required": ["percentage", "status"]
+        },
+        "water": {
+          "type": "object",
+          "description": "수(水) 기운",
+          "properties": {
+            "percentage": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "수 기운 비율"
+            },
+            "status": {
+              "type": "string",
+              "enum": ["BALANCED", "EXCESS", "DEFICIENT"],
+              "description": "수 기운 상태"
+            }
+          },
+          "required": ["percentage", "status"]
+        }
+      },
+      "required": ["dominant_element", "dominant_warning", "wood", "fire", "earth", "metal", "water"]
+    },
+    "yearly_energy_title": {
+      "type": "string",
+      "description": "올해의 기운 변화 제목 (예: 화의 기운은 '결단력·집중·주체성'을 밝히는 에너지에요)"
+    },
+    "yearly_energy_detail": {
+      "type": "string",
+      "description": "올해의 기운 변화 상세 설명"
+    },
+    "lucky_menu": {
+      "type": "string",
+      "description": "추천 메뉴 (예: 카레)"
+    },
+    "lucky_color": {
+      "type": "string",
+      "description": "행운의 색상명 (예: 연두색)"
+    },
+    "lucky_color_hex": {
+      "type": "string",
+      "description": "행운의 색상 헥스코드 (예: #90EE90)"
+    },
+    "unlucky_menu": {
+      "type": "string",
+      "description": "피해야 할 음식 (예: 치킨, 닭)"
+    },
+    "unlucky_color": {
+      "type": "string",
+      "description": "피해야 할 색상명 (예: 흰색)"
+    },
+    "unlucky_color_hex": {
+      "type": "string",
+      "description": "피해야 할 색상 헥스코드 (예: #FFFFFF)"
+    }
+  },
+  "required": [
+    "year",
+    "total_score",
+    "summary_title",
+    "summary_detail",
+    "fortune_overview",
+    "five_elements",
+    "yearly_energy_title",
+    "yearly_energy_detail",
+    "lucky_menu",
+    "lucky_color",
+    "lucky_color_hex",
+    "unlucky_menu",
+    "unlucky_color",
+    "unlucky_color_hex"
+  ]
+}

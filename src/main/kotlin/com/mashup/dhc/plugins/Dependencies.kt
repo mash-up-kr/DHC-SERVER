@@ -32,6 +32,7 @@ data class Dependencies(
     val shareService: ShareService,
     val loveMissionService: LoveMissionService,
     val pointMultiplierService: PointMultiplierService,
+    val geminiService: GeminiService,
     val mongoClient: MongoClient,
     val mongoDatabase: MongoDatabase
 )
@@ -122,6 +123,7 @@ fun Application.configureDependencies(): Dependencies {
         shareService = shareService,
         loveMissionService = loveMissionService,
         pointMultiplierService = pointMultiplierService,
+        geminiService = geminiService,
         mongoClient = mongoClient,
         mongoDatabase = mongoDatabase
     )

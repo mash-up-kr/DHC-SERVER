@@ -10,6 +10,7 @@ import com.mashup.dhc.domain.model.PastRoutineHistory
 import com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.UserRepository
+import com.mashup.dhc.domain.model.YearlyFortune
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.routes.BusinessException
 import com.mashup.dhc.routes.ErrorCode
@@ -296,6 +297,11 @@ class UserService(
         userId: String,
         pointToAdd: Long
     ): Long = userRepository.addPoint(ObjectId(userId), pointToAdd)
+
+    suspend fun updateYearlyFortune(
+        objectId: ObjectId,
+        yearlyFortune: YearlyFortune
+    ): Long = userRepository.updateYearlyFortune(objectId, yearlyFortune)
 
     suspend fun getWeekPastRoutines(
         userId: String,

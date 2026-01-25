@@ -635,7 +635,7 @@ paths:
                 $ref: "#/components/schemas/RewardProgressViewResponse"
               example:
                 user:
-                  rewardImageUrl: ""
+                  rewardImageUrl: "https://picsum.photos/250/250"
                   rewardLevel: "LV3"
                   totalPoint: 350
                   currentLevelPoint: 100
@@ -643,12 +643,125 @@ paths:
                 rewardList:
                   - id: 1
                     title: "1년 운세"
-                  - id: 2
-                    title: "전반적 사주"
-                  - id: 3
-                    title: "복합 사주"
+                    isUnlocked: false
+                    isUsed: false
         "404":
           description: "User not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/users/{userId}/yearly-fortune:
+    post:
+      summary: "Create Yearly Fortune"
+      description: "Generate a yearly fortune for the user using Gemini AI. Requires level 8 or higher. Can only be used once per user."
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "201":
+          description: "Yearly fortune created successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateYearlyFortuneResponse"
+              example:
+                success: true
+        "400":
+          description: "Yearly fortune already used"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 2006
+                message: "이미 1년 운세를 사용했습니다"
+        "403":
+          description: "Level not enough (level 8 required)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                code: 2005
+                message: "레벨이 부족합니다 (레벨 8 이상 필요)"
+        "404":
+          description: "User not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /view/users/{userId}/yearly-fortune:
+    get:
+      summary: "Get Yearly Fortune"
+      description: "Retrieve the user's generated yearly fortune. Returns 404 if yearly fortune has not been generated yet."
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "Yearly fortune retrieved successfully"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/YearlyFortuneResponse"
+              example:
+                year: 2025
+                generatedDate: "2025-01-15"
+                totalScore: 79
+                summaryTitle: "도약의 해"
+                summaryDetail: "올해는 새로운 시작과 도전이 가득한 한 해가 될 것입니다."
+                fortuneOverview:
+                  money:
+                    title: "금전운"
+                    description: "재물 운이 상승하는 시기입니다."
+                  love:
+                    title: "연애운"
+                    description: "좋은 인연을 만날 수 있는 해입니다."
+                  study:
+                    title: "학업운"
+                    description: "집중력이 높아지는 시기입니다."
+                fiveElements:
+                  dominantElement: "화"
+                  dominantWarning: "화기운이 강하니 급한 마음을 다스리세요"
+                  wood:
+                    percentage: 15
+                    status: "부족"
+                  fire:
+                    percentage: 35
+                    status: "과다"
+                  earth:
+                    percentage: 20
+                    status: "적정"
+                  metal:
+                    percentage: 15
+                    status: "부족"
+                  water:
+                    percentage: 15
+                    status: "부족"
+                yearlyEnergyTitle: "상반기 집중"
+                yearlyEnergyDetail: "상반기에 에너지가 집중되니 중요한 일은 상반기에 진행하세요."
+                tips:
+                  luckyMenu: "삼계탕"
+                  luckyColor: "파란색"
+                  luckyColorHex: "#0066CC"
+                  unluckyMenu: "매운 음식"
+                  unluckyColor: "빨간색"
+                  unluckyColorHex: "#FF0000"
+        "404":
+          description: "User not found or yearly fortune not generated"
           content:
             application/json:
               schema:
@@ -1818,4 +1931,191 @@ components:
           description: "Optional message"
           example: "Share completed successfully"
           nullable: true
+
+    CreateYearlyFortuneResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: "Whether the yearly fortune was created successfully"
+          example: true
+
+    YearlyFortuneResponse:
+      type: object
+      required:
+        - year
+        - generatedDate
+        - totalScore
+        - summaryTitle
+        - summaryDetail
+        - fortuneOverview
+        - fiveElements
+        - yearlyEnergyTitle
+        - yearlyEnergyDetail
+        - tips
+      properties:
+        year:
+          type: integer
+          description: "Year of the fortune"
+          example: 2025
+        generatedDate:
+          type: string
+          description: "Date when the fortune was generated (YYYY-MM-DD)"
+          example: "2025-01-15"
+        totalScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: "Overall fortune score"
+          example: 79
+        summaryTitle:
+          type: string
+          description: "Summary title for the year"
+          example: "도약의 해"
+        summaryDetail:
+          type: string
+          description: "Detailed summary description"
+          example: "올해는 새로운 시작과 도전이 가득한 한 해가 될 것입니다."
+        fortuneOverview:
+          $ref: "#/components/schemas/FortuneOverviewResponse"
+          description: "Overview of fortune categories (money, love, study)"
+        fiveElements:
+          $ref: "#/components/schemas/FiveElementsResponse"
+          description: "Five elements (오행) balance analysis"
+        yearlyEnergyTitle:
+          type: string
+          description: "Title for yearly energy changes"
+          example: "상반기 집중"
+        yearlyEnergyDetail:
+          type: string
+          description: "Details about yearly energy changes"
+          example: "상반기에 에너지가 집중되니 중요한 일은 상반기에 진행하세요."
+        tips:
+          $ref: "#/components/schemas/YearlyFortuneTipsResponse"
+          description: "Lucky and unlucky tips for the year"
+
+    FortuneOverviewResponse:
+      type: object
+      required:
+        - money
+        - love
+        - study
+      properties:
+        money:
+          $ref: "#/components/schemas/FortuneCategoryResponse"
+          description: "Money/wealth fortune"
+        love:
+          $ref: "#/components/schemas/FortuneCategoryResponse"
+          description: "Love/relationship fortune"
+        study:
+          $ref: "#/components/schemas/FortuneCategoryResponse"
+          description: "Study/career fortune"
+
+    FortuneCategoryResponse:
+      type: object
+      required:
+        - title
+        - description
+      properties:
+        title:
+          type: string
+          description: "Category title"
+          example: "금전운"
+        description:
+          type: string
+          description: "Category description"
+          example: "재물 운이 상승하는 시기입니다."
+
+    FiveElementsResponse:
+      type: object
+      required:
+        - dominantElement
+        - dominantWarning
+        - wood
+        - fire
+        - earth
+        - metal
+        - water
+      properties:
+        dominantElement:
+          type: string
+          description: "Dominant element name"
+          example: "화"
+        dominantWarning:
+          type: string
+          description: "Warning message about the dominant element"
+          example: "화기운이 강하니 급한 마음을 다스리세요"
+        wood:
+          $ref: "#/components/schemas/ElementBalanceResponse"
+          description: "Wood (목) element balance"
+        fire:
+          $ref: "#/components/schemas/ElementBalanceResponse"
+          description: "Fire (화) element balance"
+        earth:
+          $ref: "#/components/schemas/ElementBalanceResponse"
+          description: "Earth (토) element balance"
+        metal:
+          $ref: "#/components/schemas/ElementBalanceResponse"
+          description: "Metal (금) element balance"
+        water:
+          $ref: "#/components/schemas/ElementBalanceResponse"
+          description: "Water (수) element balance"
+
+    ElementBalanceResponse:
+      type: object
+      required:
+        - percentage
+        - status
+      properties:
+        percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: "Percentage of this element"
+          example: 20
+        status:
+          type: string
+          enum:
+            - "적정"
+            - "과다"
+            - "부족"
+          description: "Balance status (적정=balanced, 과다=excess, 부족=deficient)"
+          example: "적정"
+
+    YearlyFortuneTipsResponse:
+      type: object
+      required:
+        - luckyMenu
+        - luckyColor
+        - luckyColorHex
+        - unluckyMenu
+        - unluckyColor
+        - unluckyColorHex
+      properties:
+        luckyMenu:
+          type: string
+          description: "Recommended lucky food"
+          example: "삼계탕"
+        luckyColor:
+          type: string
+          description: "Lucky color name"
+          example: "파란색"
+        luckyColorHex:
+          type: string
+          description: "Lucky color hex code"
+          example: "#0066CC"
+        unluckyMenu:
+          type: string
+          description: "Food to avoid"
+          example: "매운 음식"
+        unluckyColor:
+          type: string
+          description: "Unlucky color name"
+          example: "빨간색"
+        unluckyColorHex:
+          type: string
+          description: "Unlucky color hex code"
+          example: "#FF0000"
 

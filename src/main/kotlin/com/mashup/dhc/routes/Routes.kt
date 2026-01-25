@@ -12,6 +12,7 @@ import com.mashup.dhc.domain.model.calculatePoint
 import com.mashup.dhc.domain.model.calculateSavedMoney
 import com.mashup.dhc.domain.model.calculateSpendMoney
 import com.mashup.dhc.domain.service.FortuneService
+import com.mashup.dhc.domain.service.GeminiService
 import com.mashup.dhc.domain.service.LoveMissionService
 import com.mashup.dhc.domain.service.PointMultiplierService
 import com.mashup.dhc.domain.service.ShareService
@@ -92,7 +93,8 @@ fun Route.userRoutes(
     fortuneService: FortuneService,
     shareService: ShareService,
     loveMissionService: LoveMissionService,
-    pointMultiplierService: PointMultiplierService
+    pointMultiplierService: PointMultiplierService,
+    geminiService: GeminiService
 ) {
     route("/api/users") {
         register(userService)
@@ -103,6 +105,7 @@ fun Route.userRoutes(
         getDailyFortune(fortuneService)
         addJulyPastRoutineHistory(userService)
         createShareCode(shareService)
+        yearlyFortune(userService, geminiService)
     }
     route("/view/users/{userId}") {
         home(userService, fortuneService, loveMissionService, pointMultiplierService)
@@ -110,6 +113,7 @@ fun Route.userRoutes(
         analysisView(userService)
         calendarView(userService)
         rewardProgress(userService)
+        getYearlyFortune(userService)
     }
     route("/api") {
         missionCategoriesRoutes()
@@ -187,7 +191,7 @@ fun Route.rewardProgress(userService: UserService) {
             HttpStatusCode.OK,
             RewardProgressViewResponse(
                 RewardUserResponse(
-                    rewardImageUrl = "", // TODO: 레벨별 이미지 URL 설정
+                    rewardImageUrl = "https://picsum.photos/250/250",
                     rewardLevel = currentLevel,
                     totalPoint = totalPoint,
                     currentLevelPoint = currentLevelPoint,
@@ -203,6 +207,57 @@ fun Route.rewardProgress(userService: UserService) {
                 )
             )
         )
+    }
+}
+
+fun Route.yearlyFortune(
+    userService: UserService,
+    geminiService: GeminiService
+) {
+    post("/{userId}/yearly-fortune") {
+        val userId =
+            call.pathParameters["userId"]
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        val user = userService.getUserById(userId)
+        val totalPoint = user.point
+        val currentLevel = RewardUserResponse.RewardLevel.fromTotalPoint(totalPoint)
+
+        // 레벨 8 이상 체크
+        if (currentLevel.level < 8) {
+            throw BusinessException(ErrorCode.LEVEL_NOT_ENOUGH)
+        }
+
+        // 이미 사용한 경우 체크
+        if (user.yearlyFortuneUsed) {
+            throw BusinessException(ErrorCode.YEARLY_FORTUNE_ALREADY_USED)
+        }
+
+        // Gemini API 호출
+        val request = user.toGeminiFortuneRequest()
+        val yearlyFortune = geminiService.requestYearlyFortune(request)
+
+        // User에 저장 (yearlyFortuneUsed도 true로 변경)
+        userService.updateYearlyFortune(ObjectId(userId), yearlyFortune)
+
+        call.respond(HttpStatusCode.Created, CreateYearlyFortuneResponse(success = true))
+    }
+}
+
+fun Route.getYearlyFortune(userService: UserService) {
+    get("/yearly-fortune") {
+        val userId =
+            call.pathParameters["userId"]
+                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+        val user = userService.getUserById(userId)
+
+        // 1년 운세가 없으면 에러
+        val yearlyFortune =
+            user.yearlyFortune
+                ?: throw BusinessException(ErrorCode.NOT_FOUND)
+
+        call.respond(HttpStatusCode.OK, YearlyFortuneResponse.from(yearlyFortune))
     }
 }
 

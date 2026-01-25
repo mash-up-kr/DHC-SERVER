@@ -1,13 +1,18 @@
 package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.DailyFortune
+import com.mashup.dhc.domain.model.ElementBalance
+import com.mashup.dhc.domain.model.ElementStatus
+import com.mashup.dhc.domain.model.FiveElements
 import com.mashup.dhc.domain.model.FortuneCard
+import com.mashup.dhc.domain.model.FortuneOverview
 import com.mashup.dhc.domain.model.FortuneScoreRange
 import com.mashup.dhc.domain.model.FortuneTip
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Mission
 import com.mashup.dhc.domain.model.MissionCategory
 import com.mashup.dhc.domain.model.MissionType
+import com.mashup.dhc.domain.model.YearlyFortune
 import com.mashup.dhc.domain.model.toTips
 import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
@@ -360,4 +365,122 @@ data class LoveMissionResponse(
     val title: String,
     val finished: Boolean,
     val remainingDays: Int
+)
+
+@Serializable
+data class CreateYearlyFortuneResponse(
+    val success: Boolean
+)
+
+@Serializable
+data class YearlyFortuneResponse(
+    val year: Int,
+    val generatedDate: String,
+    val totalScore: Int,
+    val summaryTitle: String,
+    val summaryDetail: String,
+    val fortuneOverview: FortuneOverviewResponse,
+    val fiveElements: FiveElementsResponse,
+    val yearlyEnergyTitle: String,
+    val yearlyEnergyDetail: String,
+    val tips: YearlyFortuneTipsResponse
+) {
+    companion object {
+        fun from(yearlyFortune: YearlyFortune): YearlyFortuneResponse =
+            YearlyFortuneResponse(
+                year = yearlyFortune.year,
+                generatedDate = yearlyFortune.generatedDate,
+                totalScore = yearlyFortune.totalScore,
+                summaryTitle = yearlyFortune.summaryTitle,
+                summaryDetail = yearlyFortune.summaryDetail,
+                fortuneOverview = FortuneOverviewResponse.from(yearlyFortune.fortuneOverview),
+                fiveElements = FiveElementsResponse.from(yearlyFortune.fiveElements),
+                yearlyEnergyTitle = yearlyFortune.yearlyEnergyTitle,
+                yearlyEnergyDetail = yearlyFortune.yearlyEnergyDetail,
+                tips =
+                    YearlyFortuneTipsResponse(
+                        luckyMenu = yearlyFortune.luckyMenu,
+                        luckyColor = yearlyFortune.luckyColor,
+                        luckyColorHex = yearlyFortune.luckyColorHex,
+                        unluckyMenu = yearlyFortune.unluckyMenu,
+                        unluckyColor = yearlyFortune.unluckyColor,
+                        unluckyColorHex = yearlyFortune.unluckyColorHex
+                    )
+            )
+    }
+}
+
+@Serializable
+data class FortuneOverviewResponse(
+    val money: FortuneCategoryResponse,
+    val love: FortuneCategoryResponse,
+    val study: FortuneCategoryResponse
+) {
+    companion object {
+        fun from(overview: FortuneOverview): FortuneOverviewResponse =
+            FortuneOverviewResponse(
+                money = FortuneCategoryResponse(overview.money.title, overview.money.description),
+                love = FortuneCategoryResponse(overview.love.title, overview.love.description),
+                study = FortuneCategoryResponse(overview.study.title, overview.study.description)
+            )
+    }
+}
+
+@Serializable
+data class FortuneCategoryResponse(
+    val title: String,
+    val description: String
+)
+
+@Serializable
+data class FiveElementsResponse(
+    val dominantElement: String,
+    val dominantWarning: String,
+    val wood: ElementBalanceResponse,
+    val fire: ElementBalanceResponse,
+    val earth: ElementBalanceResponse,
+    val metal: ElementBalanceResponse,
+    val water: ElementBalanceResponse
+) {
+    companion object {
+        fun from(elements: FiveElements): FiveElementsResponse =
+            FiveElementsResponse(
+                dominantElement = elements.dominantElement,
+                dominantWarning = elements.dominantWarning,
+                wood = ElementBalanceResponse.from(elements.wood),
+                fire = ElementBalanceResponse.from(elements.fire),
+                earth = ElementBalanceResponse.from(elements.earth),
+                metal = ElementBalanceResponse.from(elements.metal),
+                water = ElementBalanceResponse.from(elements.water)
+            )
+    }
+}
+
+@Serializable
+data class ElementBalanceResponse(
+    val percentage: Int,
+    val status: String
+) {
+    companion object {
+        fun from(balance: ElementBalance): ElementBalanceResponse =
+            ElementBalanceResponse(
+                percentage = balance.percentage,
+                status =
+                    when (balance.status) {
+                        ElementStatus.BALANCED -> "적정"
+                        ElementStatus.EXCESS -> "과다"
+                        ElementStatus.DEFICIENT -> "부족"
+                    }
+            )
+    }
+}
+
+@Serializable
+data class YearlyFortuneTipsResponse(
+    val luckyMenu: String,
+    val luckyColor: String,
+    val luckyColorHex: String,
+    val unluckyMenu: String,
+    val unluckyColor: String,
+    val unluckyColorHex: String
 )

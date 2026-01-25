@@ -36,6 +36,7 @@ data class User(
     val lastAccessDate: LocalDate? = null,
     val loveMissionStatus: LoveMissionStatus? = null,
     val yearlyFortuneUsed: Boolean = false,
+    val yearlyFortune: YearlyFortune? = null,
     @Transient val deleted: Boolean = false
 ) {
     private val age: Int
@@ -200,6 +201,28 @@ class UserRepository(
             return result.modifiedCount
         } catch (e: MongoException) {
             System.err.println("Unable to add point: $e")
+        }
+        return 0
+    }
+
+    suspend fun updateYearlyFortune(
+        objectId: ObjectId,
+        yearlyFortune: YearlyFortune
+    ): Long {
+        try {
+            val query = Filters.eq("_id", objectId)
+            val updates =
+                Updates.combine(
+                    Updates.set(User::yearlyFortune.name, yearlyFortune),
+                    Updates.set(User::yearlyFortuneUsed.name, true)
+                )
+            val result =
+                mongoDatabase
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(query, updates)
+            return result.modifiedCount
+        } catch (e: MongoException) {
+            System.err.println("Unable to update yearlyFortune: $e")
         }
         return 0
     }

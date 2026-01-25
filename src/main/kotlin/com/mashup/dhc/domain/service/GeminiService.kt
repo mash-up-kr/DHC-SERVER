@@ -4,6 +4,7 @@ import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneRepository
 import com.mashup.dhc.domain.model.MonthlyFortune
 import com.mashup.dhc.domain.model.User
+import com.mashup.dhc.domain.model.YearlyFortune
 import com.mashup.dhc.utils.batch.GeminiBatchProcessor
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -33,6 +34,7 @@ class GeminiService(
 
     private val monthResponseSchema: JsonElement by lazy { loadMonthResponseSchema() }
     private val dailyBatchResponseSchema: JsonElement by lazy { loadDailyBatchResponseSchema() }
+    private val yearlyFortuneResponseSchema: JsonElement by lazy { loadYearlyFortuneResponseSchema() }
     private val batchProcessor = GeminiBatchProcessor(this)
 
     private val client =
@@ -119,6 +121,26 @@ class GeminiService(
         return Json.decodeFromString<GeminiBatchFortuneResponse>(responseText)
     }
 
+    suspend fun requestYearlyFortune(request: GeminiFortuneRequest): YearlyFortune {
+        val prompt = request.toYearlyFortunePrompt()
+        val geminiRequest = prompt.toGeminiYearlyFortuneRequest()
+
+        val response =
+            client.post(BASE_URL) {
+                parameter("key", apiKey)
+                contentType(ContentType.Application.Json)
+                setBody(geminiRequest)
+                timeout { requestTimeoutMillis = 600_000 }
+            }
+
+        val geminiResponse: GeminiApiResponse = response.body()
+        logTokenUsage("YearlyFortune", geminiResponse.usageMetadata)
+        val responseText = geminiResponse.validateAndExtractText()
+
+        val yearlyFortuneResponse = Json.decodeFromString<YearlyFortune>(responseText)
+        return yearlyFortuneResponse.copy(generatedDate = now().toString())
+    }
+
     private fun logTokenUsage(
         requestType: String,
         usage: UsageMetadata?
@@ -197,6 +219,39 @@ class GeminiService(
                 )
         )
 
+    private fun GeminiFortuneRequest.toYearlyFortunePrompt(): String =
+        """
+        $systemInstruction
+
+        사용자 정보:
+        - 성별: $gender
+        - 생년월일: $birthDate
+        - 출생시간: $birthTime
+        - 요청 년도: ${year}년
+
+        위 정보를 바탕으로 ${year}년 전체 1년 운세를 분석해주세요.
+        사주팔자와 오행 분석을 포함하여 다음 내용을 제공해주세요:
+
+        1. 전체 운세 점수 (0-100)
+        2. 1년 운세 요약 (제목과 상세 설명)
+        3. 한 눈에 보는 운세 (금전운, 연애운, 학업운 각각의 제목과 설명)
+        4. 오행의 균형 (목/화/토/금/수 각각의 비율과 상태 - 적정/과다/부족)
+        5. 올해의 기운 변화 (가장 강한 오행에 대한 설명)
+        6. 이번년도 꿀팁 (추천 메뉴, 행운의 색상, 피해야 할 음식, 피해야 할 색상)
+
+        응답은 반드시 지정된 JSON 스키마 형식으로 제공해주세요.
+        """.trimIndent()
+
+    private fun String.toGeminiYearlyFortuneRequest(): GeminiRequest =
+        GeminiRequest(
+            contents = listOf(Content(parts = listOf(Part(this)))),
+            generationConfig =
+                GenerationConfig(
+                    responseMimeType = "application/json",
+                    responseSchema = yearlyFortuneResponseSchema
+                )
+        )
+
     private fun GeminiApiResponse.validateAndExtractText(): String {
         error?.let { error ->
             throw Exception("Gemini API 오류: ${error.message ?: "알 수 없는 오류"} (코드: ${error.code})")
@@ -226,6 +281,15 @@ class GeminiService(
             this::class.java.classLoader
                 .getResourceAsStream("gemini-batch-response-schema.json")
                 ?: throw IllegalStateException("gemini-batch-response-schema.json을 찾을 수 없습니다.")
+
+        return Json.parseToJsonElement(schemaResource.bufferedReader().use { it.readText() })
+    }
+
+    private fun loadYearlyFortuneResponseSchema(): JsonElement {
+        val schemaResource =
+            this::class.java.classLoader
+                .getResourceAsStream("gemini-yearly-fortune-schema.json")
+                ?: throw IllegalStateException("gemini-yearly-fortune-schema.json을 찾을 수 없습니다.")
 
         return Json.parseToJsonElement(schemaResource.bufferedReader().use { it.readText() })
     }
