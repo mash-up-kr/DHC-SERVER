@@ -29,6 +29,7 @@ import io.ktor.server.application.log
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.RoutingCall
 import io.ktor.server.routing.application
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -47,6 +48,23 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import org.bson.types.ObjectId
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+private fun RoutingCall.requirePathParameter(name: String): String =
+    pathParameters[name] ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+
+private fun parseImageFormat(formatParam: String?): ImageFormat =
+    try {
+        ImageFormat.valueOf((formatParam ?: "svg").uppercase())
+    } catch (e: IllegalArgumentException) {
+        ImageFormat.SVG
+    }
+
+private fun List<Money>.sumOrZero(): Money =
+    reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
@@ -171,10 +189,7 @@ fun Route.loveTest() {
 
 fun Route.rewardProgress(userService: UserService) {
     get("/reward-progress") {
-        val userId =
-            call.pathParameters["userId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
+        val userId = call.requirePathParameter("userId")
         val user = userService.getUserById(userId)
         val totalPoint = user.point
 
@@ -215,10 +230,7 @@ fun Route.yearlyFortune(
     geminiService: GeminiService
 ) {
     post("/{userId}/yearly-fortune") {
-        val userId =
-            call.pathParameters["userId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
+        val userId = call.requirePathParameter("userId")
         val user = userService.getUserById(userId)
         val totalPoint = user.point
         val currentLevel = RewardUserResponse.RewardLevel.fromTotalPoint(totalPoint)
@@ -246,10 +258,7 @@ fun Route.yearlyFortune(
 
 fun Route.getYearlyFortune(userService: UserService) {
     get("/yearly-fortune") {
-        val userId =
-            call.pathParameters["userId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
+        val userId = call.requirePathParameter("userId")
         val user = userService.getUserById(userId)
 
         // 1년 운세가 없으면 에러
@@ -287,14 +296,7 @@ fun Route.missionCategoriesRoutes() {
 
 private fun Route.getMissionCategories() {
     get {
-        val formatParam = call.request.queryParameters["format"] ?: "svg"
-        val format =
-            try {
-                ImageFormat.valueOf(formatParam.uppercase())
-            } catch (e: IllegalArgumentException) {
-                ImageFormat.SVG
-            }
-
+        val format = parseImageFormat(call.request.queryParameters["format"])
         val categories =
             MissionCategory.entries
                 .filter { category -> category != MissionCategory.SELF_REFLECTION }
@@ -340,7 +342,7 @@ private fun Route.home(
     pointMultiplierService: PointMultiplierService
 ) {
     get("/home") {
-        val userId = call.pathParameters["userId"] ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
+        val userId = call.requirePathParameter("userId")
 
         var user = userService.getUserById(userId)
 
@@ -353,12 +355,7 @@ private fun Route.home(
         // 2일 이상 미접속 여부 및 첫 접속 여부 계산 (lastAccessDate 업데이트 전에 계산)
         val lastAccess = user.lastAccessDate
         val isFirstAccess = lastAccess == null
-        val daysSinceLastAccess =
-            if (lastAccess != null) {
-                (now.toEpochDays() - lastAccess.toEpochDays()).toInt()
-            } else {
-                0 // 첫 접속
-            }
+        val daysSinceLastAccess = lastAccess?.let { (now.toEpochDays() - it.toEpochDays()).toInt() } ?: 0
         val longAbsence = daysSinceLastAccess >= 2
 
         // lastAccessDate 업데이트
@@ -451,28 +448,12 @@ private fun Route.home(
     }
 }
 
-private fun Mission.toMissionResponse() =
-    MissionResponse(
-        missionId = this.id.toString(),
-        category = this.category.displayName,
-        difficulty = this.difficulty,
-        type = this.type,
-        finished = this.finished,
-        cost = this.cost,
-        endDate = this.endDate,
-        title = this.title,
-        switchCount = this.switchCount
-    )
-
 private fun Route.endToday(
     userService: UserService,
     pointMultiplierService: PointMultiplierService
 ) {
     post("/{userId}/done") {
-        val userId =
-            call.pathParameters["userId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
+        val userId = call.requirePathParameter("userId")
         val request = call.receive<EndTodayMissionRequest>()
 
         request.validate()
@@ -520,13 +501,8 @@ private fun Route.changeMissionStatus(
     loveMissionService: LoveMissionService
 ) {
     put("/{userId}/missions/{missionId}") {
-        val userId =
-            call.pathParameters["userId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-        val missionId =
-            call.pathParameters["missionId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
+        val userId = call.requirePathParameter("userId")
+        val missionId = call.requirePathParameter("missionId")
         val request = call.receive<ToggleMissionRequest>()
 
         try {
@@ -581,31 +557,16 @@ private fun Route.changeMissionStatus(
             }
         }
 
-        val longTermMission =
-            if (updated.longTermMission != null) {
-                listOf(updated.longTermMission)
-            } else {
-                listOf()
-            }
-        val missions =
-            updated.todayDailyMissionList + longTermMission
-
-        call.respond(HttpStatusCode.OK, ToggleMissionResponse(missions.map { it.toMissionResponse() }))
+        val missions = updated.todayDailyMissionList + listOfNotNull(updated.longTermMission)
+        call.respond(HttpStatusCode.OK, ToggleMissionResponse(missions.map { MissionResponse.from(it) }))
     }
 }
 
 private fun Route.myPage(userService: UserService) {
     get("/myPage") {
-        val userId = call.pathParameters["userId"]!!
+        val userId = call.requirePathParameter("userId")
         val user = userService.getUserById(userId)
-
-        val formatParam = call.request.queryParameters["format"] ?: "svg"
-        val format =
-            try {
-                ImageFormat.valueOf(formatParam.uppercase())
-            } catch (e: IllegalArgumentException) {
-                ImageFormat.SVG
-            }
+        val format = parseImageFormat(call.request.queryParameters["format"])
 
         call.respond(
             HttpStatusCode.OK,
@@ -655,9 +616,8 @@ private fun generateAnimalCardImageUrl(
 
 private fun Route.logout(userService: UserService) {
     delete("/{userId}") {
-        val userId = call.pathParameters["userId"]!!
+        val userId = call.requirePathParameter("userId")
         userService.deleteById(userId)
-
         call.respond(HttpStatusCode.OK)
     }
 }
@@ -702,34 +662,17 @@ enum class ANIMAL(
 
 private fun Route.analysisView(userService: UserService) {
     get("/analysis") {
-        val userId = call.pathParameters["userId"]!!
-
+        val userId = call.requirePathParameter("userId")
         val user = userService.getUserById(userId)
-
         val now = now()
-        val year = now.year
-        val month = now.month
-
-        val baseYearMonth = LocalDate(year, month, 1)
+        val baseYearMonth = LocalDate(now.year, now.month, 1)
 
         val weeklyPastRoutines = userService.getWeekPastRoutines(userId = userId, date = baseYearMonth)
-
-        val weeklySavedMoney =
-            weeklyPastRoutines
-                .map { it.missions.calculateSavedMoney() }
-                .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
-
-        val weeklySpendMoney =
-            weeklyPastRoutines
-                .map { it.missions.calculateSpendMoney() }
-                .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+        val weeklySavedMoney = weeklyPastRoutines.map { it.missions.calculateSavedMoney() }.sumOrZero()
+        val weeklySpendMoney = weeklyPastRoutines.map { it.missions.calculateSpendMoney() }.sumOrZero()
 
         val monthlyPastRoutines = userService.getMonthlyPastRoutines(userId = userId, date = baseYearMonth)
-
-        val monthlySpendMoney =
-            monthlyPastRoutines
-                .map { it.missions.calculateSpendMoney() }
-                .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+        val monthlySpendMoney = monthlyPastRoutines.map { it.missions.calculateSpendMoney() }.sumOrZero()
 
         call.respond(
             HttpStatusCode.OK,
@@ -752,7 +695,7 @@ private fun Route.analysisView(userService: UserService) {
 
 private fun Route.calendarView(userService: UserService) {
     get("/calendar") {
-        val userId = call.pathParameters["userId"]!!
+        val userId = call.requirePathParameter("userId")
 
         val now = now()
 
@@ -810,21 +753,9 @@ private fun Route.calendarView(userService: UserService) {
 
 private fun Route.getDailyFortune(fortuneService: FortuneService) {
     get("/{userId}/fortune") {
-        val userId =
-            call.pathParameters["userId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
-        val requestDate: LocalDate =
-            call.request.queryParameters["date"]
-                ?.let { dateStr -> LocalDate.parse(dateStr) } ?: now()
-
-        val formatParam = call.request.queryParameters["format"] ?: "svg"
-        val format =
-            try {
-                ImageFormat.valueOf(formatParam.uppercase())
-            } catch (e: IllegalArgumentException) {
-                ImageFormat.SVG
-            }
+        val userId = call.requirePathParameter("userId")
+        val requestDate = call.request.queryParameters["date"]?.let { LocalDate.parse(it) } ?: now()
+        val format = parseImageFormat(call.request.queryParameters["format"])
 
         call.respond(
             HttpStatusCode.OK,
@@ -838,12 +769,9 @@ private fun Route.getDailyFortune(fortuneService: FortuneService) {
 
 private fun Route.addJulyPastRoutineHistory(userService: UserService) {
     post("/{userId}/add-july-history") {
-        val userId = call.pathParameters["userId"] ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
+        val userId = call.requirePathParameter("userId")
         val currentYear = now().year
         val july = 7
-
-        val user = userService.getUserById(userId)
 
         // 7월 데이터를 추가할 날짜들과 완료 상태
         val julyData =
@@ -863,6 +791,12 @@ private fun Route.addJulyPastRoutineHistory(userService: UserService) {
 
         val addedHistories = userService.addJulyPastRoutineHistories(userId, currentYear, julyData)
 
+        val totalSavedMoney = addedHistories
+            .flatMap { it.missions }
+            .filter { it.finished }
+            .map { it.cost }
+            .sumOrZero()
+
         call.respond(
             HttpStatusCode.Created,
             AddJulyHistoryResponse(
@@ -870,12 +804,7 @@ private fun Route.addJulyPastRoutineHistory(userService: UserService) {
                 year = currentYear,
                 month = july,
                 addedDays = addedHistories.size,
-                totalSavedMoney =
-                    addedHistories
-                        .flatMap { it.missions }
-                        .filter { it.finished }
-                        .map { it.cost }
-                        .reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+                totalSavedMoney = totalSavedMoney
             )
         )
     }
@@ -883,10 +812,7 @@ private fun Route.addJulyPastRoutineHistory(userService: UserService) {
 
 private fun Route.createShareCode(shareService: ShareService) {
     post("/{userId}/share") {
-        val userId =
-            call.pathParameters["userId"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
+        val userId = call.requirePathParameter("userId")
         val result = shareService.createShareCode(userId)
 
         call.respond(
@@ -900,10 +826,7 @@ private fun Route.createShareCode(shareService: ShareService) {
 
 private fun Route.completeShare(shareService: ShareService) {
     post("/{shareCode}/complete") {
-        val shareCode =
-            call.pathParameters["shareCode"]
-                ?: throw BusinessException(ErrorCode.INVALID_REQUEST)
-
+        val shareCode = call.requirePathParameter("shareCode")
         val result = shareService.completeShare(shareCode)
 
         call.respond(
