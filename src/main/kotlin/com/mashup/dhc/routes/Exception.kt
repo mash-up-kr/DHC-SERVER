@@ -48,6 +48,7 @@ enum class ErrorCode(
     SHARE_NOT_FOUND(2004, "공유 정보를 찾을 수 없습니다", HttpStatusCode.NotFound),
     LEVEL_NOT_ENOUGH(2005, "레벨이 부족합니다 (레벨 8 이상 필요)", HttpStatusCode.Forbidden),
     YEARLY_FORTUNE_ALREADY_USED(2006, "이미 1년 운세를 사용했습니다", HttpStatusCode.BadRequest),
+    YEARLY_FORTUNE_NOT_CREATED(2007, "1년 운세가 아직 생성되지 않았습니다. 먼저 운세를 열어주세요", HttpStatusCode.NotFound),
 
     // Auth Errors - 3xxx
     UNAUTHORIZED(3001, "인증이 필요합니다", HttpStatusCode.Unauthorized),

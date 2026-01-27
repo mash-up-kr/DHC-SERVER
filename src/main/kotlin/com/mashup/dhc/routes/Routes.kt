@@ -264,7 +264,7 @@ fun Route.getYearlyFortune(userService: UserService) {
         // 1년 운세가 없으면 에러
         val yearlyFortune =
             user.yearlyFortune
-                ?: throw BusinessException(ErrorCode.NOT_FOUND)
+                ?: throw BusinessException(ErrorCode.YEARLY_FORTUNE_NOT_CREATED)
 
         call.respond(HttpStatusCode.OK, YearlyFortuneResponse.from(yearlyFortune))
     }
