@@ -51,7 +51,7 @@ data class TestBannerResponse(
     val version: Int,
     val title: String,
     val subTitle: String,
-    val imageUrl: String?,
+    val imageUrl: Image?,
     val testUrl: String?
 )
 
@@ -63,7 +63,7 @@ data class RewardProgressViewResponse(
 
 @Serializable
 data class RewardUserResponse(
-    val rewardImageUrl: String,
+    val rewardImageUrl: Image,
     val rewardLevel: RewardLevel,
     val totalPoint: Long,
     val currentLevelPoint: Long,

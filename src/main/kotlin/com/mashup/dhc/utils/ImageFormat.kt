@@ -15,7 +15,7 @@ value class Image(
     private val url: String
 ) {
     companion object {
-        private const val BASE_URL = "https://kr.object.ncloudstorage.com/dhc-object-storage"
+        private const val BASE_URL = "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o"
 
         /**
          * 미션 카테고리 이미지 URL 생성
