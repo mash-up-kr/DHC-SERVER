@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class YearlyFortune(
     val year: Int,
-    @SerialName("generated_date") val generatedDate: String,
+    @SerialName("generated_date") val generatedDate: String = "",
     @SerialName("total_score") val totalScore: Int,
     @SerialName("summary_title") val summaryTitle: String,
     @SerialName("summary_detail") val summaryDetail: String,
