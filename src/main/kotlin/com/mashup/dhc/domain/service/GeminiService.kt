@@ -296,7 +296,7 @@ class GeminiService(
 
     companion object {
         private const val BASE_URL =
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent"
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
     }
 }
 
