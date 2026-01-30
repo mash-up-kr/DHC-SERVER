@@ -81,6 +81,12 @@ resource "oci_core_instance" "main" {
     is_management_disabled = false
   }
 
+  # 가용성 설정 - 인스턴스 자동 복구
+  availability_config {
+    is_live_migration_preferred = true
+    recovery_action             = "RESTORE_INSTANCE"
+  }
+
   # 인스턴스가 삭제될 때 부트 볼륨도 함께 삭제
   preserve_boot_volume = false
 }
