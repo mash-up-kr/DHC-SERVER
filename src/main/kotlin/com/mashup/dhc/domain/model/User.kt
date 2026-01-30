@@ -87,8 +87,8 @@ class UserRepository(
             val result =
                 mongoDatabase
                     .getCollection<User>(USER_COLLECTION)
-                    .updateOne(session, Filters.eq("_id", objectId), Updates.set(User::deleted.name, true))
-            return result.modifiedCount
+                    .deleteOne(session, Filters.eq("_id", objectId))
+            return result.deletedCount
         } catch (e: MongoException) {
             System.err.println("Unable to delete due to an error: $e")
         }
