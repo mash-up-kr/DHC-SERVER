@@ -206,7 +206,7 @@ fun Route.rewardProgress(userService: UserService) {
             HttpStatusCode.OK,
             RewardProgressViewResponse(
                 RewardUserResponse(
-                    rewardImageUrl = Image.custom("https://picsum.photos/250/250"),
+                    rewardImageUrl = ImageUrlMapper.getRewardLevelImageUrl(currentLevel.level),
                     rewardLevel = currentLevel,
                     totalPoint = totalPoint,
                     currentLevelPoint = currentLevelPoint,

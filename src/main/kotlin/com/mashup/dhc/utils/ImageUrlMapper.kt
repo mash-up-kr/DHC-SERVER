@@ -93,4 +93,13 @@ object ImageUrlMapper {
             return Image.forMainCard(scoreRange, format)
         }
     }
+
+    /**
+     * 리워드 레벨 이미지 URL
+     */
+    fun getRewardLevelImageUrl(level: Int): Image {
+        // 이미지는 레벨 8까지만 존재하므로, 8 이상은 8레벨 이미지를 사용
+        val targetLevel = if (level > 8) 8 else level
+        return Image.forReward(targetLevel)
+    }
 }
