@@ -9,16 +9,16 @@ class TransactionService(
     suspend fun <T> executeInTransaction(operations: suspend (ClientSession) -> T): T {
         val session = mongoClient.startSession()
 
-        return try {
-            session.use { activeSession ->
-                activeSession.startTransaction()
+        return session.use { activeSession ->
+            activeSession.startTransaction()
+            try {
                 val result = operations(activeSession)
                 activeSession.commitTransaction()
                 result
+            } catch (e: Exception) {
+                activeSession.abortTransaction()
+                throw e
             }
-        } catch (e: Exception) {
-            session.abortTransaction()
-            throw e
         }
     }
 }
