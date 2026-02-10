@@ -383,11 +383,13 @@ data class YearlyFortuneResponse(
     val fiveElements: FiveElementsResponse,
     val yearlyEnergyTitle: String,
     val yearlyEnergyDetail: String,
-    val tips: YearlyFortuneTipsResponse
+    val tips: YearlyFortuneTipsResponse,
+    val cardInfo: FortuneCard
 ) {
     companion object {
-        fun from(yearlyFortune: YearlyFortune): YearlyFortuneResponse =
-            YearlyFortuneResponse(
+        fun from(yearlyFortune: YearlyFortune): YearlyFortuneResponse {
+            val scoreRange = FortuneScoreRange.fromScore(yearlyFortune.totalScore)
+            return YearlyFortuneResponse(
                 year = yearlyFortune.year,
                 generatedDate = yearlyFortune.generatedDate,
                 totalScore = yearlyFortune.totalScore,
@@ -405,8 +407,15 @@ data class YearlyFortuneResponse(
                         unluckyMenu = yearlyFortune.unluckyMenu,
                         unluckyColor = yearlyFortune.unluckyColor,
                         unluckyColorHex = yearlyFortune.unluckyColorHex
+                    ),
+                cardInfo =
+                    FortuneCard(
+                        image = ImageUrlMapper.MainCard.getFortuneCardByScore(yearlyFortune.totalScore, ImageFormat.PNG),
+                        title = scoreRange.title,
+                        subTitle = scoreRange.subTitle
                     )
             )
+        }
     }
 }
 
