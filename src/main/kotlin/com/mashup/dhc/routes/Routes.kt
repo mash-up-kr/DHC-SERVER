@@ -362,7 +362,7 @@ private fun Route.home(
         userService.updateLastAccessDate(userId, now)
 
         // summaryTodayMission이 어제 날짜로 PastRoutineHistory를 생성할 수 있으므로 먼저 실행
-        val isAlreadyAllDone = user.todayDailyMissionList.any { it.endDate?.run { this <= now } ?: false }
+        val isAlreadyAllDone = user.todayDailyMissionList.any { it.endDate?.run { this < now } ?: false }
         if (isAlreadyAllDone) {
             userService.summaryTodayMission(
                 userId,
