@@ -202,12 +202,14 @@ fun Route.rewardProgress(userService: UserService) {
         // 다음 레벨까지 필요한 포인트 (다음 레벨 시작점 - 현재 레벨 시작점)
         val nextLevelRequiredPoint = nextLevel?.let { it.requiredTotalPoint - currentLevel.requiredTotalPoint }
 
+        val isYearlyFortuneUnlocked = currentLevel.level >= 8
+
         call.respond(
             HttpStatusCode.OK,
             RewardProgressViewResponse(
                 RewardUserResponse(
                     rewardImageUrl = ImageUrlMapper.getRewardLevelImageUrl(currentLevel.level),
-                    rewardLevel = currentLevel,
+                    rewardLevel = currentLevel.toInfo(),
                     totalPoint = totalPoint,
                     currentLevelPoint = currentLevelPoint,
                     nextLevelRequiredPoint = nextLevelRequiredPoint
@@ -216,8 +218,11 @@ fun Route.rewardProgress(userService: UserService) {
                     RewardItemResponse(
                         id = 1,
                         title = "1년 운세",
-                        isUnlocked = currentLevel.level >= 8,
-                        isUsed = user.yearlyFortuneUsed
+                        isUnlocked = isYearlyFortuneUnlocked,
+                        isUsed = user.yearlyFortuneUsed,
+                        iconURL = if (isYearlyFortuneUnlocked) ImageUrlMapper.getRewardLevelImageUrl(8) else null,
+                        message = if (!isYearlyFortuneUnlocked) "레벨 8 달성 시 해금됩니다" else null,
+                        type = RewardType.YEARLY_FORTUNE
                     )
                 )
             )
@@ -575,7 +580,14 @@ private fun Route.myPage(userService: UserService) {
                 user.birthDate,
                 user.birthTime,
                 user.preferredMissionCategoryList.map { MissionCategoryResponse.from(it, format) },
-                true // TODO: alarm
+                true, // TODO: alarm
+                fortuneTests = listOf(
+                    FortuneTestInfo(
+                        imageURL = null,
+                        displayName = "궁합 테스트",
+                        testURL = null
+                    )
+                )
             )
         )
     }

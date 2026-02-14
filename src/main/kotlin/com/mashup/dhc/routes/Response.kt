@@ -64,7 +64,7 @@ data class RewardProgressViewResponse(
 @Serializable
 data class RewardUserResponse(
     val rewardImageUrl: Image,
-    val rewardLevel: RewardLevel,
+    val rewardLevel: RewardLevelInfo,
     val totalPoint: Long,
     val currentLevelPoint: Long,
     val nextLevelRequiredPoint: Long?
@@ -74,16 +74,18 @@ data class RewardUserResponse(
         val title: String,
         val requiredTotalPoint: Long
     ) {
-        LV1(1, "새싹", 0),
-        LV2(2, "흙", 100),
-        LV3(3, "돌", 250),
-        LV4(4, "동", 400),
-        LV5(5, "은", 600),
-        LV6(6, "금", 800),
-        LV7(7, "백금", 1000),
-        LV8(8, "다이아", 1300),
-        LV9(9, "루비", 1700),
-        LV10(10, "프리미엄", 2200);
+        LV1(1, "새싹 복주머니", 0),
+        LV2(2, "흙 복주머니", 100),
+        LV3(3, "돌 복주머니", 250),
+        LV4(4, "동 복주머니", 400),
+        LV5(5, "은 복주머니", 600),
+        LV6(6, "금 복주머니", 800),
+        LV7(7, "백금 복주머니", 1000),
+        LV8(8, "다이아 복주머니", 1300),
+        LV9(9, "루비 복주머니", 1700),
+        LV10(10, "프리미엄 복주머니", 2200);
+
+        fun toInfo() = RewardLevelInfo(level = level, name = title, requiredTotalPoint = requiredTotalPoint)
 
         companion object {
             fun fromTotalPoint(point: Long): RewardLevel = entries.lastOrNull { point >= it.requiredTotalPoint } ?: LV1
@@ -94,12 +96,26 @@ data class RewardUserResponse(
 }
 
 @Serializable
+data class RewardLevelInfo(
+    val level: Int,
+    val name: String,
+    val requiredTotalPoint: Long
+)
+
+@Serializable
 data class RewardItemResponse(
     val id: Long,
     val title: String,
     val isUnlocked: Boolean,
-    val isUsed: Boolean
+    val isUsed: Boolean,
+    val iconURL: Image?,
+    val message: String?,
+    val type: RewardType
 )
+
+enum class RewardType {
+    YEARLY_FORTUNE
+}
 
 @Serializable
 data class MissionResponse(
@@ -187,7 +203,15 @@ data class MyPageResponse(
     val birthDate: BirthDate,
     val birthTime: BirthTime?,
     val preferredMissionCategoryList: List<MissionCategoryResponse>,
-    val alarm: Boolean
+    val alarm: Boolean,
+    val fortuneTests: List<FortuneTestInfo>
+)
+
+@Serializable
+data class FortuneTestInfo(
+    val imageURL: String?,
+    val displayName: String,
+    val testURL: String?
 )
 
 @Serializable
