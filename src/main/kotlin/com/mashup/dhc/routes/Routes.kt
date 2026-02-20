@@ -1,6 +1,7 @@
 package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.FortuneCard
+import com.mashup.dhc.domain.model.FortuneScoreRange
 import com.mashup.dhc.domain.model.FortuneTip
 import com.mashup.dhc.domain.model.Gender
 import com.mashup.dhc.domain.model.Generation
@@ -135,53 +136,57 @@ fun Route.userRoutes(
     }
     route("/api") {
         missionCategoriesRoutes()
-        loveTest()
+        loveTest(geminiService)
     }
     route("/api/share") {
         completeShare(shareService)
     }
 }
 
-fun Route.loveTest() {
+fun Route.loveTest(geminiService: GeminiService) {
     post("/love-test") {
         val request = call.receive<LoveTestRequest>()
+        val geminiResponse = geminiService.requestLoveTest(request)
+
+        val score = geminiResponse.score
+        val scoreRange = FortuneScoreRange.fromScore(score)
 
         call.respond(
             HttpStatusCode.OK,
             LoveTestViewResponse(
-                85,
-                "궁합운 설명",
-                FortuneCard(
-                    ImageUrlMapper.MainCard.getFortuneCardByScore(85, ImageFormat.PNG),
-                    "궁합운",
-                    "결혼까지 꿈꿔볼 수 있을 것 같아요 놓치기전에 먼저 고백해보세요!"
+                score = score,
+                fortuneDetail = geminiResponse.fortuneDetail,
+                fortuneCard = FortuneCard(
+                    image = ImageUrlMapper.MainCard.getFortuneCardByScore(score, ImageFormat.PNG),
+                    title = scoreRange.title,
+                    subTitle = scoreRange.subTitle
                 ),
-                listOf(
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(ImageFormat.SVG),
-                        title = "피해야 할 색상",
-                        description = "흰색",
-                        hexColor = "#ffffff"
-                    ),
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(ImageFormat.SVG),
-                        title = "이 음식은 조심해!",
-                        description = "치킨, 닭"
-                    ),
+                fortuneTips = listOf(
                     FortuneTip(
                         image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(ImageFormat.SVG),
                         title = "행운의 메뉴",
-                        description = "카레"
+                        description = geminiResponse.todayMenu
                     ),
                     FortuneTip(
                         image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(ImageFormat.SVG),
                         title = "행운의 색상",
-                        description = "연두색",
-                        hexColor = "#81c147"
+                        description = geminiResponse.luckyColor,
+                        hexColor = geminiResponse.luckyColorHex
+                    ),
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(ImageFormat.SVG),
+                        title = "피해야 할 색상",
+                        description = geminiResponse.jinxedColor,
+                        hexColor = geminiResponse.jinxedColorHex
+                    ),
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(ImageFormat.SVG),
+                        title = "이 음식은 조심해!",
+                        description = geminiResponse.jinxedMenu
                     )
                 ),
-                LocalDate.parse("2026-10-04"),
-                "학교 근처 놀이터에서"
+                confessDate = LocalDate.parse(geminiResponse.confessDate),
+                confessLocation = geminiResponse.confessLocation
             )
         )
     }

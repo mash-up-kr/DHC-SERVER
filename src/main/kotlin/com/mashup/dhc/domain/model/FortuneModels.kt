@@ -268,3 +268,18 @@ data class FortuneCard(
     val title: String,
     val subTitle: String
 )
+
+// Gemini 궁합 테스트 응답 모델
+@Serializable
+data class LoveTestGeminiResponse(
+    val score: Int,
+    @SerialName("fortune_detail") val fortuneDetail: String,
+    @SerialName("lucky_color") val luckyColor: String,
+    @SerialName("lucky_color_hex") val luckyColorHex: String,
+    @SerialName("jinxed_color") val jinxedColor: String,
+    @SerialName("jinxed_color_hex") val jinxedColorHex: String,
+    @SerialName("today_menu") val todayMenu: String,
+    @SerialName("jinxed_menu") val jinxedMenu: String,
+    @SerialName("confess_date") val confessDate: String,
+    @SerialName("confess_location") val confessLocation: String
+)

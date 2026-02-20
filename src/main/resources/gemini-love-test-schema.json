@@ -1,0 +1,59 @@
+{
+  "type": "object",
+  "properties": {
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "궁합 점수 (0-100)"
+    },
+    "fortune_detail": {
+      "type": "string",
+      "description": "궁합 상세 설명 (두 사람의 사주 궁합을 분석한 결과)"
+    },
+    "lucky_color": {
+      "type": "string",
+      "description": "행운의 색상명 (예: 연두색)"
+    },
+    "lucky_color_hex": {
+      "type": "string",
+      "description": "행운의 색상 헥스코드 (예: #90EE90)"
+    },
+    "jinxed_color": {
+      "type": "string",
+      "description": "피해야 할 색상명 (예: 흰색)"
+    },
+    "jinxed_color_hex": {
+      "type": "string",
+      "description": "피해야 할 색상 헥스코드 (예: #FFFFFF)"
+    },
+    "today_menu": {
+      "type": "string",
+      "description": "추천 데이트 메뉴 (예: 카레)"
+    },
+    "jinxed_menu": {
+      "type": "string",
+      "description": "피해야 할 음식 (예: 치킨, 닭)"
+    },
+    "confess_date": {
+      "type": "string",
+      "description": "추천 고백 날짜 (YYYY-MM-DD 형식, 예: 2026-03-14)"
+    },
+    "confess_location": {
+      "type": "string",
+      "description": "추천 고백 장소 (예: 학교 근처 놀이터에서)"
+    }
+  },
+  "required": [
+    "score",
+    "fortune_detail",
+    "lucky_color",
+    "lucky_color_hex",
+    "jinxed_color",
+    "jinxed_color_hex",
+    "today_menu",
+    "jinxed_menu",
+    "confess_date",
+    "confess_location"
+  ]
+}

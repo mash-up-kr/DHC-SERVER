@@ -2,9 +2,11 @@ package com.mashup.dhc.domain.service
 
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.FortuneRepository
+import com.mashup.dhc.domain.model.LoveTestGeminiResponse
 import com.mashup.dhc.domain.model.MonthlyFortune
 import com.mashup.dhc.domain.model.User
 import com.mashup.dhc.domain.model.YearlyFortune
+import com.mashup.dhc.routes.LoveTestRequest
 import com.mashup.dhc.utils.batch.GeminiBatchProcessor
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -35,6 +37,7 @@ class GeminiService(
     private val monthResponseSchema: JsonElement by lazy { loadMonthResponseSchema() }
     private val dailyBatchResponseSchema: JsonElement by lazy { loadDailyBatchResponseSchema() }
     private val yearlyFortuneResponseSchema: JsonElement by lazy { loadYearlyFortuneResponseSchema() }
+    private val loveTestResponseSchema: JsonElement by lazy { loadLoveTestResponseSchema() }
     private val batchProcessor = GeminiBatchProcessor(this)
 
     private val client =
@@ -139,6 +142,24 @@ class GeminiService(
 
         val yearlyFortuneResponse = Json.decodeFromString<YearlyFortune>(responseText)
         return yearlyFortuneResponse.copy(generatedDate = now().toString())
+    }
+
+    suspend fun requestLoveTest(request: LoveTestRequest): LoveTestGeminiResponse {
+        val prompt = request.toLoveTestPrompt()
+        val geminiRequest = prompt.toGeminiLoveTestRequest()
+
+        val response =
+            client.post(BASE_URL) {
+                parameter("key", apiKey)
+                contentType(ContentType.Application.Json)
+                setBody(geminiRequest)
+                timeout { requestTimeoutMillis = 600_000 }
+            }
+
+        val geminiResponse: GeminiApiResponse = response.body()
+        logTokenUsage("LoveTest", geminiResponse.usageMetadata)
+        val responseText = geminiResponse.validateAndExtractText()
+        return Json.decodeFromString<LoveTestGeminiResponse>(responseText)
     }
 
     private fun logTokenUsage(
@@ -252,6 +273,57 @@ class GeminiService(
                 )
         )
 
+    private fun LoveTestRequest.toLoveTestPrompt(): String {
+        val meInfo =
+            """
+            - 성별: ${me.gender}
+            - 이름: ${me.name}
+            - 생년월일: ${me.birthDate}
+            - 출생시간: ${me.birthTime ?: "모름"}
+            """.trimIndent()
+
+        val youInfo = buildString {
+            appendLine("- 성별: ${you.gender}")
+            appendLine("- 이름: ${you.name}")
+            appendLine("- 생년월일: ${you.birthDate ?: "모름"}")
+            appendLine("- 출생시간: ${you.birthTime ?: "모름"}")
+            you.additional?.let { appendLine("- 추가정보: $it") }
+        }.trimEnd()
+
+        return """
+            $systemInstruction
+
+            두 사람의 궁합을 사주팔자 기반으로 분석해주세요:
+
+            [나]
+            $meInfo
+
+            [상대방]
+            $youInfo
+
+            연애 시작일: $loveDate
+
+            다음 항목들을 분석해주세요:
+            1. 궁합 점수 (0-100)
+            2. 궁합 상세 설명 (두 사람의 사주 궁합을 재미있고 자세하게 분석)
+            3. 추천 데이트 메뉴 / 피해야 할 음식
+            4. 행운의 색상(이름+헥스코드) / 피해야 할 색상(이름+헥스코드)
+            5. 추천 고백 날짜 (YYYY-MM-DD 형식) / 추천 고백 장소
+
+            응답은 반드시 지정된 JSON 스키마 형식으로 제공해주세요.
+            """.trimIndent()
+    }
+
+    private fun String.toGeminiLoveTestRequest(): GeminiRequest =
+        GeminiRequest(
+            contents = listOf(Content(parts = listOf(Part(this)))),
+            generationConfig =
+                GenerationConfig(
+                    responseMimeType = "application/json",
+                    responseSchema = loveTestResponseSchema
+                )
+        )
+
     private fun GeminiApiResponse.validateAndExtractText(): String {
         error?.let { error ->
             throw Exception("Gemini API 오류: ${error.message ?: "알 수 없는 오류"} (코드: ${error.code})")
@@ -290,6 +362,15 @@ class GeminiService(
             this::class.java.classLoader
                 .getResourceAsStream("gemini-yearly-fortune-schema.json")
                 ?: throw IllegalStateException("gemini-yearly-fortune-schema.json을 찾을 수 없습니다.")
+
+        return Json.parseToJsonElement(schemaResource.bufferedReader().use { it.readText() })
+    }
+
+    private fun loadLoveTestResponseSchema(): JsonElement {
+        val schemaResource =
+            this::class.java.classLoader
+                .getResourceAsStream("gemini-love-test-schema.json")
+                ?: throw IllegalStateException("gemini-love-test-schema.json을 찾을 수 없습니다.")
 
         return Json.parseToJsonElement(schemaResource.bufferedReader().use { it.readText() })
     }
