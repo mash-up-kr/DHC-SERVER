@@ -37,7 +37,9 @@ class UserService(
     private val pastRoutineHistoryRepository: PastRoutineHistoryRepository,
     private val missionPicker: MissionPicker
 ) {
-    suspend fun getUserById(userId: String): User = userRepository.findById(ObjectId(userId))!!
+    suspend fun getUserById(userId: String): User =
+        userRepository.findById(ObjectId(userId))
+            ?: throw BusinessException(ErrorCode.USER_NOT_FOUND)
 
     suspend fun findUserByUserToken(userToken: String): User? = userRepository.findByUserToken(userToken)
 
