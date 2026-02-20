@@ -229,7 +229,11 @@ fun Route.rewardProgress(userService: UserService) {
                         isUnlocked = isYearlyFortuneUnlocked,
                         isUsed = user.yearlyFortuneUsed,
                         iconURL = if (isYearlyFortuneUnlocked) ImageUrlMapper.getRewardLevelImageUrl(8) else null,
-                        message = if (!isYearlyFortuneUnlocked) "레벨 8 달성 시 해금됩니다" else null,
+                        message = when {
+                            !isYearlyFortuneUnlocked -> "레벨 8 달성 시 해금됩니다"
+                            !user.yearlyFortuneUsed -> "1년 운세를 확인해보세요!"
+                            else -> null
+                        },
                         type = RewardType.YEARLY_FORTUNE
                     )
                 )
