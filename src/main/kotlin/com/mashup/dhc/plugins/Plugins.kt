@@ -7,6 +7,7 @@ import com.mashup.dhc.routes.InternalServerErrorException
 import com.mashup.dhc.routes.ValidationErrorResponse
 import com.mashup.dhc.routes.ValidationException
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -152,5 +153,8 @@ fun Application.configurePlugins() {
     install(CORS) {
         anyHost()
         allowHeader(HttpHeaders.ContentType)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Patch)
     }
 }
