@@ -141,6 +141,9 @@ fun Route.userRoutes(
     route("/api/share") {
         completeShare(shareService)
     }
+    route("/api") {
+        qaRoutes(userService)
+    }
 }
 
 fun Route.loveTest(geminiService: GeminiService) {
@@ -366,7 +369,7 @@ private fun Route.home(
         val lastAccess = user.lastAccessDate
         val isFirstAccess = lastAccess == null
         val daysSinceLastAccess = lastAccess?.let { (now.toEpochDays() - it.toEpochDays()).toInt() } ?: 0
-        val longAbsence = daysSinceLastAccess >= 2
+        val longAbsence = user.qaOverrideLongAbsence ?: (daysSinceLastAccess >= 2)
 
         // lastAccessDate 업데이트
         userService.updateLastAccessDate(userId, now)
@@ -387,10 +390,11 @@ private fun Route.home(
 
         // 어제 일일 미션 성공 여부 (DAILY 타입만 체크)
         val yesterdayMissionSuccess =
-            yesterdayPastRoutines
-                .flatMap { it.missions }
-                .filter { it.type == MissionType.DAILY }
-                .any { it.finished }
+            user.qaOverrideYesterdayMissionSuccess
+                ?: yesterdayPastRoutines
+                    .flatMap { it.missions }
+                    .filter { it.type == MissionType.DAILY }
+                    .any { it.finished }
 
         // 어제 획득한 포인트 계산 (배율 적용)
         val basePoint =
@@ -447,7 +451,7 @@ private fun Route.home(
                 longTermMission = latestUser.longTermMission?.let { MissionResponse.from(it) },
                 todayDailyMissionList = todayMissions,
                 todayDailyFortune = todayDailyFortune.let { FortuneResponse.from(it) },
-                todayDone = todayPastRoutines.isNotEmpty(),
+                todayDone = user.qaOverrideTodayDone ?: todayPastRoutines.isNotEmpty(),
                 yesterdayMissionSuccess = yesterdayMissionSuccess,
                 longAbsence = longAbsence,
                 isFirstAccess = isFirstAccess,
@@ -853,5 +857,55 @@ private fun Route.completeShare(shareService: ShareService) {
                 alreadyCompleted = result.alreadyCompleted
             )
         )
+    }
+}
+
+// =============================================================================
+// QA Routes
+// =============================================================================
+
+fun Route.qaRoutes(userService: UserService) {
+    route("/qa/users/{userId}") {
+        put("/home-state") {
+            val userId = call.requirePathParameter("userId")
+            userService.getUserById(userId) // 존재 확인
+            val request = call.receive<QaHomeStateRequest>()
+
+            userService.updateQaHomeStateOverrides(
+                userId,
+                request.longAbsence,
+                request.yesterdayMissionSuccess,
+                request.todayDone
+            )
+
+            call.respond(HttpStatusCode.OK, QaSuccessResponse(success = true))
+        }
+
+        put("/point") {
+            val userId = call.requirePathParameter("userId")
+            userService.getUserById(userId) // 존재 확인
+            val request = call.receive<QaPointRequest>()
+
+            userService.setPoint(userId, request.point)
+            val level = RewardUserResponse.RewardLevel.fromTotalPoint(request.point)
+
+            call.respond(
+                HttpStatusCode.OK,
+                QaPointResponse(
+                    success = true,
+                    point = request.point,
+                    level = level.level
+                )
+            )
+        }
+
+        delete("/yearly-fortune") {
+            val userId = call.requirePathParameter("userId")
+            userService.getUserById(userId) // 존재 확인
+
+            userService.resetYearlyFortune(userId)
+
+            call.respond(HttpStatusCode.OK, QaSuccessResponse(success = true))
+        }
     }
 }

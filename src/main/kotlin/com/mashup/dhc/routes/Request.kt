@@ -100,6 +100,18 @@ data class ToggleMissionRequest(
 }
 
 @Serializable
+data class QaHomeStateRequest(
+    val longAbsence: Boolean? = null,
+    val yesterdayMissionSuccess: Boolean? = null,
+    val todayDone: Boolean? = null
+)
+
+@Serializable
+data class QaPointRequest(
+    val point: Long
+)
+
+@Serializable
 data class LoveTestRequest(
     val me: LoveTestMe,
     val you: LoveTestYou,

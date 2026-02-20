@@ -509,6 +509,18 @@ data class ElementBalanceResponse(
 }
 
 @Serializable
+data class QaSuccessResponse(
+    val success: Boolean
+)
+
+@Serializable
+data class QaPointResponse(
+    val success: Boolean,
+    val point: Long,
+    val level: Int
+)
+
+@Serializable
 data class YearlyFortuneTipsResponse(
     val luckyMenu: String,
     val luckyColor: String,

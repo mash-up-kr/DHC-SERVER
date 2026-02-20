@@ -303,6 +303,23 @@ class UserService(
         yearlyFortune: YearlyFortune
     ): Long = userRepository.updateYearlyFortune(objectId, yearlyFortune)
 
+    suspend fun updateQaHomeStateOverrides(
+        userId: String,
+        longAbsence: Boolean?,
+        yesterdayMissionSuccess: Boolean?,
+        todayDone: Boolean?
+    ): Long = userRepository.updateQaHomeStateOverrides(
+        ObjectId(userId), longAbsence, yesterdayMissionSuccess, todayDone
+    )
+
+    suspend fun setPoint(
+        userId: String,
+        point: Long
+    ): Long = userRepository.setPoint(ObjectId(userId), point)
+
+    suspend fun resetYearlyFortune(userId: String): Long =
+        userRepository.resetYearlyFortune(ObjectId(userId))
+
     suspend fun getWeekPastRoutines(
         userId: String,
         date: LocalDate

@@ -37,6 +37,9 @@ data class User(
     val loveMissionStatus: LoveMissionStatus? = null,
     val yearlyFortuneUsed: Boolean = false,
     val yearlyFortune: YearlyFortune? = null,
+    val qaOverrideLongAbsence: Boolean? = null,
+    val qaOverrideYesterdayMissionSuccess: Boolean? = null,
+    val qaOverrideTodayDone: Boolean? = null,
     @Transient val deleted: Boolean = false
 ) {
     private val age: Int
@@ -223,6 +226,68 @@ class UserRepository(
             return result.modifiedCount
         } catch (e: MongoException) {
             System.err.println("Unable to update yearlyFortune: $e")
+        }
+        return 0
+    }
+
+    suspend fun updateQaHomeStateOverrides(
+        objectId: ObjectId,
+        longAbsence: Boolean?,
+        yesterdayMissionSuccess: Boolean?,
+        todayDone: Boolean?
+    ): Long {
+        try {
+            val query = Filters.eq("_id", objectId)
+            val updates =
+                Updates.combine(
+                    Updates.set(User::qaOverrideLongAbsence.name, longAbsence),
+                    Updates.set(User::qaOverrideYesterdayMissionSuccess.name, yesterdayMissionSuccess),
+                    Updates.set(User::qaOverrideTodayDone.name, todayDone)
+                )
+            val result =
+                mongoDatabase
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(query, updates)
+            return result.modifiedCount
+        } catch (e: MongoException) {
+            System.err.println("Unable to update QA home state overrides: $e")
+        }
+        return 0
+    }
+
+    suspend fun setPoint(
+        objectId: ObjectId,
+        point: Long
+    ): Long {
+        try {
+            val query = Filters.eq("_id", objectId)
+            val updates = Updates.set(User::point.name, point)
+            val result =
+                mongoDatabase
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(query, updates)
+            return result.modifiedCount
+        } catch (e: MongoException) {
+            System.err.println("Unable to set point: $e")
+        }
+        return 0
+    }
+
+    suspend fun resetYearlyFortune(objectId: ObjectId): Long {
+        try {
+            val query = Filters.eq("_id", objectId)
+            val updates =
+                Updates.combine(
+                    Updates.set(User::yearlyFortuneUsed.name, false),
+                    Updates.set(User::yearlyFortune.name, null)
+                )
+            val result =
+                mongoDatabase
+                    .getCollection<User>(USER_COLLECTION)
+                    .updateOne(query, updates)
+            return result.modifiedCount
+        } catch (e: MongoException) {
+            System.err.println("Unable to reset yearly fortune: $e")
         }
         return 0
     }

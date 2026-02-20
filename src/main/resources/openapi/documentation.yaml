@@ -925,6 +925,201 @@ paths:
                 code: 404
                 message: "Share not found"
 
+  /api/qa/users/{userId}/home-state:
+    put:
+      tags:
+        - QA
+      summary: "[QA] 홈 화면 상태 오버라이드"
+      description: |
+        **QA 테스트 전용 API** - 홈 화면(`/view/users/{userId}/home`)의 `longAbsence`, `yesterdayMissionSuccess`, `todayDone` 값을 강제로 설정합니다.
+
+        이 3개 값은 원래 서버에서 매번 계산되는 값이므로, 이 API로 오버라이드를 설정하면 계산 결과 대신 오버라이드 값이 반환됩니다.
+
+        ### 사용 시나리오
+        - **2일 이상 미접속 화면 테스트**: `longAbsence: true` 설정
+        - **어제 미션 성공 후 홈 화면 테스트**: `yesterdayMissionSuccess: true` 설정
+        - **오늘 미션 완료 후 화면 테스트**: `todayDone: true` 설정
+        - **조합 테스트**: 여러 값을 동시에 설정 가능
+
+        ### 오버라이드 해제
+        각 필드를 `null`로 보내면 오버라이드가 해제되고 원래 계산 로직으로 복원됩니다.
+        ```json
+        { "longAbsence": null, "yesterdayMissionSuccess": null, "todayDone": null }
+        ```
+
+        ### 주의사항
+        - 오버라이드는 해당 유저에게 영구적으로 적용됩니다 (해제할 때까지)
+        - QA 테스트 완료 후 반드시 `null`로 초기화하세요
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QaHomeStateRequest"
+            examples:
+              long_absence_true:
+                summary: "2일 이상 미접속 상태로 설정"
+                value:
+                  longAbsence: true
+                  yesterdayMissionSuccess: null
+                  todayDone: null
+              all_true:
+                summary: "모든 값 true로 설정"
+                value:
+                  longAbsence: true
+                  yesterdayMissionSuccess: true
+                  todayDone: true
+              reset_all:
+                summary: "모든 오버라이드 해제 (원래 계산 로직 복원)"
+                value:
+                  longAbsence: null
+                  yesterdayMissionSuccess: null
+                  todayDone: null
+      responses:
+        "200":
+          description: "오버라이드 설정 완료"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaSuccessResponse"
+              example:
+                success: true
+        "404":
+          description: "User not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/qa/users/{userId}/point:
+    put:
+      tags:
+        - QA
+      summary: "[QA] 포인트(레벨) 조정"
+      description: |
+        **QA 테스트 전용 API** - 유저의 총 포인트를 입력한 정확한 수치로 설정합니다.
+        포인트에 따라 레벨이 자동으로 결정됩니다.
+
+        ### 레벨별 필요 포인트
+        | 레벨 | 이름 | 필요 포인트 |
+        |------|------|------------|
+        | LV1 | 새싹 복주머니 | 0 |
+        | LV2 | 흙 복주머니 | 100 |
+        | LV3 | 돌 복주머니 | 250 |
+        | LV4 | 동 복주머니 | 400 |
+        | LV5 | 은 복주머니 | 600 |
+        | LV6 | 금 복주머니 | 800 |
+        | LV7 | 백금 복주머니 | 1000 |
+        | **LV8** | **다이아 복주머니** | **1300** |
+        | LV9 | 루비 복주머니 | 1700 |
+        | LV10 | 프리미엄 복주머니 | 2200 |
+
+        ### 연간 운세 해금
+        **LV8 (1300pt) 이상**부터 연간 운세(`POST /api/users/{userId}/yearly-fortune`) 사용이 가능합니다.
+
+        ### 사용 시나리오
+        - **레벨 8 테스트**: `point: 1300` → LV8 달성, 연간 운세 해금
+        - **최고 레벨 테스트**: `point: 2200` → LV10
+        - **초기 상태 복원**: `point: 0` → LV1
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QaPointRequest"
+            examples:
+              level_8:
+                summary: "LV8 달성 (연간 운세 해금)"
+                value:
+                  point: 1300
+              level_10:
+                summary: "LV10 최고 레벨"
+                value:
+                  point: 2200
+              reset:
+                summary: "포인트 초기화 (LV1)"
+                value:
+                  point: 0
+      responses:
+        "200":
+          description: "포인트 설정 완료"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaPointResponse"
+              example:
+                success: true
+                point: 1300
+                level: 8
+        "404":
+          description: "User not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/qa/users/{userId}/yearly-fortune:
+    delete:
+      tags:
+        - QA
+      summary: "[QA] 연간 운세 사용 내역 삭제"
+      description: |
+        **QA 테스트 전용 API** - 유저의 연간 운세 사용 기록을 삭제하여 다시 사용할 수 있도록 원복합니다.
+
+        이 API를 호출하면:
+        - `yearlyFortuneUsed` → `false`로 변경
+        - `yearlyFortune` → `null`로 삭제
+
+        ### 사용 시나리오
+        1. 포인트 API로 LV8 이상 설정 (`PUT /api/qa/users/{userId}/point` → `{ "point": 1300 }`)
+        2. 연간 운세 생성 (`POST /api/users/{userId}/yearly-fortune`)
+        3. 연간 운세 확인 (`GET /view/users/{userId}/yearly-fortune`)
+        4. **이 API로 원복** (`DELETE /api/qa/users/{userId}/yearly-fortune`)
+        5. 다시 2번부터 반복 테스트 가능
+
+        ### 주의사항
+        - 이 API는 `yearlyFortuneUsed` 플래그만 리셋합니다. 포인트/레벨은 별도로 관리하세요.
+        - 연간 운세 재생성 시 Gemini API가 다시 호출되므로 다른 결과가 나올 수 있습니다.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "연간 운세 사용 내역 삭제 완료"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaSuccessResponse"
+              example:
+                success: true
+        "404":
+          description: "User not found"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     RegisterUserRequest:
@@ -2118,4 +2313,67 @@ components:
           type: string
           description: "Unlucky color hex code"
           example: "#FF0000"
+
+    QaHomeStateRequest:
+      type: object
+      description: "홈 화면 상태 오버라이드 요청. null로 보내면 해당 오버라이드가 해제되어 원래 계산 로직으로 복원됩니다."
+      properties:
+        longAbsence:
+          type: boolean
+          description: "2일 이상 미접속 여부 오버라이드. null이면 오버라이드 해제."
+          example: true
+          nullable: true
+        yesterdayMissionSuccess:
+          type: boolean
+          description: "어제 일일 미션 성공 여부 오버라이드. null이면 오버라이드 해제."
+          example: false
+          nullable: true
+        todayDone:
+          type: boolean
+          description: "오늘 미션 완료 여부 오버라이드. null이면 오버라이드 해제."
+          example: true
+          nullable: true
+
+    QaPointRequest:
+      type: object
+      required:
+        - point
+      properties:
+        point:
+          type: integer
+          format: int64
+          minimum: 0
+          description: "설정할 포인트 값. 레벨은 포인트에 따라 자동 결정됩니다. (LV1:0, LV2:100, LV3:250, LV4:400, LV5:600, LV6:800, LV7:1000, LV8:1300, LV9:1700, LV10:2200)"
+          example: 1300
+
+    QaSuccessResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+          description: "작업 성공 여부"
+          example: true
+
+    QaPointResponse:
+      type: object
+      required:
+        - success
+        - point
+        - level
+      properties:
+        success:
+          type: boolean
+          description: "작업 성공 여부"
+          example: true
+        point:
+          type: integer
+          format: int64
+          description: "설정된 포인트"
+          example: 1300
+        level:
+          type: integer
+          description: "포인트에 해당하는 레벨 (1-10)"
+          example: 8
 
