@@ -160,9 +160,9 @@ fun Route.loveTest(geminiService: GeminiService) {
                 score = score,
                 fortuneDetail = geminiResponse.fortuneDetail,
                 fortuneCard = FortuneCard(
-                    image = ImageUrlMapper.MainCard.getFortuneCardByScore(score, ImageFormat.PNG),
-                    title = scoreRange.title,
-                    subTitle = scoreRange.subTitle
+                    image = scoreRange.getCardImage(),
+                    title = scoreRange.animalName,
+                    subTitle = scoreRange.title
                 ),
                 fortuneTips = listOf(
                     FortuneTip(

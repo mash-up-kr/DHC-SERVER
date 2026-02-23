@@ -18,7 +18,6 @@ import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Image
 import com.mashup.dhc.utils.ImageFormat
-import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -281,7 +280,7 @@ data class FortuneResponse(
 
             return FortuneResponse(
                 date = dailyFortune.date,
-                fortuneTitle = dailyFortune.fortuneTitle,
+                fortuneTitle = scoreRange.subTitle,
                 fortuneDetail = dailyFortune.fortuneDetail,
                 positiveScore = dailyFortune.positiveScore,
                 negativeScore = dailyFortune.negativeScore,
@@ -289,13 +288,9 @@ data class FortuneResponse(
                 tips = dailyFortune.toTips(format),
                 cardInfo =
                     FortuneCard(
-                        image =
-                            ImageUrlMapper.MainCard.getFortuneCardByScore(
-                                dailyFortune.totalScore,
-                                ImageFormat.PNG
-                            ),
-                        title = scoreRange.title,
-                        subTitle = scoreRange.subTitle
+                        image = scoreRange.getCardImage(),
+                        title = scoreRange.animalName,
+                        subTitle = scoreRange.title
                     )
             )
         }
@@ -434,9 +429,9 @@ data class YearlyFortuneResponse(
                     ),
                 cardInfo =
                     FortuneCard(
-                        image = ImageUrlMapper.MainCard.getFortuneCardByScore(yearlyFortune.totalScore, ImageFormat.PNG),
-                        title = scoreRange.title,
-                        subTitle = scoreRange.subTitle
+                        image = scoreRange.getCardImage(),
+                        title = scoreRange.animalName,
+                        subTitle = scoreRange.title
                     )
             )
         }

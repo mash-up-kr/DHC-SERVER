@@ -210,6 +210,7 @@ class UserService(
                 todayDailyMissionList =
                     dailyCategoryMissions
                         .shuffled()
+                        .distinctBy { it.title }
                         .take(PEEK_MISSION_SIZE)
                         .map { it.copy(endDate = today.plus(1, DateTimeUnit.DAY)) }
             )
