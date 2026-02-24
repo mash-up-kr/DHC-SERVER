@@ -393,8 +393,11 @@ private fun Route.home(
         val yesterdayPastRoutines = userService.getYesterdayPastRoutines(userId, now)
 
         // 어제 일일 미션 성공 여부 (DAILY 타입만 체크)
+        // null: 어제 미션 기회 없었음 또는 이미 확인함 (첫 접속, 같은 날 재접속)
+        // true: 어제 미션 성공, false: 어제 미션 실패
         val yesterdayMissionSuccess =
-            user.qaOverrideYesterdayMissionSuccess
+            if (daysSinceLastAccess == 0) null
+            else user.qaOverrideYesterdayMissionSuccess
                 ?: yesterdayPastRoutines
                     .flatMap { it.missions }
                     .filter { it.type == MissionType.DAILY }

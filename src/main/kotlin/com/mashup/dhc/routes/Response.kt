@@ -39,7 +39,7 @@ data class HomeViewResponse(
     val todayDailyMissionList: List<MissionResponse>,
     val todayDailyFortune: FortuneResponse?,
     val todayDone: Boolean,
-    val yesterdayMissionSuccess: Boolean,
+    val yesterdayMissionSuccess: Boolean?,
     val longAbsence: Boolean,
     val isFirstAccess: Boolean,
     val point: Long,
