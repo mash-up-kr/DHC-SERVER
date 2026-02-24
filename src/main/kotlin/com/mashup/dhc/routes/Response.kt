@@ -18,6 +18,7 @@ import com.mashup.dhc.utils.BirthDate
 import com.mashup.dhc.utils.BirthTime
 import com.mashup.dhc.utils.Image
 import com.mashup.dhc.utils.ImageFormat
+import com.mashup.dhc.utils.ImageUrlMapper
 import com.mashup.dhc.utils.Money
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
@@ -402,7 +403,7 @@ data class YearlyFortuneResponse(
     val fiveElements: FiveElementsResponse,
     val yearlyEnergyTitle: String,
     val yearlyEnergyDetail: String,
-    val tips: YearlyFortuneTipsResponse,
+    val tips: List<FortuneTip>,
     val cardInfo: FortuneCard
 ) {
     companion object {
@@ -418,15 +419,30 @@ data class YearlyFortuneResponse(
                 fiveElements = FiveElementsResponse.from(yearlyFortune.fiveElements),
                 yearlyEnergyTitle = yearlyFortune.yearlyEnergyTitle,
                 yearlyEnergyDetail = yearlyFortune.yearlyEnergyDetail,
-                tips =
-                    YearlyFortuneTipsResponse(
-                        luckyMenu = yearlyFortune.luckyMenu,
-                        luckyColor = yearlyFortune.luckyColor,
-                        luckyColorHex = yearlyFortune.luckyColorHex,
-                        unluckyMenu = yearlyFortune.unluckyMenu,
-                        unluckyColor = yearlyFortune.unluckyColor,
-                        unluckyColorHex = yearlyFortune.unluckyColorHex
+                tips = listOf(
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(),
+                        title = "행운의 메뉴",
+                        description = yearlyFortune.luckyMenu
                     ),
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(),
+                        title = "행운의 색상",
+                        description = yearlyFortune.luckyColor,
+                        hexColor = yearlyFortune.luckyColorHex
+                    ),
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(),
+                        title = "피해야 할 색상",
+                        description = yearlyFortune.unluckyColor,
+                        hexColor = yearlyFortune.unluckyColorHex
+                    ),
+                    FortuneTip(
+                        image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(),
+                        title = "피해야 할 음식",
+                        description = yearlyFortune.unluckyMenu
+                    )
+                ),
                 cardInfo =
                     FortuneCard(
                         image = scoreRange.getCardImage(),
@@ -515,12 +531,3 @@ data class QaPointResponse(
     val level: Int
 )
 
-@Serializable
-data class YearlyFortuneTipsResponse(
-    val luckyMenu: String,
-    val luckyColor: String,
-    val luckyColorHex: String,
-    val unluckyMenu: String,
-    val unluckyColor: String,
-    val unluckyColorHex: String
-)
