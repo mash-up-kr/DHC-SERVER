@@ -428,9 +428,16 @@ private fun Route.home(
         // 포인트 적립 후 최신 user 정보 다시 가져오기
         val latestUser = userService.getUserById(userId)
 
-        // todayDailyMissionList 구성 (러브미션이 있으면 맨 앞에 추가)
-        val dailyMissions = latestUser.todayDailyMissionList.map { MissionResponse.from(it) }
-        val todayMissions =
+        val todayDone = user.qaOverrideTodayDone ?: todayPastRoutines.isNotEmpty()
+
+        // todayDailyMissionList 구성
+        // todayDone이면 완료한 미션(PastRoutineHistory)을 반환, 아니면 현재 미션 반환
+        val todayMissions = if (todayDone) {
+            todayPastRoutines
+                .flatMap { it.missions }
+                .map { MissionResponse.from(it) }
+        } else {
+            val dailyMissions = latestUser.todayDailyMissionList.map { MissionResponse.from(it) }
             if (loveMissionInfo != null) {
                 val loveMissionResponse =
                     MissionResponse.fromLoveMission(
@@ -442,6 +449,7 @@ private fun Route.home(
             } else {
                 dailyMissions
             }
+        }
 
         // 궁합 테스트 배너 (목 데이터)
         val testBanner =
@@ -456,10 +464,17 @@ private fun Route.home(
         call.respond(
             HttpStatusCode.OK,
             HomeViewResponse(
-                longTermMission = latestUser.longTermMission?.let { MissionResponse.from(it) },
+                longTermMission = if (todayDone) {
+                    todayPastRoutines
+                        .flatMap { it.missions }
+                        .firstOrNull { it.type == MissionType.LONG_TERM }
+                        ?.let { MissionResponse.from(it) }
+                } else {
+                    latestUser.longTermMission?.let { MissionResponse.from(it) }
+                },
                 todayDailyMissionList = todayMissions,
                 todayDailyFortune = todayDailyFortune.let { FortuneResponse.from(it) },
-                todayDone = user.qaOverrideTodayDone ?: todayPastRoutines.isNotEmpty(),
+                todayDone = todayDone,
                 yesterdayMissionSuccess = yesterdayMissionSuccess,
                 longAbsence = longAbsence,
                 isFirstAccess = isFirstAccess,
