@@ -371,7 +371,11 @@ private fun Route.home(
 
         // 2일 이상 미접속 여부 및 첫 접속 여부 계산 (lastAccessDate 업데이트 전에 계산)
         val lastAccess = user.lastAccessDate
-        val isFirstAccess = lastAccess == null
+        val createdDate = user.id?.let {
+            Instant.fromEpochSeconds(it.timestamp.toLong())
+                .toLocalDateTime(TimeZone.currentSystemDefault()).date
+        }
+        val isFirstAccess = createdDate == now
         val daysSinceLastAccess = lastAccess?.let { (now.toEpochDays() - it.toEpochDays()).toInt() } ?: 0
         val longAbsence = user.qaOverrideLongAbsence ?: (daysSinceLastAccess >= 2)
 
@@ -393,11 +397,8 @@ private fun Route.home(
         val yesterdayPastRoutines = userService.getYesterdayPastRoutines(userId, now)
 
         // 어제 일일 미션 성공 여부 (DAILY 타입만 체크)
-        // null: 어제 미션 기회 없었음 또는 이미 확인함 (첫 접속, 같은 날 재접속)
-        // true: 어제 미션 성공, false: 어제 미션 실패
         val yesterdayMissionSuccess =
-            if (daysSinceLastAccess == 0) null
-            else user.qaOverrideYesterdayMissionSuccess
+            user.qaOverrideYesterdayMissionSuccess
                 ?: yesterdayPastRoutines
                     .flatMap { it.missions }
                     .filter { it.type == MissionType.DAILY }

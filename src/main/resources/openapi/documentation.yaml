@@ -727,12 +727,15 @@ paths:
                   money:
                     title: "금전운"
                     description: "재물 운이 상승하는 시기입니다."
+                    image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/money.svg"
                   love:
                     title: "연애운"
                     description: "좋은 인연을 만날 수 있는 해입니다."
+                    image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/love.svg"
                   study:
                     title: "학업운"
                     description: "집중력이 높아지는 시기입니다."
+                    image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/study.svg"
                 fiveElements:
                   dominantElement: "화"
                   dominantWarning: "화기운이 강하니 급한 마음을 다스리세요"
@@ -754,12 +757,20 @@ paths:
                 yearlyEnergyTitle: "상반기 집중"
                 yearlyEnergyDetail: "상반기에 에너지가 집중되니 중요한 일은 상반기에 진행하세요."
                 tips:
-                  luckyMenu: "삼계탕"
-                  luckyColor: "파란색"
-                  luckyColorHex: "#0066CC"
-                  unluckyMenu: "매운 음식"
-                  unluckyColor: "빨간색"
-                  unluckyColorHex: "#FF0000"
+                  - image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/todayMenu.svg"
+                    title: "행운의 메뉴"
+                    description: "삼계탕"
+                  - image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/luckyColor.svg"
+                    title: "행운의 색상"
+                    description: "파란색"
+                    hexColor: "#0066CC"
+                  - image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/jinxedColor.svg"
+                    title: "피해야 할 색상"
+                    description: "빨간색"
+                    hexColor: "#FF0000"
+                  - image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/jinxedMenu.svg"
+                    title: "피해야 할 음식"
+                    description: "매운 음식"
         "404":
           description: "User not found or yearly fortune not generated"
           content:
@@ -1285,7 +1296,7 @@ components:
           example: false
         isFirstAccess:
           type: boolean
-          description: "Whether this is user's first access (lastAccessDate was null)"
+          description: "가입 첫날 여부 (유저 생성일 == 오늘). 첫날이면 yesterdayMissionSuccess가 false여도 어제 미션 기회가 없었음을 의미"
           example: false
         point:
           type: integer
@@ -2188,8 +2199,10 @@ components:
           description: "Details about yearly energy changes"
           example: "상반기에 에너지가 집중되니 중요한 일은 상반기에 진행하세요."
         tips:
-          $ref: "#/components/schemas/YearlyFortuneTipsResponse"
-          description: "Lucky and unlucky tips for the year"
+          type: array
+          items:
+            $ref: "#/components/schemas/FortuneTip"
+          description: "List of fortune tips (행운의 메뉴, 행운의 색상, 피해야 할 색상, 피해야 할 음식)"
 
     FortuneOverviewResponse:
       type: object
@@ -2213,6 +2226,7 @@ components:
       required:
         - title
         - description
+        - image
       properties:
         title:
           type: string
@@ -2222,6 +2236,10 @@ components:
           type: string
           description: "Category description"
           example: "재물 운이 상승하는 시기입니다."
+        image:
+          type: string
+          description: "Category image URL"
+          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/money.svg"
 
     FiveElementsResponse:
       type: object
@@ -2278,41 +2296,6 @@ components:
             - "부족"
           description: "Balance status (적정=balanced, 과다=excess, 부족=deficient)"
           example: "적정"
-
-    YearlyFortuneTipsResponse:
-      type: object
-      required:
-        - luckyMenu
-        - luckyColor
-        - luckyColorHex
-        - unluckyMenu
-        - unluckyColor
-        - unluckyColorHex
-      properties:
-        luckyMenu:
-          type: string
-          description: "Recommended lucky food"
-          example: "삼계탕"
-        luckyColor:
-          type: string
-          description: "Lucky color name"
-          example: "파란색"
-        luckyColorHex:
-          type: string
-          description: "Lucky color hex code"
-          example: "#0066CC"
-        unluckyMenu:
-          type: string
-          description: "Food to avoid"
-          example: "매운 음식"
-        unluckyColor:
-          type: string
-          description: "Unlucky color name"
-          example: "빨간색"
-        unluckyColorHex:
-          type: string
-          description: "Unlucky color hex code"
-          example: "#FF0000"
 
     QaHomeStateRequest:
       type: object
