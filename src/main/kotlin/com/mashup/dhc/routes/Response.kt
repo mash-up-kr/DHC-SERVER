@@ -463,9 +463,12 @@ data class FortuneOverviewResponse(
     companion object {
         fun from(overview: FortuneOverview): FortuneOverviewResponse =
             FortuneOverviewResponse(
-                money = FortuneCategoryResponse(overview.money.title, overview.money.description),
-                love = FortuneCategoryResponse(overview.love.title, overview.love.description),
-                study = FortuneCategoryResponse(overview.study.title, overview.study.description)
+                money = FortuneCategoryResponse(overview.money.title, overview.money.description,
+                    ImageUrlMapper.Fortune.getOverviewMoneyImageUrl()),
+                love = FortuneCategoryResponse(overview.love.title, overview.love.description,
+                    ImageUrlMapper.Fortune.getOverviewLoveImageUrl()),
+                study = FortuneCategoryResponse(overview.study.title, overview.study.description,
+                    ImageUrlMapper.Fortune.getOverviewStudyImageUrl())
             )
     }
 }
@@ -473,7 +476,8 @@ data class FortuneOverviewResponse(
 @Serializable
 data class FortuneCategoryResponse(
     val title: String,
-    val description: String
+    val description: String,
+    val image: Image
 )
 
 @Serializable

@@ -47,6 +47,12 @@ object ImageUrlMapper {
         fun getLuckyColorImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("luckyColor", format)
 
         fun getTodayMenuImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("todayMenu", format)
+
+        fun getOverviewMoneyImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("money", format)
+
+        fun getOverviewLoveImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("love", format)
+
+        fun getOverviewStudyImageUrl(format: ImageFormat = ImageFormat.SVG): Image = Image.forFortune("study", format)
     }
 
     /**
