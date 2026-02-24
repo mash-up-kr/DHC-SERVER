@@ -1278,13 +1278,13 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Mission"
-          description: "List of today's missions including love mission (if active) at the top. Love missions have type=LOVE and include dayNumber, remainingDays fields."
+          description: "todayDone=false: 오늘의 미션 (러브미션 포함 시 맨 앞에 추가). todayDone=true: 오늘 완료한 미션(PastRoutineHistory)을 finished 상태 그대로 반환."
         todayDailyFortune:
           $ref: "#/components/schemas/FortuneResponse"
           nullable: true
         todayDone:
           type: boolean
-          description: "Whether today's missions are completed"
+          description: "오늘 미션 완료 여부. true이면 todayDailyMissionList와 longTermMission이 완료한 미션(PastRoutineHistory)으로 반환됨"
           example: false
         yesterdayMissionSuccess:
           type: boolean
