@@ -514,10 +514,10 @@ data class ElementBalanceResponse(
             ElementBalanceResponse(
                 percentage = balance.percentage,
                 status =
-                    when (balance.status) {
-                        ElementStatus.BALANCED -> "적정"
-                        ElementStatus.EXCESS -> "과다"
-                        ElementStatus.DEFICIENT -> "부족"
+                    when {
+                        balance.percentage >= 40 -> "과다"
+                        balance.percentage >= 20 -> "적정"
+                        else -> "부족"
                     }
             )
     }
