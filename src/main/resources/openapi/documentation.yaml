@@ -701,7 +701,19 @@ paths:
   /view/users/{userId}/yearly-fortune:
     get:
       summary: "Get Yearly Fortune"
-      description: "Retrieve the user's generated yearly fortune. Returns 404 if yearly fortune has not been generated yet."
+      description: |
+        사용자의 연간 운세를 조회합니다.
+
+        **사전 조건**: `POST /api/users/{userId}/yearly-fortune`로 연간 운세를 먼저 생성해야 합니다.
+        생성되지 않은 경우 404를 반환합니다.
+
+        **응답 구조**:
+        - `summaryTitle/summaryDetail`: 올해 운세의 전반적인 요약
+        - `fortuneOverview`: 금전운/연애운/학업운 3개 카테고리별 운세 (title은 고정값)
+        - `fiveElements`: 오행(목/화/토/금/수) 균형 분석 (percentage 기준으로 status 자동 결정)
+        - `yearlyEnergyTitle/yearlyEnergyDetail`: 올해의 기운 변화 설명
+        - `tips`: 행운의 메뉴, 행운의 색상, 피해야 할 색상, 피해야 할 음식 4개
+        - `cardInfo`: 총점 기반 운세 카드 (이미지, 동물 이름, 등급)
       parameters:
         - name: userId
           in: path
@@ -718,59 +730,63 @@ paths:
               schema:
                 $ref: "#/components/schemas/YearlyFortuneResponse"
               example:
-                year: 2025
-                generatedDate: "2025-01-15"
+                year: 2026
+                generatedDate: "2026-02-25"
                 totalScore: 79
-                summaryTitle: "도약의 해"
-                summaryDetail: "올해는 새로운 시작과 도전이 가득한 한 해가 될 것입니다."
+                summaryTitle: "올 한해는 전반적으로 마음이 들뜨는 날이에요"
+                summaryDetail: "2026년은 새로운 시작과 도전이 가득한 한 해가 될 것입니다. 상반기에는 금전적으로 안정적인 흐름을 보이며, 하반기에는 새로운 인연과 기회가 찾아올 수 있습니다."
                 fortuneOverview:
                   money:
                     title: "금전운"
-                    description: "재물 운이 상승하는 시기입니다."
+                    description: "올해 금전운은 전반적으로 안정적인 흐름을 보입니다. 예상치 못한 큰 지출보다는 꾸준한 수입 관리가 중요하며, 장기적인 관점에서의 재테크나 투자에 관심을 가져보는 것이 좋습니다."
                     image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/money.svg"
                   love:
                     title: "연애운"
-                    description: "좋은 인연을 만날 수 있는 해입니다."
+                    description: "연애운은 현재 관계에 깊이를 더하고, 새로운 인연에게는 진지한 만남의 기회를 제공합니다. 자신의 감정을 솔직하게 표현하고 상대방의 마음을 헤아리는 노력이 필요해요."
                     image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/love.svg"
                   study:
                     title: "학업운"
-                    description: "집중력이 높아지는 시기입니다."
+                    description: "학업운은 당신의 노력에 정비례하는 시기입니다. 새로운 지식을 습득하고 기술을 연마하는 데 매우 유리하며, 특히 꾸준함과 집중력이 중요합니다."
                     image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/study.svg"
                 fiveElements:
-                  dominantElement: "화"
-                  dominantWarning: "화기운이 강하니 급한 마음을 다스리세요"
+                  dominantElement: "화기운"
+                  dominantWarning: "내년엔 화기운이 너무 강해져요! 화기운을 조심해야 해요~"
                   wood:
                     percentage: 15
                     status: "부족"
                   fire:
-                    percentage: 35
+                    percentage: 40
                     status: "과다"
                   earth:
                     percentage: 20
                     status: "적정"
                   metal:
-                    percentage: 15
+                    percentage: 10
                     status: "부족"
                   water:
                     percentage: 15
                     status: "부족"
-                yearlyEnergyTitle: "상반기 집중"
-                yearlyEnergyDetail: "상반기에 에너지가 집중되니 중요한 일은 상반기에 진행하세요."
+                yearlyEnergyTitle: "내년엔 화기운이 너무 강해져요! 화기운을 조심해야 해요~"
+                yearlyEnergyDetail: "화의 기운은 '결단력·집중·주체성'을 밝히는 에너지에요. 불안이나 충동으로 흐르면 지치기 쉽지만, 올바르게 쓰이면 큰 성과를 이끌어낼 수 있습니다."
                 tips:
                   - image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/todayMenu.svg"
                     title: "행운의 메뉴"
-                    description: "삼계탕"
+                    description: "카레"
                   - image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/luckyColor.svg"
                     title: "행운의 색상"
-                    description: "파란색"
-                    hexColor: "#0066CC"
+                    description: "연두색"
+                    hexColor: "#90EE90"
                   - image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/jinxedColor.svg"
                     title: "피해야 할 색상"
-                    description: "빨간색"
-                    hexColor: "#FF0000"
+                    description: "흰색"
+                    hexColor: "#FFFFFF"
                   - image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/jinxedMenu.svg"
                     title: "피해야 할 음식"
-                    description: "매운 음식"
+                    description: "치킨, 닭"
+                cardInfo:
+                  image: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/mainCard/svg/fourLeafClover.svg"
+                  title: "네잎클로버"
+                  subTitle: "행운이 가득한 해"
         "404":
           description: "User not found or yearly fortune not generated"
           content:
@@ -2161,51 +2177,61 @@ components:
         - yearlyEnergyTitle
         - yearlyEnergyDetail
         - tips
+        - cardInfo
       properties:
         year:
           type: integer
-          description: "Year of the fortune"
-          example: 2025
+          description: "연간 운세 대상 연도"
+          example: 2026
         generatedDate:
           type: string
-          description: "Date when the fortune was generated (YYYY-MM-DD)"
-          example: "2025-01-15"
+          description: "운세가 생성된 날짜 (YYYY-MM-DD)"
+          example: "2026-02-25"
         totalScore:
           type: integer
           minimum: 0
           maximum: 100
-          description: "Overall fortune score"
+          description: "전체 운세 총점 (0~100). 이 점수에 따라 cardInfo의 동물 카드가 결정됨"
           example: 79
         summaryTitle:
           type: string
-          description: "Summary title for the year"
-          example: "도약의 해"
+          description: "1년 운세 요약 제목. AI가 생성한 한 줄 요약"
+          example: "올 한해는 전반적으로 마음이 들뜨는 날이에요"
         summaryDetail:
           type: string
-          description: "Detailed summary description"
-          example: "올해는 새로운 시작과 도전이 가득한 한 해가 될 것입니다."
+          description: "1년 운세 요약 상세 설명. 전반적인 운세 흐름을 2~3문장으로 설명"
+          example: "2026년은 새로운 시작과 도전이 가득한 한 해가 될 것입니다. 상반기에는 금전적으로 안정적인 흐름을 보이며, 하반기에는 새로운 인연과 기회가 찾아올 수 있습니다."
         fortuneOverview:
           $ref: "#/components/schemas/FortuneOverviewResponse"
-          description: "Overview of fortune categories (money, love, study)"
+          description: "한 눈에 보는 운세 - 금전운/연애운/학업운 3개 카테고리"
         fiveElements:
           $ref: "#/components/schemas/FiveElementsResponse"
-          description: "Five elements (오행) balance analysis"
+          description: "사주 오행(목/화/토/금/수) 균형 분석"
         yearlyEnergyTitle:
           type: string
-          description: "Title for yearly energy changes"
-          example: "상반기 집중"
+          description: "올해의 기운 변화 제목. 가장 강한 기운에 대한 요약"
+          example: "내년엔 화기운이 너무 강해져요! 화기운을 조심해야 해요~"
         yearlyEnergyDetail:
           type: string
-          description: "Details about yearly energy changes"
-          example: "상반기에 에너지가 집중되니 중요한 일은 상반기에 진행하세요."
+          description: "올해의 기운 변화 상세 설명. 강한 기운의 의미와 대처법을 설명"
+          example: "화의 기운은 '결단력·집중·주체성'을 밝히는 에너지에요. 불안이나 충동으로 흐르면 지치기 쉽지만, 올바르게 쓰이면 큰 성과를 이끌어낼 수 있습니다."
         tips:
           type: array
           items:
             $ref: "#/components/schemas/FortuneTip"
-          description: "List of fortune tips (행운의 메뉴, 행운의 색상, 피해야 할 색상, 피해야 할 음식)"
+          description: |
+            운세 팁 4개 (고정 순서):
+            1. 행운의 메뉴 (todayMenu 이미지)
+            2. 행운의 색상 (luckyColor 이미지, hexColor 포함)
+            3. 피해야 할 색상 (jinxedColor 이미지, hexColor 포함)
+            4. 피해야 할 음식 (jinxedMenu 이미지)
+        cardInfo:
+          $ref: "#/components/schemas/FortuneCard"
+          description: "totalScore 기반 운세 카드. 점수 구간별로 다른 동물 카드가 할당됨"
 
     FortuneOverviewResponse:
       type: object
+      description: "한 눈에 보는 운세. 금전운/연애운/학업운 3개 카테고리별 운세 요약"
       required:
         - money
         - love
@@ -2213,13 +2239,13 @@ components:
       properties:
         money:
           $ref: "#/components/schemas/FortuneCategoryResponse"
-          description: "Money/wealth fortune"
+          description: "금전운 - 재물/소비/투자 관련 운세"
         love:
           $ref: "#/components/schemas/FortuneCategoryResponse"
-          description: "Love/relationship fortune"
+          description: "연애운 - 연애/인간관계 관련 운세"
         study:
           $ref: "#/components/schemas/FortuneCategoryResponse"
-          description: "Study/career fortune"
+          description: "학업운 - 학업/커리어/자기계발 관련 운세"
 
     FortuneCategoryResponse:
       type: object
@@ -2230,19 +2256,25 @@ components:
       properties:
         title:
           type: string
-          description: "Category title"
+          description: "카테고리 이름 (고정값: 금전운, 연애운, 학업운)"
           example: "금전운"
         description:
           type: string
-          description: "Category description"
-          example: "재물 운이 상승하는 시기입니다."
+          description: "해당 카테고리의 상세 운세 설명 (AI 생성)"
+          example: "올해 금전운은 전반적으로 안정적인 흐름을 보입니다. 예상치 못한 큰 지출보다는 꾸준한 수입 관리가 중요하며, 장기적인 관점에서의 재테크나 투자에 관심을 가져보는 것이 좋습니다."
         image:
           type: string
-          description: "Category image URL"
+          description: "카테고리 아이콘 이미지 URL (SVG)"
           example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/svg/money.svg"
 
     FiveElementsResponse:
       type: object
+      description: |
+        사주 오행 균형 분석. 5개 원소(목/화/토/금/수)의 비율과 상태를 보여줌.
+        status는 서버에서 percentage 기준으로 자동 결정:
+        - 과다: 40% 이상
+        - 적정: 20% ~ 39%
+        - 부족: 19% 이하
       required:
         - dominantElement
         - dominantWarning
@@ -2254,27 +2286,27 @@ components:
       properties:
         dominantElement:
           type: string
-          description: "Dominant element name"
-          example: "화"
+          description: "가장 강한 오행 기운 이름"
+          example: "화기운"
         dominantWarning:
           type: string
-          description: "Warning message about the dominant element"
-          example: "화기운이 강하니 급한 마음을 다스리세요"
+          description: "강한 기운에 대한 경고/조언 메시지"
+          example: "내년엔 화기운이 너무 강해져요! 화기운을 조심해야 해요~"
         wood:
           $ref: "#/components/schemas/ElementBalanceResponse"
-          description: "Wood (목) element balance"
+          description: "목(木) 기운 - 성장, 창의성, 유연함"
         fire:
           $ref: "#/components/schemas/ElementBalanceResponse"
-          description: "Fire (화) element balance"
+          description: "화(火) 기운 - 결단력, 집중, 주체성"
         earth:
           $ref: "#/components/schemas/ElementBalanceResponse"
-          description: "Earth (토) element balance"
+          description: "토(土) 기운 - 안정, 신뢰, 포용력"
         metal:
           $ref: "#/components/schemas/ElementBalanceResponse"
-          description: "Metal (금) element balance"
+          description: "금(金) 기운 - 정의, 결단, 실행력"
         water:
           $ref: "#/components/schemas/ElementBalanceResponse"
-          description: "Water (수) element balance"
+          description: "수(水) 기운 - 지혜, 적응력, 소통"
 
     ElementBalanceResponse:
       type: object
@@ -2286,7 +2318,7 @@ components:
           type: integer
           minimum: 0
           maximum: 100
-          description: "Percentage of this element"
+          description: "해당 원소의 비율 (%). 5개 원소의 합이 100%"
           example: 20
         status:
           type: string
@@ -2294,7 +2326,7 @@ components:
             - "적정"
             - "과다"
             - "부족"
-          description: "Balance status (적정=balanced, 과다=excess, 부족=deficient)"
+          description: "균형 상태. percentage 기준 자동 결정 (과다≥40%, 적정≥20%, 부족<20%)"
           example: "적정"
 
     QaHomeStateRequest:
