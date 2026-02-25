@@ -465,9 +465,11 @@ private fun Route.home(
             HttpStatusCode.OK,
             HomeViewResponse(
                 longTermMission = if (todayDone) {
-                    todayPastRoutines
+                    // PastRoutineHistory에 longTermMission이 있으면 사용, 없으면 현재 유저의 longTermMission 사용
+                    (todayPastRoutines
                         .flatMap { it.missions }
                         .firstOrNull { it.type == MissionType.LONG_TERM }
+                        ?: latestUser.longTermMission)
                         ?.let { MissionResponse.from(it) }
                 } else {
                     latestUser.longTermMission?.let { MissionResponse.from(it) }
@@ -498,9 +500,10 @@ private fun Route.endToday(
         // 미션 정보 먼저 가져오기 (summaryTodayMission 호출 전)
         val user = userService.getUserById(userId)
         val todayMissions = user.todayDailyMissionList
+        val allMissions = todayMissions + listOfNotNull(user.longTermMission)
 
         // 미션 성공 여부 (하나라도 완료했으면 성공)
-        val missionSuccess = todayMissions.any { it.finished }
+        val missionSuccess = allMissions.any { it.finished }
 
         // 어제 기록 조회 (배율 계산용)
         val today = now()
@@ -511,7 +514,7 @@ private fun Route.endToday(
 
         // 획득 포인트 계산 (배율 적용)
         val basePoint =
-            todayMissions
+            allMissions
                 .filter { it.finished }
                 .sumOf { it.calculatePoint() }
         val earnedPoint = basePoint * multiplier
