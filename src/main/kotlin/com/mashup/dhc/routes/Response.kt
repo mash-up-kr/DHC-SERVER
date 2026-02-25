@@ -463,11 +463,11 @@ data class FortuneOverviewResponse(
     companion object {
         fun from(overview: FortuneOverview): FortuneOverviewResponse =
             FortuneOverviewResponse(
-                money = FortuneCategoryResponse(overview.money.title, overview.money.description,
+                money = FortuneCategoryResponse("금전운", overview.money.description,
                     ImageUrlMapper.Fortune.getOverviewMoneyImageUrl()),
-                love = FortuneCategoryResponse(overview.love.title, overview.love.description,
+                love = FortuneCategoryResponse("연애운", overview.love.description,
                     ImageUrlMapper.Fortune.getOverviewLoveImageUrl()),
-                study = FortuneCategoryResponse(overview.study.title, overview.study.description,
+                study = FortuneCategoryResponse("학업운", overview.study.description,
                     ImageUrlMapper.Fortune.getOverviewStudyImageUrl())
             )
     }
