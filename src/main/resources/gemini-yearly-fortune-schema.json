@@ -178,11 +178,11 @@
     },
     "yearly_energy_title": {
       "type": "string",
-      "description": "올해의 기운 변화 제목 (예: 화의 기운은 '결단력·집중·주체성'을 밝히는 에너지에요)"
+      "description": "올해의 기운 변화 제목 (예: 내년엔 화기운이 너무 강해져요! 화기운을 조심해야 해요~)"
     },
     "yearly_energy_detail": {
       "type": "string",
-      "description": "올해의 기운 변화 상세 설명"
+      "description": "올해의 기운 변화 상세 설명 (예: 화의 기운은 '결단력·집중·주체성'을 밝히는 에너지에요. 불안이나 충동으로 흐르면 지치기 쉽지만, 올바르게 쓰이면 ...)"
     },
     "lucky_menu": {
       "type": "string",
