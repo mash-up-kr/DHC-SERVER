@@ -375,7 +375,7 @@ private fun Route.home(
             Instant.fromEpochSeconds(it.timestamp.toLong())
                 .toLocalDateTime(TimeZone.currentSystemDefault()).date
         }
-        val isFirstAccess = createdDate == now
+        val isFirstAccess = user.qaOverrideIsFirstAccess ?: (createdDate == now)
         val daysSinceLastAccess = lastAccess?.let { (now.toEpochDays() - it.toEpochDays()).toInt() } ?: 0
         val longAbsence = user.qaOverrideLongAbsence ?: (daysSinceLastAccess >= 2)
 
@@ -898,7 +898,8 @@ fun Route.qaRoutes(userService: UserService) {
                 userId,
                 request.longAbsence,
                 request.yesterdayMissionSuccess,
-                request.todayDone
+                request.todayDone,
+                request.isFirstAccess
             )
 
             call.respond(HttpStatusCode.OK, QaSuccessResponse(success = true))

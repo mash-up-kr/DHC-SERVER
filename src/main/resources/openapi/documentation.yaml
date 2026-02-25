@@ -947,7 +947,7 @@ paths:
         이 3개 값은 원래 서버에서 매번 계산되는 값이므로, 이 API로 오버라이드를 설정하면 계산 결과 대신 오버라이드 값이 반환됩니다.
 
         ### 사용 시나리오
-        - **2일 이상 미접속 화면 테스트**: `longAbsence: true` 설정
+ㅡ다음         - **2일 이상 미접속 화면 테스트**: `longAbsence: true` 설정
         - **어제 미션 성공 후 홈 화면 테스트**: `yesterdayMissionSuccess: true` 설정
         - **오늘 미션 완료 후 화면 테스트**: `todayDone: true` 설정
         - **조합 테스트**: 여러 값을 동시에 설정 가능
@@ -2314,6 +2314,11 @@ components:
         todayDone:
           type: boolean
           description: "오늘 미션 완료 여부 오버라이드. null이면 오버라이드 해제."
+          example: true
+          nullable: true
+        isFirstAccess:
+          type: boolean
+          description: "가입 첫날 여부 오버라이드. null이면 오버라이드 해제."
           example: true
           nullable: true
 

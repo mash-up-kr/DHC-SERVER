@@ -40,6 +40,7 @@ data class User(
     val qaOverrideLongAbsence: Boolean? = null,
     val qaOverrideYesterdayMissionSuccess: Boolean? = null,
     val qaOverrideTodayDone: Boolean? = null,
+    val qaOverrideIsFirstAccess: Boolean? = null,
     @Transient val deleted: Boolean = false
 ) {
     private val age: Int
@@ -234,7 +235,8 @@ class UserRepository(
         objectId: ObjectId,
         longAbsence: Boolean?,
         yesterdayMissionSuccess: Boolean?,
-        todayDone: Boolean?
+        todayDone: Boolean?,
+        isFirstAccess: Boolean?
     ): Long {
         try {
             val query = Filters.eq("_id", objectId)
@@ -242,7 +244,8 @@ class UserRepository(
                 Updates.combine(
                     Updates.set(User::qaOverrideLongAbsence.name, longAbsence),
                     Updates.set(User::qaOverrideYesterdayMissionSuccess.name, yesterdayMissionSuccess),
-                    Updates.set(User::qaOverrideTodayDone.name, todayDone)
+                    Updates.set(User::qaOverrideTodayDone.name, todayDone),
+                    Updates.set(User::qaOverrideIsFirstAccess.name, isFirstAccess)
                 )
             val result =
                 mongoDatabase

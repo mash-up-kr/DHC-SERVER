@@ -310,9 +310,10 @@ class UserService(
         userId: String,
         longAbsence: Boolean?,
         yesterdayMissionSuccess: Boolean?,
-        todayDone: Boolean?
+        todayDone: Boolean?,
+        isFirstAccess: Boolean?
     ): Long = userRepository.updateQaHomeStateOverrides(
-        ObjectId(userId), longAbsence, yesterdayMissionSuccess, todayDone
+        ObjectId(userId), longAbsence, yesterdayMissionSuccess, todayDone, isFirstAccess
     )
 
     suspend fun setPoint(

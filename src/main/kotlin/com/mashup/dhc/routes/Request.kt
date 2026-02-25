@@ -103,7 +103,8 @@ data class ToggleMissionRequest(
 data class QaHomeStateRequest(
     val longAbsence: Boolean? = null,
     val yesterdayMissionSuccess: Boolean? = null,
-    val todayDone: Boolean? = null
+    val todayDone: Boolean? = null,
+    val isFirstAccess: Boolean? = null
 )
 
 @Serializable
