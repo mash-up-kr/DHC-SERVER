@@ -2219,12 +2219,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FortuneTip"
-          description: |
-            운세 팁 4개 (고정 순서):
-            1. 행운의 메뉴 (todayMenu 이미지)
-            2. 행운의 색상 (luckyColor 이미지, hexColor 포함)
-            3. 피해야 할 색상 (jinxedColor 이미지, hexColor 포함)
-            4. 피해야 할 음식 (jinxedMenu 이미지)
+          description: "운세 팁 4개 (고정 순서: 행운의 메뉴, 행운의 색상(hexColor 포함), 피해야 할 색상(hexColor 포함), 피해야 할 음식)"
         cardInfo:
           $ref: "#/components/schemas/FortuneCard"
           description: "totalScore 기반 운세 카드. 점수 구간별로 다른 동물 카드가 할당됨"
@@ -2269,12 +2264,7 @@ components:
 
     FiveElementsResponse:
       type: object
-      description: |
-        사주 오행 균형 분석. 5개 원소(목/화/토/금/수)의 비율과 상태를 보여줌.
-        status는 서버에서 percentage 기준으로 자동 결정:
-        - 과다: 40% 이상
-        - 적정: 20% ~ 39%
-        - 부족: 19% 이하
+      description: "사주 오행 균형 분석. 5개 원소(목/화/토/금/수)의 비율과 상태를 보여줌. status는 percentage 기준 자동 결정 (과다: 40%이상, 적정: 20~39%, 부족: 19%이하)"
       required:
         - dominantElement
         - dominantWarning
