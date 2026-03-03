@@ -953,6 +953,31 @@ paths:
                 message: "Share not found"
 
   /api/qa/users/{userId}/home-state:
+    get:
+      tags:
+        - QA
+      summary: "[QA] 홈 화면 상태 오버라이드 조회"
+      description: "현재 설정된 홈 화면 오버라이드 값을 조회합니다. null인 필드는 오버라이드가 없어 원래 계산 로직이 적용됩니다."
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "현재 오버라이드 상태"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaHomeStateRequest"
+              example:
+                longAbsence: true
+                yesterdayMissionSuccess: null
+                todayDone: null
+                isFirstAccess: null
     put:
       tags:
         - QA

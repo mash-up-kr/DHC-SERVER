@@ -524,6 +524,14 @@ data class ElementBalanceResponse(
 }
 
 @Serializable
+data class QaHomeStateResponse(
+    val longAbsence: Boolean?,
+    val yesterdayMissionSuccess: Boolean?,
+    val todayDone: Boolean?,
+    val isFirstAccess: Boolean?
+)
+
+@Serializable
 data class QaSuccessResponse(
     val success: Boolean
 )

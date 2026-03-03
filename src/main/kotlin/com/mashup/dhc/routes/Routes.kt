@@ -892,6 +892,21 @@ private fun Route.completeShare(shareService: ShareService) {
 
 fun Route.qaRoutes(userService: UserService) {
     route("/qa/users/{userId}") {
+        get("/home-state") {
+            val userId = call.requirePathParameter("userId")
+            val user = userService.getUserById(userId)
+
+            call.respond(
+                HttpStatusCode.OK,
+                QaHomeStateResponse(
+                    longAbsence = user.qaOverrideLongAbsence,
+                    yesterdayMissionSuccess = user.qaOverrideYesterdayMissionSuccess,
+                    todayDone = user.qaOverrideTodayDone,
+                    isFirstAccess = user.qaOverrideIsFirstAccess
+                )
+            )
+        }
+
         put("/home-state") {
             val userId = call.requirePathParameter("userId")
             userService.getUserById(userId) // 존재 확인
