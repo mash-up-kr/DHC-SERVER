@@ -1050,6 +1050,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      tags:
+        - QA
+      summary: "[QA] 홈 화면 상태 오버라이드 초기화"
+      description: "모든 오버라이드를 null로 초기화하여 원래 계산 로직으로 복원합니다."
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "User ID"
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        "200":
+          description: "오버라이드 초기화 완료"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaSuccessResponse"
+              example:
+                success: true
 
   /api/qa/users/{userId}/point:
     put:

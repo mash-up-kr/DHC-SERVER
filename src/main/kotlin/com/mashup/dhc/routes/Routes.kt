@@ -923,6 +923,21 @@ fun Route.qaRoutes(userService: UserService) {
             call.respond(HttpStatusCode.OK, QaSuccessResponse(success = true))
         }
 
+        delete("/home-state") {
+            val userId = call.requirePathParameter("userId")
+            userService.getUserById(userId) // 존재 확인
+
+            userService.updateQaHomeStateOverrides(
+                userId,
+                longAbsence = null,
+                yesterdayMissionSuccess = null,
+                todayDone = null,
+                isFirstAccess = null
+            )
+
+            call.respond(HttpStatusCode.OK, QaSuccessResponse(success = true))
+        }
+
         put("/point") {
             val userId = call.requirePathParameter("userId")
             userService.getUserById(userId) // 존재 확인
