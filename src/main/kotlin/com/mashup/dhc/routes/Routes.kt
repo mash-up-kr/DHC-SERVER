@@ -435,6 +435,7 @@ private fun Route.home(
         val todayMissions = if (todayDone) {
             todayPastRoutines
                 .flatMap { it.missions }
+                .filter { it.type != MissionType.LONG_TERM }
                 .map { MissionResponse.from(it) }
         } else {
             val dailyMissions = latestUser.todayDailyMissionList.map { MissionResponse.from(it) }
