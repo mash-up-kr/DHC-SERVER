@@ -51,6 +51,7 @@ data class TestBannerResponse(
     val version: Int,
     val title: String,
     val subTitle: String,
+    val image: Image?,
     val imageUrl: Image?,
     val testUrl: String?
 )
