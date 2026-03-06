@@ -459,7 +459,7 @@ private fun Route.home(
                 title = "궁합 테스트에 참여하고\n스페셜 미션 받아보세요",
                 subTitle = "지금까지 389명이 참여했어요!",
                 imageUrl = null,
-                testUrl = null
+                testUrl = "https://dhc-web.vercel.app"
             )
 
         call.respond(
