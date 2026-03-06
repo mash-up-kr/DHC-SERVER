@@ -620,9 +620,9 @@ private fun Route.myPage(userService: UserService) {
                 true, // TODO: alarm
                 fortuneTests = listOf(
                     FortuneTestInfo(
-                        imageURL = null,
+                        imageURL = "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/icon/love_test.png",
                         displayName = "궁합 테스트",
-                        testURL = null
+                        testURL = "https://dhc-web.vercel.app"
                     )
                 )
             )
