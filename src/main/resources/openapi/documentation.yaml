@@ -635,6 +635,7 @@ paths:
                 $ref: "#/components/schemas/RewardProgressViewResponse"
               example:
                 user:
+                  image: "https://picsum.photos/250/250"
                   rewardImageUrl: "https://picsum.photos/250/250"
                   rewardLevel: "LV3"
                   totalPoint: 350
@@ -1390,15 +1391,21 @@ components:
           type: string
           description: "Banner subtitle text"
           example: "지금까지 389명이 참여했어요!"
-        imageUrl:
+        image:
           type: string
-          description: "URL of the banner graphic image"
+          description: "Banner graphic image URL (new)"
           example: "https://example.com/banner.png"
           nullable: true
+        imageUrl:
+          type: string
+          description: "Banner graphic image URL (deprecated, use image)"
+          example: "https://example.com/banner.png"
+          nullable: true
+          deprecated: true
         testUrl:
           type: string
           description: "URL to navigate when clicking the test button"
-          example: "https://example.com/love-test"
+          example: "https://dhc-web.vercel.app/love-test"
           nullable: true
 
     MissionCategoriesResponse:
@@ -1459,6 +1466,43 @@ components:
           type: boolean
           description: "Whether alarm is enabled (hardcoded to true)"
           example: true
+        fortuneTests:
+          type: array
+          items:
+            $ref: "#/components/schemas/FortuneTestInfo"
+          description: "List of fortune tests"
+
+    FortuneTestInfo:
+      type: object
+      required:
+        - displayName
+      properties:
+        image:
+          type: string
+          description: "Test image URL (new)"
+          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/icon/love_test.png"
+          nullable: true
+        imageURL:
+          type: string
+          description: "Test image URL (deprecated, use image)"
+          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/icon/love_test.png"
+          nullable: true
+          deprecated: true
+        displayName:
+          type: string
+          description: "Display name of the test"
+          example: "궁합 테스트"
+        testUrl:
+          type: string
+          description: "URL to navigate to the test (new)"
+          example: "https://dhc-web.vercel.app/love-test"
+          nullable: true
+        testURL:
+          type: string
+          description: "URL to navigate to the test (deprecated, use testUrl)"
+          example: "https://dhc-web.vercel.app/love-test"
+          nullable: true
+          deprecated: true
 
     AnalysisViewResponse:
       type: object
@@ -1997,14 +2041,20 @@ components:
       type: object
       required:
         - rewardImageUrl
+        - image
         - rewardLevel
         - totalPoint
         - currentLevelPoint
       properties:
+        image:
+          type: string
+          description: "Reward level image URL (new)"
+          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/reward/lv1.svg"
         rewardImageUrl:
           type: string
-          description: "URL of the reward image"
-          example: ""
+          description: "Reward level image URL (deprecated, use image)"
+          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/reward/lv1.svg"
+          deprecated: true
         rewardLevel:
           $ref: "#/components/schemas/RewardLevel"
           description: "Current reward level"
@@ -2050,6 +2100,23 @@ components:
           type: boolean
           description: "Whether the reward has been used (one-time use)"
           example: false
+        icon:
+          type: string
+          description: "Reward icon image URL (new)"
+          nullable: true
+        iconURL:
+          type: string
+          description: "Reward icon image URL (deprecated, use icon)"
+          nullable: true
+          deprecated: true
+        message:
+          type: string
+          description: "Toast message to display (if present, show toast instead of navigating)"
+          nullable: true
+        type:
+          type: string
+          description: "Reward type for API routing"
+          example: "YEARLY_FORTUNE"
 
     RewardLevel:
       type: string
