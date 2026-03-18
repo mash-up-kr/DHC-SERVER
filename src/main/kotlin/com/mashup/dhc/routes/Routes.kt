@@ -217,6 +217,7 @@ fun Route.rewardProgress(userService: UserService) {
             RewardProgressViewResponse(
                 RewardUserResponse(
                     rewardImageUrl = ImageUrlMapper.getRewardLevelImageUrl(currentLevel.level),
+                    image = ImageUrlMapper.getRewardLevelImageUrl(currentLevel.level),
                     rewardLevel = currentLevel.toInfo(),
                     totalPoint = totalPoint,
                     currentLevelPoint = currentLevelPoint,
@@ -229,6 +230,7 @@ fun Route.rewardProgress(userService: UserService) {
                         isUnlocked = isYearlyFortuneUnlocked,
                         isUsed = user.yearlyFortuneUsed,
                         iconURL = if (isYearlyFortuneUnlocked) ImageUrlMapper.getRewardLevelImageUrl(8) else null,
+                        icon = if (isYearlyFortuneUnlocked) ImageUrlMapper.getRewardLevelImageUrl(8) else null,
                         message = when {
                             !isYearlyFortuneUnlocked -> "레벨 8 달성 시 해금됩니다"
                             !user.yearlyFortuneUsed -> "1년 운세를 확인해보세요!"
@@ -460,7 +462,7 @@ private fun Route.home(
                 subTitle = "지금까지 389명이 참여했어요!",
                 image = Image.custom("logos/icon/test_title_modal.png"),
                 imageUrl = Image.custom("logos/icon/test_title_modal.png"),
-                testUrl = "https://dhc-web.vercel.app"
+                testUrl = "https://dhc-web.vercel.app/love-test"
             )
 
         call.respond(
@@ -621,8 +623,10 @@ private fun Route.myPage(userService: UserService) {
                 fortuneTests = listOf(
                     FortuneTestInfo(
                         imageURL = "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/icon/love_test.png",
+                        image = Image.custom("logos/icon/love_test.png"),
                         displayName = "궁합 테스트",
-                        testURL = "https://dhc-web.vercel.app"
+                        testURL = "https://dhc-web.vercel.app/love-test",
+                        testUrl = "https://dhc-web.vercel.app/love-test"
                     )
                 )
             )

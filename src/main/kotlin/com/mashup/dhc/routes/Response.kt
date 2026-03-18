@@ -51,6 +51,7 @@ data class TestBannerResponse(
     val version: Int,
     val title: String,
     val subTitle: String,
+    // TODO: imageUrl 제거 (클라이언트 마이그레이션 후)
     val image: Image?,
     val imageUrl: Image?,
     val testUrl: String?
@@ -64,7 +65,9 @@ data class RewardProgressViewResponse(
 
 @Serializable
 data class RewardUserResponse(
+    // TODO: rewardImageUrl 제거 (클라이언트 마이그레이션 후)
     val rewardImageUrl: Image,
+    val image: Image,
     val rewardLevel: RewardLevelInfo,
     val totalPoint: Long,
     val currentLevelPoint: Long,
@@ -109,7 +112,9 @@ data class RewardItemResponse(
     val title: String,
     val isUnlocked: Boolean,
     val isUsed: Boolean,
+    // TODO: iconURL 제거 (클라이언트 마이그레이션 후)
     val iconURL: Image?,
+    val icon: Image?,
     val message: String?,
     val type: RewardType
 )
@@ -210,9 +215,12 @@ data class MyPageResponse(
 
 @Serializable
 data class FortuneTestInfo(
+    // TODO: imageURL, testURL 제거 (클라이언트 마이그레이션 후)
     val imageURL: String?,
+    val image: Image?,
     val displayName: String,
-    val testURL: String?
+    val testURL: String?,
+    val testUrl: String?
 )
 
 @Serializable
