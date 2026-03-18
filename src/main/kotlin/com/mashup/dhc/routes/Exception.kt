@@ -59,8 +59,14 @@ enum class ErrorCode(
     FILE_NOT_FOUND(4002, "파일을 찾을 수 없습니다", HttpStatusCode.NotFound),
 
     // Server Errors - 5xxx
-    INTERNAL_SERVER_ERROR(5000, "서버 오류가 발생했습니다", HttpStatusCode.InternalServerError)
+    INTERNAL_SERVER_ERROR(5000, "서버 오류가 발생했습니다", HttpStatusCode.InternalServerError),
+    EXTERNAL_SERVICE_UNAVAILABLE(5001, "외부 서비스가 일시적으로 사용할 수 없습니다", HttpStatusCode.ServiceUnavailable)
 }
+
+class ExternalServiceUnavailableException(
+    val detail: String? = null,
+    val errorCode: ErrorCode = ErrorCode.EXTERNAL_SERVICE_UNAVAILABLE
+) : RuntimeException(detail ?: errorCode.message)
 
 class ValidationException(
     val errors: List<ErrorCode>

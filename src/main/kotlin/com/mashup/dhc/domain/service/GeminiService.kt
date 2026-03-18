@@ -326,6 +326,11 @@ class GeminiService(
 
     private fun GeminiApiResponse.validateAndExtractText(): String {
         error?.let { error ->
+            if (error.code == 503) {
+                throw com.mashup.dhc.routes.ExternalServiceUnavailableException(
+                    "Gemini API 일시적 과부하 (503)"
+                )
+            }
             throw Exception("Gemini API 오류: ${error.message ?: "알 수 없는 오류"} (코드: ${error.code})")
         }
 

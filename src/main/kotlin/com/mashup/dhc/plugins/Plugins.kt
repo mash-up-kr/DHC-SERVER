@@ -1,6 +1,7 @@
 package com.mashup.dhc.plugins
 
 import com.mashup.dhc.routes.BusinessException
+import com.mashup.dhc.routes.ExternalServiceUnavailableException
 import com.mashup.dhc.routes.ErrorCode
 import com.mashup.dhc.routes.ErrorResponse
 import com.mashup.dhc.routes.InternalServerErrorException
@@ -116,6 +117,14 @@ fun Application.configurePlugins() {
             call.respond(
                 ErrorCode.INVALID_JSON_FORMAT.httpStatus,
                 ErrorResponse.from(ErrorCode.INVALID_JSON_FORMAT, cause.message)
+            )
+        }
+
+        exception<ExternalServiceUnavailableException> { call, cause ->
+            call.application.log.warn("External service unavailable: ${cause.detail}")
+            call.respond(
+                cause.errorCode.httpStatus,
+                ErrorResponse.from(cause.errorCode, cause.detail)
             )
         }
 
