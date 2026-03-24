@@ -372,6 +372,193 @@ class UserServiceTest {
             assertEquals(secondMissionId, result.todayDailyMissionList[1].id.toString())
         }
 
+    @Test
+    fun `switchTodayMission excludes other active missions from pick`() =
+        runBlocking {
+            val userId = "507f1f77bcf86cd799439011"
+            val missionIdToReplace = "507f1f77bcf86cd799439022"
+            val missionCategory = MissionCategory.TRAVEL
+
+            val missionToReplace =
+                Mission(
+                    id = ObjectId(missionIdToReplace),
+                    category = missionCategory,
+                    difficulty = 1,
+                    type = MissionType.DAILY,
+                    cost = Money(100),
+                    endDate = null,
+                    title = "미션 A"
+                )
+
+            val otherDailyMission =
+                Mission(
+                    id = ObjectId("507f1f77bcf86cd799439033"),
+                    category = missionCategory,
+                    difficulty = 1,
+                    type = MissionType.DAILY,
+                    cost = Money(100),
+                    endDate = null,
+                    title = "미션 B"
+                )
+
+            val newMission =
+                Mission(
+                    id = ObjectId("507f1f77bcf86cd799439055"),
+                    category = missionCategory,
+                    difficulty = 1,
+                    type = MissionType.DAILY,
+                    cost = Money(150),
+                    endDate = null,
+                    title = "미션 C"
+                )
+
+            val user =
+                User(
+                    id = ObjectId(userId),
+                    gender = Gender.MALE,
+                    userToken = "test-token",
+                    birthDate = BirthDate(now(), CalendarType.SOLAR),
+                    birthTime = null,
+                    longTermMission = null,
+                    todayDailyMissionList = listOf(missionToReplace, otherDailyMission),
+                    pastRoutineHistoryIds = listOf(),
+                    preferredMissionCategoryList = listOf(missionCategory),
+                    currentAmulet = Amulet(totalPiece = 0, remainPiece = 0),
+                    dailyFortune =
+                        com.mashup.dhc.domain.model.DailyFortune(
+                            date = "2025-01-01",
+                            fortuneTitle = "",
+                            fortuneDetail = "",
+                            jinxedColor = "",
+                            jinxedColorHex = "",
+                            jinxedMenu = "",
+                            jinxedNumber = 0,
+                            luckyColor = "",
+                            luckyColorHex = "",
+                            luckyNumber = 0,
+                            positiveScore = 50,
+                            negativeScore = 20,
+                            todayMenu = ""
+                        )
+                )
+
+            coEvery { transactionService.executeInTransaction<User>(any()) } coAnswers {
+                val block = arg<suspend (ClientSession) -> User>(0)
+                block(session)
+            }
+
+            every { runBlocking { userRepository.findById(ObjectId(userId), session) } } returns user
+            // findByCategory returns all 3 missions including the other active one
+            every {
+                runBlocking { missionRepository.findByCategory(MissionType.DAILY, missionCategory, session) }
+            } returns listOf(missionToReplace, otherDailyMission, newMission)
+            every { runBlocking { userRepository.updateOne(ObjectId(userId), any(), session) } } returns 1
+
+            val result = userService.switchTodayMission(userId, missionIdToReplace)
+
+            val userSlot = slot<User>()
+            verify { runBlocking { userRepository.updateOne(ObjectId(userId), capture(userSlot), session) } }
+
+            val replacedMission = userSlot.captured.todayDailyMissionList[0]
+            // Should pick newMission since missionToReplace and otherDailyMission are excluded
+            assertEquals(newMission.id, replacedMission.id)
+            assertEquals("미션 C", replacedMission.title)
+        }
+
+    @Test
+    fun `updateTodayMission sets pointAwarded true when finished is true`() =
+        runBlocking {
+            val userId = "507f1f77bcf86cd799439011"
+            val missionId = "507f1f77bcf86cd799439055"
+
+            val dailyMission =
+                Mission(
+                    id = ObjectId(missionId),
+                    category = MissionCategory.FOOD,
+                    difficulty = 1,
+                    type = MissionType.DAILY,
+                    finished = false,
+                    cost = Money(100),
+                    endDate = null,
+                    title = "미션 A",
+                    pointAwarded = false
+                )
+
+            val user =
+                User(
+                    id = ObjectId(userId),
+                    gender = Gender.MALE,
+                    userToken = "test-token",
+                    birthDate = BirthDate(now(), CalendarType.SOLAR),
+                    birthTime = null,
+                    longTermMission = null,
+                    todayDailyMissionList = listOf(dailyMission),
+                    pastRoutineHistoryIds = listOf(),
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD),
+                    currentAmulet = Amulet(totalPiece = 0, remainPiece = 0)
+                )
+
+            coEvery { transactionService.executeInTransaction<User>(any()) } coAnswers {
+                val block = arg<suspend (ClientSession) -> User>(0)
+                block(session)
+            }
+
+            every { runBlocking { userRepository.findById(ObjectId(userId), session) } } returns user
+            every { runBlocking { userRepository.updateOne(ObjectId(userId), any(), session) } } returns 1
+
+            // finished=true로 업데이트
+            val result = userService.updateTodayMission(userId, missionId, true)
+            assertTrue(result.todayDailyMissionList[0].finished)
+            assertTrue(result.todayDailyMissionList[0].pointAwarded)
+        }
+
+    @Test
+    fun `updateTodayMission keeps pointAwarded when toggling back to false`() =
+        runBlocking {
+            val userId = "507f1f77bcf86cd799439011"
+            val missionId = "507f1f77bcf86cd799439055"
+
+            val dailyMission =
+                Mission(
+                    id = ObjectId(missionId),
+                    category = MissionCategory.FOOD,
+                    difficulty = 1,
+                    type = MissionType.DAILY,
+                    finished = true,
+                    cost = Money(100),
+                    endDate = null,
+                    title = "미션 A",
+                    pointAwarded = true
+                )
+
+            val user =
+                User(
+                    id = ObjectId(userId),
+                    gender = Gender.MALE,
+                    userToken = "test-token",
+                    birthDate = BirthDate(now(), CalendarType.SOLAR),
+                    birthTime = null,
+                    longTermMission = null,
+                    todayDailyMissionList = listOf(dailyMission),
+                    pastRoutineHistoryIds = listOf(),
+                    preferredMissionCategoryList = listOf(MissionCategory.FOOD),
+                    currentAmulet = Amulet(totalPiece = 0, remainPiece = 0)
+                )
+
+            coEvery { transactionService.executeInTransaction<User>(any()) } coAnswers {
+                val block = arg<suspend (ClientSession) -> User>(0)
+                block(session)
+            }
+
+            every { runBlocking { userRepository.findById(ObjectId(userId), session) } } returns user
+            every { runBlocking { userRepository.updateOne(ObjectId(userId), any(), session) } } returns 1
+
+            // finished=false로 되돌려도 pointAwarded는 true 유지
+            val result = userService.updateTodayMission(userId, missionId, false)
+            assertFalse(result.todayDailyMissionList[0].finished)
+            assertTrue(result.todayDailyMissionList[0].pointAwarded)
+        }
+
     private fun now() =
         Clock.System
             .now()
