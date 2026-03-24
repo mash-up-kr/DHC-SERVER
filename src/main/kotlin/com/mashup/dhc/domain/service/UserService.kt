@@ -96,7 +96,11 @@ class UserService(
 
             val today = now()
 
-            val toUpdateMission = mission.copy(finished = finished, endDate = today)
+            val toUpdateMission = mission.copy(
+                finished = finished,
+                endDate = today,
+                pointAwarded = if (finished) true else mission.pointAwarded
+            )
 
             val updated =
                 user.copy(
@@ -227,6 +231,9 @@ class UserService(
         transactionService.executeInTransaction { session ->
             val user = userRepository.findById(ObjectId(userId), session)!!
 
+            val currentMissionIds: Set<ObjectId> =
+                (user.todayDailyMissionList.mapNotNull { it.id } + listOfNotNull(user.longTermMission?.id)).toSet()
+
             val reRolledTodayMissionList =
                 user.todayDailyMissionList.map { todayMission ->
                     if (todayMission.id != ObjectId(missionId)) {
@@ -241,7 +248,8 @@ class UserService(
                                 existingMission = todayMission,
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
                                 luckTotalScore = user.dailyFortune?.totalScore ?: 50, // null일 경우 기본값 50
-                                session = session
+                                session = session,
+                                excludeMissionIds = currentMissionIds
                             ).copy(
                                 endDate = now().plus(1, DateTimeUnit.DAY),
                                 switchCount = todayMission.switchCount + 1
@@ -264,7 +272,8 @@ class UserService(
                                 type = MissionType.LONG_TERM,
                                 preferredMissionCategoryList = user.preferredMissionCategoryList,
                                 luckTotalScore = user.dailyFortune?.totalScore ?: 50, // null일 경우 기본값 50
-                                session
+                                session,
+                                excludeMissionIds = currentMissionIds
                             ).copy(endDate = now().plus(14, DateTimeUnit.DAY), switchCount = it.switchCount + 1)
                     }
                 }
@@ -466,13 +475,15 @@ class MissionPicker(
         type: MissionType = MissionType.DAILY,
         preferredMissionCategoryList: List<MissionCategory>,
         luckTotalScore: Int = 0,
-        session: ClientSession
+        session: ClientSession,
+        excludeMissionIds: Set<ObjectId> = emptySet()
     ): Mission {
+        val allExcludedIds = excludeMissionIds + listOfNotNull(existingMission?.id)
         val peekMissionCategory = preferredMissionCategoryList.random()
         val availableMissions =
             missionRepository
                 .findByCategory(type, peekMissionCategory, session)
-                .filter { it.id != existingMission?.id }
+                .filter { it.id !in allExcludedIds }
                 .filter {
                     Difficulty.entries[it.difficulty - 1].let { difficulty: Difficulty ->
                         luckTotalScore in difficulty.minValue..difficulty.maxValue
@@ -484,7 +495,7 @@ class MissionPicker(
             val fallbackMissions =
                 missionRepository
                     .findByCategory(type, peekMissionCategory, session)
-                    .filter { it.id != existingMission?.id }
+                    .filter { it.id !in allExcludedIds }
 
             if (fallbackMissions.isEmpty()) {
                 throw IllegalStateException("No missions available for category $peekMissionCategory and type $type")

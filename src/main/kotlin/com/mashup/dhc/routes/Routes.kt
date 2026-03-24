@@ -592,10 +592,10 @@ private fun Route.changeMissionStatus(
                 }
             }
 
-        // 미션 완료 시 포인트 적립 (finished = true이고, 이전에 완료되지 않았던 경우)
+        // 미션 완료 시 포인트 적립 (finished = true이고, 아직 포인트 지급 안 된 경우)
         if (request.finished == true) {
             val mission = loveMission ?: regularMission
-            if (mission != null && !mission.finished) {
+            if (mission != null && !mission.pointAwarded) {
                 val pointToAdd = mission.calculatePoint()
                 userService.addPoint(userId, pointToAdd)
             }
