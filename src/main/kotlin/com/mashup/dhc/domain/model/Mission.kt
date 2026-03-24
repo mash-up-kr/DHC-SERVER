@@ -26,7 +26,7 @@ data class Mission(
     val cost: Money,
     val switchCount: Int = 0,
     val endDate: LocalDate?,
-    val pointAwarded: Boolean = false
+    val pointAwarded: Boolean? = false
 )
 
 enum class MissionCategory(
