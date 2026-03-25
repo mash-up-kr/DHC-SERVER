@@ -55,6 +55,14 @@ class PastRoutineHistoryRepository(
             .sort(Document("date", -1)) // 날짜를 기준으로 내림차순 정렬 (최신 날짜가 먼저)
             .toList()
 
+    suspend fun findLatestByUserId(userId: ObjectId): PastRoutineHistory? =
+        mongoDatabase
+            .getCollection<PastRoutineHistory>(PAST_ROUTINE_HISTORY_COLLECTION)
+            .find(eq("userId", userId))
+            .sort(Document("date", -1))
+            .limit(1)
+            .firstOrNull()
+
     suspend fun findByUserIdAndDate(
         userId: ObjectId,
         date: LocalDate,

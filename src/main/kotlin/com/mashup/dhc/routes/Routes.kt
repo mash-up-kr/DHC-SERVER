@@ -387,6 +387,16 @@ private fun Route.home(
         // summaryTodayMission이 어제 날짜로 PastRoutineHistory를 생성할 수 있으므로 먼저 실행
         val isAlreadyAllDone = user.todayDailyMissionList.any { it.endDate?.run { this < now } ?: false }
         if (isAlreadyAllDone) {
+            // 미션 수행일 = endDate - 1 (일일 미션은 생성일 + 1이 endDate)
+            val missionDate = user.todayDailyMissionList.first().endDate!!
+                .minus(1, DateTimeUnit.DAY)
+
+            // 자동 롤오버: 미션 수행일 기준으로 포인트 정산 (배율 적용)
+            val allMissions = user.todayDailyMissionList + listOfNotNull(user.longTermMission)
+            settleMissions(
+                userId, missionDate, allMissions, userService, pointMultiplierService, isExplicit = false
+            )
+
             userService.summaryTodayMission(
                 userId,
                 user.todayDailyMissionList.random().endDate!!
@@ -406,13 +416,14 @@ private fun Route.home(
                     .filter { it.type == MissionType.DAILY }
                     .any { it.finished }
 
-        // 어제 획득한 포인트 계산 (배율 적용)
+        // 어제 획득한 포인트 계산 (배율 적용) - 표시용
         val basePoint =
             yesterdayPastRoutines
                 .flatMap { it.missions }
                 .filter { it.finished }
                 .sumOf { it.calculatePoint() }
-        val multiplier = pointMultiplierService.calculateMultiplier(user, now, yesterdayPastRoutines)
+        val latestHistoryDate = userService.getLatestPastRoutineDate(userId)
+        val multiplier = pointMultiplierService.calculateMultiplier(now, yesterdayPastRoutines, latestHistoryDate)
         val yesterdayEarnedPoint = basePoint * multiplier
 
         val todayDailyFortune = fortuneService.queryDailyFortune(userId, now)
@@ -503,25 +514,17 @@ private fun Route.endToday(
 
         // 미션 정보 먼저 가져오기 (summaryTodayMission 호출 전)
         val user = userService.getUserById(userId)
-        val todayMissions = user.todayDailyMissionList
-        val allMissions = todayMissions + listOfNotNull(user.longTermMission)
+        val allMissions = user.todayDailyMissionList + listOfNotNull(user.longTermMission)
 
         // 미션 성공 여부 (하나라도 완료했으면 성공)
         val missionSuccess = allMissions.any { it.finished }
 
-        // 어제 기록 조회 (배율 계산용)
         val today = now()
-        val yesterdayHistory = userService.getYesterdayPastRoutines(userId, today)
 
-        // 배율 계산
-        val multiplier = pointMultiplierService.calculateMultiplier(user, today, yesterdayHistory)
-
-        // 획득 포인트 계산 (배율 적용)
-        val basePoint =
-            allMissions
-                .filter { it.finished }
-                .sumOf { it.calculatePoint() }
-        val earnedPoint = basePoint * multiplier
+        // 포인트 정산 (배율 적용)
+        val earnedPoint = settleMissions(
+            userId, today, allMissions, userService, pointMultiplierService, isExplicit = true
+        )
 
         val todaySavedMoney =
             userService.summaryTodayMission(
@@ -591,15 +594,6 @@ private fun Route.changeMissionStatus(
                     userService.switchTodayMission(userId, missionId)
                 }
             }
-
-        // 미션 완료 시 포인트 적립 (finished = true이고, 아직 포인트 지급 안 된 경우)
-        if (request.finished == true) {
-            val mission = loveMission ?: regularMission
-            if (mission != null && mission.pointAwarded != true) {
-                val pointToAdd = mission.calculatePoint()
-                userService.addPoint(userId, pointToAdd)
-            }
-        }
 
         val missions = updated.todayDailyMissionList + listOfNotNull(updated.longTermMission)
         call.respond(HttpStatusCode.OK, ToggleMissionResponse(missions.map { MissionResponse.from(it) }))
@@ -971,4 +965,29 @@ fun Route.qaRoutes(userService: UserService) {
             call.respond(HttpStatusCode.OK, QaSuccessResponse(success = true))
         }
     }
+}
+
+/**
+ * 미션 정산 공통 메서드
+ * @param isExplicit true = /done API 호출, false = 자동 롤오버 (둘 다 배율 적용)
+ * @return 적립된 포인트
+ */
+private suspend fun settleMissions(
+    userId: String,
+    date: kotlinx.datetime.LocalDate,
+    missions: List<Mission>,
+    userService: UserService,
+    pointMultiplierService: PointMultiplierService,
+    isExplicit: Boolean
+): Long {
+    val basePoint = missions.filter { it.finished }.sumOf { it.calculatePoint() }
+    if (basePoint == 0L) return 0L
+
+    val yesterdayHistory = userService.getYesterdayPastRoutines(userId, date)
+    val latestHistoryDate = userService.getLatestPastRoutineDate(userId)
+    val multiplier = pointMultiplierService.calculateMultiplier(date, yesterdayHistory, latestHistoryDate)
+
+    val earnedPoint = basePoint * multiplier
+    userService.addPoint(userId, earnedPoint)
+    return earnedPoint
 }

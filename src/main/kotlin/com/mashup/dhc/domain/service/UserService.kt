@@ -98,8 +98,7 @@ class UserService(
 
             val toUpdateMission = mission.copy(
                 finished = finished,
-                endDate = today,
-                pointAwarded = if (finished) true else mission.pointAwarded
+                endDate = today
             )
 
             val updated =
@@ -297,6 +296,9 @@ class UserService(
         date.minus(1, DateTimeUnit.DAY),
         date.minus(1, DateTimeUnit.DAY)
     )
+
+    suspend fun getLatestPastRoutineDate(userId: String): LocalDate? =
+        pastRoutineHistoryRepository.findLatestByUserId(ObjectId(userId))?.date
 
     suspend fun updateLastAccessDate(
         userId: String,
