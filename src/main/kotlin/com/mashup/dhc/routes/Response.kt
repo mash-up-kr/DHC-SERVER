@@ -552,3 +552,29 @@ data class QaPointResponse(
     val level: Int
 )
 
+// =============================================================================
+// 부자 테스트 (Wealth Fortune Test)
+// =============================================================================
+
+@Serializable
+data class WealthFortuneResultResponse(
+    val id: Int,
+    val fortuneType: String,
+    val fortuneTypeDescription: String,
+    val fortuneDetail: String,
+    val fortuneTypeImageUrl: Image,
+    val asset20s: Long,
+    val asset40s: Long,
+    val asset60s: Long,
+    val asset80s: Long,
+    val events: List<WealthFortuneEvent>
+)
+
+@Serializable
+data class WealthFortuneEvent(
+    val age: Int,
+    val description: String,
+    val amount: Long,
+    val iconUrl: Image
+)
+
