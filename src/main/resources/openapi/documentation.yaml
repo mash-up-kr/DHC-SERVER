@@ -388,6 +388,41 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/wealth-fortune-test:
+    get:
+      summary: "Wealth Fortune Test (Mock)"
+      description: "부자 테스트 결과를 랜덤으로 반환합니다. 5개 금전운 타입 중 하나가 세트 단위로 제공됩니다."
+      responses:
+        "200":
+          description: "부자 테스트 결과"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WealthFortuneResultResponse"
+              example:
+                id: 1
+                fortuneType: "마이더스의 손 형"
+                fortuneTypeDescription: "손만 대면 수익이 터지는 사업가"
+                fortuneDetail: "당신은 자본주의 시장에서 돈이 흐르는 길목을 본능적으로 포착하는..."
+                fortuneTypeImageUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/midas.png"
+                asset20s: 55000000
+                asset40s: 800000000
+                asset60s: 3500000000
+                asset80s: 9000000000
+                events:
+                  - age: 31
+                    description: "대충 던진 밈코인이 떡상함"
+                    amount: 120000000
+                    iconUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/event_positive.png"
+                  - age: 46
+                    description: "술김에 산 골동품이 가짜로 판명"
+                    amount: -45000000
+                    iconUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/event_negative.png"
+                  - age: 62
+                    description: "취미로 만든 앱이 대기업에 팔림"
+                    amount: 2000000000
+                    iconUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/event_positive.png"
+
   /view/users/{userId}/home:
     get:
       summary: "Get Home View"
@@ -2500,4 +2535,90 @@ components:
           type: integer
           description: "포인트에 해당하는 레벨 (1-10)"
           example: 8
+
+    WealthFortuneResultResponse:
+      type: object
+      required:
+        - id
+        - fortuneType
+        - fortuneTypeDescription
+        - fortuneDetail
+        - fortuneTypeImageUrl
+        - asset20s
+        - asset40s
+        - asset60s
+        - asset80s
+        - events
+      properties:
+        id:
+          type: integer
+          description: "금전운 타입 ID"
+          example: 1
+        fortuneType:
+          type: string
+          description: "금전운 타입명"
+          example: "마이더스의 손 형"
+        fortuneTypeDescription:
+          type: string
+          description: "금전운 타입 한줄 설명"
+          example: "손만 대면 수익이 터지는 사업가"
+        fortuneDetail:
+          type: string
+          description: "금전운 상세 본문"
+          example: "당신은 자본주의 시장에서 돈이 흐르는 길목을..."
+        fortuneTypeImageUrl:
+          type: string
+          description: "금전운 타입 이미지 URL"
+          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/midas.png"
+        asset20s:
+          type: integer
+          format: int64
+          description: "20대 자산 (원)"
+          example: 55000000
+        asset40s:
+          type: integer
+          format: int64
+          description: "40대 자산 (원)"
+          example: 800000000
+        asset60s:
+          type: integer
+          format: int64
+          description: "60대 자산 (원)"
+          example: 3500000000
+        asset80s:
+          type: integer
+          format: int64
+          description: "80대 자산 (원)"
+          example: 9000000000
+        events:
+          type: array
+          description: "금전운 이벤트 목록 (3개)"
+          items:
+            $ref: "#/components/schemas/WealthFortuneEvent"
+
+    WealthFortuneEvent:
+      type: object
+      required:
+        - age
+        - description
+        - amount
+        - iconUrl
+      properties:
+        age:
+          type: integer
+          description: "이벤트 발생 나이"
+          example: 31
+        description:
+          type: string
+          description: "이벤트 내용"
+          example: "대충 던진 밈코인이 떡상함"
+        amount:
+          type: integer
+          format: int64
+          description: "이벤트 금액 (원, 음수 가능)"
+          example: 120000000
+        iconUrl:
+          type: string
+          description: "이벤트 아이콘 URL"
+          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/event_positive.png"
 
