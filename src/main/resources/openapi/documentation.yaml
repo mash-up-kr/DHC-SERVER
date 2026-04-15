@@ -402,8 +402,7 @@ paths:
               name: "홍길동"
               gender: "MALE"
               birthDate: "2000-01-01"
-              birthTime:
-                value: "14:30"
+              birthTime: "14:30"
       responses:
         "200":
           description: "테스트 결과 (resultId 포함)"
@@ -2790,14 +2789,10 @@ components:
           description: "생년월일 (YYYY-MM-DD)"
           example: "2000-01-01"
         birthTime:
-          type: object
+          type: string
           nullable: true
-          description: "태어난 시간. '잘 모르겠어요' 체크 시 null"
-          properties:
-            value:
-              type: string
-              description: "HH:mm 형식"
-              example: "14:30"
+          description: "태어난 시간 (HH:mm 형식). '잘 모르겠어요' 체크 시 null"
+          example: "14:30"
 
     WealthTestResultResponse:
       type: object

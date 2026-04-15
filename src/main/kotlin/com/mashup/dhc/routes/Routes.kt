@@ -1005,7 +1005,8 @@ private val wealthFortuneResults = listOf(
 private data class StoredWealthResult(
     val resultId: String,
     val name: String,
-    val result: WealthFortuneResultResponse
+    val result: WealthFortuneResultResponse,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
 private data class StoredWealthGroup(
@@ -1171,7 +1172,7 @@ fun Route.wealthTestRoutes() {
         val members = group.memberResultIds.mapNotNull { wealthResultStore[it] }
         val ranked = members
             .map { stored -> stored to stored.result.amountByAgeGroup(ageGroup) }
-            .sortedByDescending { it.second }
+            .sortedWith(compareByDescending<Pair<StoredWealthResult, Long>> { it.second }.thenBy { it.first.createdAt })
             .mapIndexed { idx, (stored, amount) ->
                 WealthGroupRankingEntry(
                     rank = idx + 1,
