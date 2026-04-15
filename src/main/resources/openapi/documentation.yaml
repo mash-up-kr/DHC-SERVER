@@ -405,10 +405,15 @@ paths:
                 fortuneTypeDescription: "손만 대면 수익이 터지는 사업가"
                 fortuneDetail: "당신은 자본주의 시장에서 돈이 흐르는 길목을 본능적으로 포착하는..."
                 fortuneTypeImageUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/midas.png"
-                asset20s: 55000000
-                asset40s: 800000000
-                asset60s: 3500000000
-                asset80s: 9000000000
+                graphData:
+                  - age: 20
+                    amount: 55000000
+                  - age: 40
+                    amount: 800000000
+                  - age: 60
+                    amount: 3500000000
+                  - age: 80
+                    amount: 9000000000
                 events:
                   - age: 31
                     description: "대충 던진 밈코인이 떡상함"
@@ -2544,10 +2549,7 @@ components:
         - fortuneTypeDescription
         - fortuneDetail
         - fortuneTypeImageUrl
-        - asset20s
-        - asset40s
-        - asset60s
-        - asset80s
+        - graphData
         - events
       properties:
         id:
@@ -2570,31 +2572,32 @@ components:
           type: string
           description: "금전운 타입 이미지 URL"
           example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/midas.png"
-        asset20s:
-          type: integer
-          format: int64
-          description: "20대 자산 (원)"
-          example: 55000000
-        asset40s:
-          type: integer
-          format: int64
-          description: "40대 자산 (원)"
-          example: 800000000
-        asset60s:
-          type: integer
-          format: int64
-          description: "60대 자산 (원)"
-          example: 3500000000
-        asset80s:
-          type: integer
-          format: int64
-          description: "80대 자산 (원)"
-          example: 9000000000
+        graphData:
+          type: array
+          description: "연령대별 자산 그래프 데이터 (20/40/60/80대)"
+          items:
+            $ref: "#/components/schemas/WealthFortuneGraphPoint"
         events:
           type: array
           description: "금전운 이벤트 목록 (3개)"
           items:
             $ref: "#/components/schemas/WealthFortuneEvent"
+
+    WealthFortuneGraphPoint:
+      type: object
+      required:
+        - age
+        - amount
+      properties:
+        age:
+          type: integer
+          description: "연령대 (20, 40, 60, 80)"
+          example: 20
+        amount:
+          type: integer
+          format: int64
+          description: "해당 연령대 자산 (원)"
+          example: 55000000
 
     WealthFortuneEvent:
       type: object

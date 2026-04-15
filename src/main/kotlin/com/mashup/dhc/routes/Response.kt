@@ -563,11 +563,14 @@ data class WealthFortuneResultResponse(
     val fortuneTypeDescription: String,
     val fortuneDetail: String,
     val fortuneTypeImageUrl: Image,
-    val asset20s: Long,
-    val asset40s: Long,
-    val asset60s: Long,
-    val asset80s: Long,
+    val graphData: List<WealthFortuneGraphPoint>,
     val events: List<WealthFortuneEvent>
+)
+
+@Serializable
+data class WealthFortuneGraphPoint(
+    val age: Int,
+    val amount: Long
 )
 
 @Serializable
