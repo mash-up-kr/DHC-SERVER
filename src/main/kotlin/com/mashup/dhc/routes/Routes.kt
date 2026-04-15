@@ -142,7 +142,7 @@ fun Route.userRoutes(
         completeShare(shareService)
     }
     route("/api") {
-        wealthFortuneTest()
+        wealthTestRoutes()
     }
     route("/api") {
         qaRoutes(userService)
@@ -902,8 +902,11 @@ private val wealthFortuneResults = listOf(
         fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/midas.png"),
         graphData = listOf(
             WealthFortuneGraphPoint(age = 20, amount = 55_000_000),
+            WealthFortuneGraphPoint(age = 30, amount = 300_000_000),
             WealthFortuneGraphPoint(age = 40, amount = 800_000_000),
+            WealthFortuneGraphPoint(age = 50, amount = 1_800_000_000),
             WealthFortuneGraphPoint(age = 60, amount = 3_500_000_000),
+            WealthFortuneGraphPoint(age = 70, amount = 6_000_000_000),
             WealthFortuneGraphPoint(age = 80, amount = 9_000_000_000)
         ),
         events = listOf(
@@ -920,8 +923,11 @@ private val wealthFortuneResults = listOf(
         fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/minus.png"),
         graphData = listOf(
             WealthFortuneGraphPoint(age = 20, amount = 40_000_000),
+            WealthFortuneGraphPoint(age = 30, amount = 30_000_000),
             WealthFortuneGraphPoint(age = 40, amount = 25_000_000),
+            WealthFortuneGraphPoint(age = 50, amount = 60_000_000),
             WealthFortuneGraphPoint(age = 60, amount = 150_000_000),
+            WealthFortuneGraphPoint(age = 70, amount = 120_000_000),
             WealthFortuneGraphPoint(age = 80, amount = 90_000_000)
         ),
         events = listOf(
@@ -938,8 +944,11 @@ private val wealthFortuneResults = listOf(
         fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/saver.png"),
         graphData = listOf(
             WealthFortuneGraphPoint(age = 20, amount = 60_000_000),
+            WealthFortuneGraphPoint(age = 30, amount = 180_000_000),
             WealthFortuneGraphPoint(age = 40, amount = 400_000_000),
+            WealthFortuneGraphPoint(age = 50, amount = 900_000_000),
             WealthFortuneGraphPoint(age = 60, amount = 1_500_000_000),
+            WealthFortuneGraphPoint(age = 70, amount = 2_500_000_000),
             WealthFortuneGraphPoint(age = 80, amount = 3_500_000_000)
         ),
         events = listOf(
@@ -956,8 +965,11 @@ private val wealthFortuneResults = listOf(
         fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/romantic.png"),
         graphData = listOf(
             WealthFortuneGraphPoint(age = 20, amount = 35_000_000),
+            WealthFortuneGraphPoint(age = 30, amount = 50_000_000),
             WealthFortuneGraphPoint(age = 40, amount = 70_000_000),
+            WealthFortuneGraphPoint(age = 50, amount = 55_000_000),
             WealthFortuneGraphPoint(age = 60, amount = 40_000_000),
+            WealthFortuneGraphPoint(age = 70, amount = 180_000_000),
             WealthFortuneGraphPoint(age = 80, amount = 400_000_000)
         ),
         events = listOf(
@@ -974,8 +986,11 @@ private val wealthFortuneResults = listOf(
         fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/craftsman.png"),
         graphData = listOf(
             WealthFortuneGraphPoint(age = 20, amount = 25_000_000),
+            WealthFortuneGraphPoint(age = 30, amount = 90_000_000),
             WealthFortuneGraphPoint(age = 40, amount = 200_000_000),
+            WealthFortuneGraphPoint(age = 50, amount = 600_000_000),
             WealthFortuneGraphPoint(age = 60, amount = 1_200_000_000),
+            WealthFortuneGraphPoint(age = 70, amount = 2_200_000_000),
             WealthFortuneGraphPoint(age = 80, amount = 3_000_000_000)
         ),
         events = listOf(
@@ -986,11 +1001,206 @@ private val wealthFortuneResults = listOf(
     )
 )
 
-fun Route.wealthFortuneTest() {
-    get("/wealth-fortune-test") {
-        val result = wealthFortuneResults.random()
-        call.respond(HttpStatusCode.OK, result)
+// Mock 인메모리 저장소
+private data class StoredWealthResult(
+    val resultId: String,
+    val name: String,
+    val result: WealthFortuneResultResponse
+)
+
+private data class StoredWealthGroup(
+    val groupId: String,
+    val groupName: String,
+    val inviteCode: String,
+    val memberResultIds: MutableList<String>
+)
+
+private val wealthResultStore = java.util.concurrent.ConcurrentHashMap<String, StoredWealthResult>()
+private val wealthGroupStore = java.util.concurrent.ConcurrentHashMap<String, StoredWealthGroup>()
+private val wealthInviteCodeIndex = java.util.concurrent.ConcurrentHashMap<String, String>() // inviteCode -> groupId
+private val wealthTestCounter = java.util.concurrent.atomic.AtomicLong(389L) // 초기값 - 디자인 "389명"
+
+private const val WEALTH_GROUP_MAX_MEMBERS = 50
+
+private fun generateInviteCode(): String {
+    val chars = ('a'..'z') + ('0'..'9')
+    return (1..8).map { chars.random() }.joinToString("")
+}
+
+private fun WealthFortuneResultResponse.amountByAgeGroup(ageGroup: String): Long =
+    when (ageGroup) {
+        "all" -> graphData.maxOf { it.amount }
+        else -> {
+            val age = ageGroup.toIntOrNull()
+                ?: throw BusinessException(ErrorCode.WEALTH_INVALID_AGE_GROUP)
+            graphData.find { it.age == age }?.amount
+                ?: throw BusinessException(ErrorCode.WEALTH_INVALID_AGE_GROUP)
+        }
     }
+
+fun Route.wealthTestRoutes() {
+    // 테스트 실행
+    post("/wealth-test") {
+        val request = call.receive<WealthTestRequest>()
+        request.validate()
+
+        val result = wealthFortuneResults.random()
+        val resultId = java.util.UUID.randomUUID().toString()
+        wealthResultStore[resultId] = StoredWealthResult(resultId, request.name, result)
+        wealthTestCounter.incrementAndGet()
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthTestResultResponse(resultId = resultId, name = request.name, result = result)
+        )
+    }
+
+    // 개인 결과 조회
+    get("/wealth-test/results/{resultId}") {
+        val resultId = call.requirePathParameter("resultId")
+        val stored = wealthResultStore[resultId]
+            ?: throw BusinessException(ErrorCode.WEALTH_RESULT_NOT_FOUND)
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthTestResultResponse(resultId = stored.resultId, name = stored.name, result = stored.result)
+        )
+    }
+
+    // 누적 참여자 수
+    get("/wealth-test/stats") {
+        call.respond(
+            HttpStatusCode.OK,
+            WealthTestStatsResponse(totalParticipants = wealthTestCounter.get())
+        )
+    }
+
+    // 그룹 생성
+    post("/wealth-test/groups") {
+        val request = call.receive<WealthGroupCreateRequest>()
+        request.validate()
+
+        request.resultId?.let {
+            if (!wealthResultStore.containsKey(it)) {
+                throw BusinessException(ErrorCode.WEALTH_RESULT_NOT_FOUND)
+            }
+        }
+
+        val groupId = java.util.UUID.randomUUID().toString()
+        val inviteCode = generateUniqueInviteCode()
+        val members = request.resultId?.let { mutableListOf(it) } ?: mutableListOf()
+
+        val group = StoredWealthGroup(
+            groupId = groupId,
+            groupName = request.groupName,
+            inviteCode = inviteCode,
+            memberResultIds = members
+        )
+        wealthGroupStore[groupId] = group
+        wealthInviteCodeIndex[inviteCode] = groupId
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthGroupCreateResponse(
+                groupId = groupId,
+                groupName = group.groupName,
+                inviteCode = inviteCode,
+                memberCount = members.size
+            )
+        )
+    }
+
+    // 초대 코드로 그룹 정보 조회
+    get("/wealth-test/groups/invite/{inviteCode}") {
+        val inviteCode = call.requirePathParameter("inviteCode")
+        val groupId = wealthInviteCodeIndex[inviteCode]
+            ?: throw BusinessException(ErrorCode.WEALTH_GROUP_NOT_FOUND)
+        val group = wealthGroupStore[groupId]
+            ?: throw BusinessException(ErrorCode.WEALTH_GROUP_NOT_FOUND)
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthGroupInviteResponse(
+                groupId = group.groupId,
+                groupName = group.groupName,
+                memberCount = group.memberResultIds.size
+            )
+        )
+    }
+
+    // 그룹 가입
+    post("/wealth-test/groups/{groupId}/join") {
+        val groupId = call.requirePathParameter("groupId")
+        val request = call.receive<WealthGroupJoinRequest>()
+        request.validate()
+
+        val group = wealthGroupStore[groupId]
+            ?: throw BusinessException(ErrorCode.WEALTH_GROUP_NOT_FOUND)
+
+        if (!wealthResultStore.containsKey(request.resultId)) {
+            throw BusinessException(ErrorCode.WEALTH_RESULT_NOT_FOUND)
+        }
+
+        synchronized(group.memberResultIds) {
+            if (group.memberResultIds.size >= WEALTH_GROUP_MAX_MEMBERS) {
+                throw BusinessException(ErrorCode.WEALTH_GROUP_FULL)
+            }
+            if (!group.memberResultIds.contains(request.resultId)) {
+                group.memberResultIds.add(request.resultId)
+            }
+        }
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthGroupJoinResponse(
+                groupId = group.groupId,
+                groupName = group.groupName,
+                memberCount = group.memberResultIds.size
+            )
+        )
+    }
+
+    // 그룹 랭킹 조회
+    get("/wealth-test/groups/{groupId}/ranking") {
+        val groupId = call.requirePathParameter("groupId")
+        val ageGroup = call.request.queryParameters["ageGroup"] ?: "all"
+
+        val group = wealthGroupStore[groupId]
+            ?: throw BusinessException(ErrorCode.WEALTH_GROUP_NOT_FOUND)
+
+        val members = group.memberResultIds.mapNotNull { wealthResultStore[it] }
+        val ranked = members
+            .map { stored -> stored to stored.result.amountByAgeGroup(ageGroup) }
+            .sortedByDescending { it.second }
+            .mapIndexed { idx, (stored, amount) ->
+                WealthGroupRankingEntry(
+                    rank = idx + 1,
+                    resultId = stored.resultId,
+                    name = stored.name,
+                    amount = amount,
+                    result = stored.result
+                )
+            }
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthGroupRankingResponse(
+                groupName = group.groupName,
+                inviteCode = group.inviteCode,
+                totalMemberCount = ranked.size,
+                ageGroup = ageGroup,
+                rankings = ranked
+            )
+        )
+    }
+}
+
+private fun generateUniqueInviteCode(): String {
+    repeat(10) {
+        val code = generateInviteCode()
+        if (!wealthInviteCodeIndex.containsKey(code)) return code
+    }
+    throw InternalServerErrorException()
 }
 
 // =============================================================================

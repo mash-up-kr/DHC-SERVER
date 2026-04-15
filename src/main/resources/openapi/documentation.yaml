@@ -388,45 +388,190 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/wealth-fortune-test:
-    get:
-      summary: "Wealth Fortune Test (Mock)"
-      description: "부자 테스트 결과를 랜덤으로 반환합니다. 5개 금전운 타입 중 하나가 세트 단위로 제공됩니다."
+  /api/wealth-test:
+    post:
+      summary: "금전운 테스트 실행 (Mock)"
+      description: "5개 금전운 타입 중 랜덤 1개를 뽑아 저장하고 resultId와 함께 반환합니다."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WealthTestRequest"
+            example:
+              name: "홍길동"
+              gender: "MALE"
+              birthDate: "2000-01-01"
+              birthTime:
+                value: "14:30"
       responses:
         "200":
-          description: "부자 테스트 결과"
+          description: "테스트 결과 (resultId 포함)"
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/WealthFortuneResultResponse"
+                $ref: "#/components/schemas/WealthTestResultResponse"
+
+  /api/wealth-test/results/{resultId}:
+    get:
+      summary: "금전운 테스트 개인 결과 조회 (Mock)"
+      description: "저장된 테스트 결과 조회. 결과 공유 URL 진입 시에도 동일한 데이터 반환."
+      parameters:
+        - name: resultId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "테스트 결과 ID"
+      responses:
+        "200":
+          description: "테스트 결과"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WealthTestResultResponse"
+        "404":
+          description: "결과를 찾을 수 없음"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/wealth-test/stats:
+    get:
+      summary: "금전운 테스트 누적 참여자 수 (Mock)"
+      description: "메인 화면 '지금까지 N명이 참여했어요' 노출용."
+      responses:
+        "200":
+          description: "누적 참여자 수"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WealthTestStatsResponse"
               example:
-                id: 1
-                fortuneType: "마이더스의 손 형"
-                fortuneTypeDescription: "손만 대면 수익이 터지는 사업가"
-                fortuneDetail: "당신은 자본주의 시장에서 돈이 흐르는 길목을 본능적으로 포착하는..."
-                fortuneTypeImageUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/midas.png"
-                graphData:
-                  - age: 20
-                    amount: 55000000
-                  - age: 40
-                    amount: 800000000
-                  - age: 60
-                    amount: 3500000000
-                  - age: 80
-                    amount: 9000000000
-                events:
-                  - age: 31
-                    description: "대충 던진 밈코인이 떡상함"
-                    amount: 120000000
-                    iconUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/event_positive.png"
-                  - age: 46
-                    description: "술김에 산 골동품이 가짜로 판명"
-                    amount: -45000000
-                    iconUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/event_negative.png"
-                  - age: 62
-                    description: "취미로 만든 앱이 대기업에 팔림"
-                    amount: 2000000000
-                    iconUrl: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/event_positive.png"
+                totalParticipants: 389
+
+  /api/wealth-test/groups:
+    post:
+      summary: "금전운 랭킹 그룹 생성 (Mock)"
+      description: "그룹을 생성하고 초대 코드(8자리)를 발급합니다. resultId가 있으면 첫 멤버로 등록, 없으면 빈 그룹 생성."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WealthGroupCreateRequest"
+            example:
+              groupName: "부자 모임"
+              resultId: "6651a..."
+      responses:
+        "200":
+          description: "생성된 그룹 정보"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WealthGroupCreateResponse"
+        "400":
+          description: "그룹 이름이 유효하지 않음"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/wealth-test/groups/invite/{inviteCode}:
+    get:
+      summary: "초대 코드로 그룹 정보 조회 (Mock)"
+      description: "초대 링크 진입 시 그룹 요약 노출용."
+      parameters:
+        - name: inviteCode
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "8자리 초대 코드"
+      responses:
+        "200":
+          description: "그룹 요약"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WealthGroupInviteResponse"
+        "404":
+          description: "그룹을 찾을 수 없음"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/wealth-test/groups/{groupId}/join:
+    post:
+      summary: "그룹 가입 (Mock)"
+      description: "기존 테스트 결과(resultId)로 그룹에 가입합니다. 정원(50명) 초과 시 409."
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WealthGroupJoinRequest"
+            example:
+              resultId: "6651a..."
+      responses:
+        "200":
+          description: "가입 완료"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WealthGroupJoinResponse"
+        "404":
+          description: "그룹 또는 결과를 찾을 수 없음"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: "그룹 정원 초과"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/wealth-test/groups/{groupId}/ranking:
+    get:
+      summary: "그룹 랭킹 조회 (Mock)"
+      description: "그룹 멤버를 금액 기준 내림차순으로 반환. ageGroup에 따라 기준 금액이 달라집니다. (all=peak, 20/30/40/50/60/70/80=해당 연령 자산)"
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ageGroup
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["all", "20", "30", "40", "50", "60", "70", "80"]
+            default: "all"
+          description: "연령대 필터"
+      responses:
+        "200":
+          description: "랭킹"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WealthGroupRankingResponse"
+        "404":
+          description: "그룹을 찾을 수 없음"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /view/users/{userId}/home:
     get:
@@ -2574,7 +2719,7 @@ components:
           example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/midas.png"
         graphData:
           type: array
-          description: "연령대별 자산 그래프 데이터 (20/40/60/80대)"
+          description: "연령대별 자산 그래프 데이터 (20/30/40/50/60/70/80대, 총 7개 포인트)"
           items:
             $ref: "#/components/schemas/WealthFortuneGraphPoint"
         events:
@@ -2591,7 +2736,7 @@ components:
       properties:
         age:
           type: integer
-          description: "연령대 (20, 40, 60, 80)"
+          description: "연령대 (20, 30, 40, 50, 60, 70, 80)"
           example: 20
         amount:
           type: integer
@@ -2624,4 +2769,187 @@ components:
           type: string
           description: "이벤트 아이콘 URL"
           example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/event_positive.png"
+
+    WealthTestRequest:
+      type: object
+      required:
+        - name
+        - gender
+        - birthDate
+      properties:
+        name:
+          type: string
+          description: "사용자 이름"
+          example: "홍길동"
+        gender:
+          type: string
+          enum: [MALE, FEMALE]
+        birthDate:
+          type: string
+          format: date
+          description: "생년월일 (YYYY-MM-DD)"
+          example: "2000-01-01"
+        birthTime:
+          type: object
+          nullable: true
+          description: "태어난 시간. '잘 모르겠어요' 체크 시 null"
+          properties:
+            value:
+              type: string
+              description: "HH:mm 형식"
+              example: "14:30"
+
+    WealthTestResultResponse:
+      type: object
+      required:
+        - resultId
+        - name
+        - result
+      properties:
+        resultId:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: "홍길동"
+        result:
+          $ref: "#/components/schemas/WealthFortuneResultResponse"
+
+    WealthTestStatsResponse:
+      type: object
+      required:
+        - totalParticipants
+      properties:
+        totalParticipants:
+          type: integer
+          format: int64
+          description: "누적 테스트 참여자 수"
+          example: 389
+
+    WealthGroupCreateRequest:
+      type: object
+      required:
+        - groupName
+      properties:
+        groupName:
+          type: string
+          description: "그룹 이름 (1~24자, 공백 포함)"
+          example: "부자 모임"
+        resultId:
+          type: string
+          nullable: true
+          description: "테스트 결과 ID (있으면 첫 멤버로 등록, 없으면 빈 그룹)"
+
+    WealthGroupCreateResponse:
+      type: object
+      required:
+        - groupId
+        - groupName
+        - inviteCode
+        - memberCount
+      properties:
+        groupId:
+          type: string
+          example: "660f9500-f39c-52e5-b827-557766551111"
+        groupName:
+          type: string
+          example: "부자 모임"
+        inviteCode:
+          type: string
+          description: "8자리 초대 코드 (URL 공유용)"
+          example: "abc123xy"
+        memberCount:
+          type: integer
+          example: 1
+
+    WealthGroupInviteResponse:
+      type: object
+      required:
+        - groupId
+        - groupName
+        - memberCount
+      properties:
+        groupId:
+          type: string
+        groupName:
+          type: string
+          example: "부자 모임"
+        memberCount:
+          type: integer
+          example: 5
+
+    WealthGroupJoinRequest:
+      type: object
+      required:
+        - resultId
+      properties:
+        resultId:
+          type: string
+          description: "테스트 결과 ID"
+
+    WealthGroupJoinResponse:
+      type: object
+      required:
+        - groupId
+        - groupName
+        - memberCount
+      properties:
+        groupId:
+          type: string
+        groupName:
+          type: string
+        memberCount:
+          type: integer
+
+    WealthGroupRankingResponse:
+      type: object
+      required:
+        - groupName
+        - inviteCode
+        - totalMemberCount
+        - ageGroup
+        - rankings
+      properties:
+        groupName:
+          type: string
+          example: "부자 모임"
+        inviteCode:
+          type: string
+          example: "abc123xy"
+        totalMemberCount:
+          type: integer
+          example: 3
+        ageGroup:
+          type: string
+          enum: ["all", "20", "30", "40", "50", "60", "70", "80"]
+          example: "all"
+        rankings:
+          type: array
+          items:
+            $ref: "#/components/schemas/WealthGroupRankingEntry"
+
+    WealthGroupRankingEntry:
+      type: object
+      required:
+        - rank
+        - resultId
+        - name
+        - amount
+        - result
+      properties:
+        rank:
+          type: integer
+          example: 1
+        resultId:
+          type: string
+        name:
+          type: string
+          example: "홍길동"
+        amount:
+          type: integer
+          format: int64
+          description: "선택된 ageGroup 기준 금액 (원)"
+          example: 4500000000
+        result:
+          $ref: "#/components/schemas/WealthFortuneResultResponse"
 

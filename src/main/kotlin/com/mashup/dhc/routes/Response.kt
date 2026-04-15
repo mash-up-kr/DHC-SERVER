@@ -581,3 +581,55 @@ data class WealthFortuneEvent(
     val iconUrl: Image
 )
 
+@Serializable
+data class WealthTestResultResponse(
+    val resultId: String,
+    val name: String,
+    val result: WealthFortuneResultResponse
+)
+
+@Serializable
+data class WealthTestStatsResponse(
+    val totalParticipants: Long
+)
+
+@Serializable
+data class WealthGroupCreateResponse(
+    val groupId: String,
+    val groupName: String,
+    val inviteCode: String,
+    val memberCount: Int
+)
+
+@Serializable
+data class WealthGroupInviteResponse(
+    val groupId: String,
+    val groupName: String,
+    val memberCount: Int
+)
+
+@Serializable
+data class WealthGroupJoinResponse(
+    val groupId: String,
+    val groupName: String,
+    val memberCount: Int
+)
+
+@Serializable
+data class WealthGroupRankingResponse(
+    val groupName: String,
+    val inviteCode: String,
+    val totalMemberCount: Int,
+    val ageGroup: String,
+    val rankings: List<WealthGroupRankingEntry>
+)
+
+@Serializable
+data class WealthGroupRankingEntry(
+    val rank: Int,
+    val resultId: String,
+    val name: String,
+    val amount: Long,
+    val result: WealthFortuneResultResponse
+)
+

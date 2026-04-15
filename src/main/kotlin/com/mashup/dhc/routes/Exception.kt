@@ -50,6 +50,13 @@ enum class ErrorCode(
     YEARLY_FORTUNE_ALREADY_USED(2006, "이미 1년 운세를 사용했습니다", HttpStatusCode.BadRequest),
     YEARLY_FORTUNE_NOT_CREATED(2007, "1년 운세가 아직 생성되지 않았습니다. 먼저 운세를 열어주세요", HttpStatusCode.NotFound),
 
+    // 부자 테스트 - 2100
+    WEALTH_RESULT_NOT_FOUND(2101, "금전운 테스트 결과를 찾을 수 없습니다", HttpStatusCode.NotFound),
+    WEALTH_GROUP_NOT_FOUND(2102, "그룹을 찾을 수 없습니다", HttpStatusCode.NotFound),
+    WEALTH_GROUP_FULL(2103, "그룹 정원이 가득 찼습니다 (최대 50명)", HttpStatusCode.Conflict),
+    WEALTH_INVALID_GROUP_NAME(2104, "그룹 이름은 1~24자여야 합니다", HttpStatusCode.BadRequest),
+    WEALTH_INVALID_AGE_GROUP(2105, "유효하지 않은 연령대 필터입니다", HttpStatusCode.BadRequest),
+
     // Auth Errors - 3xxx
     UNAUTHORIZED(3001, "인증이 필요합니다", HttpStatusCode.Unauthorized),
     FORBIDDEN(3002, "접근 권한이 없습니다", HttpStatusCode.Forbidden),
