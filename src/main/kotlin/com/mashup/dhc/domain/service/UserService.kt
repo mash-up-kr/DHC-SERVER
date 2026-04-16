@@ -96,10 +96,11 @@ class UserService(
 
             val today = now()
 
-            val toUpdateMission = mission.copy(
-                finished = finished,
-                endDate = today
-            )
+            val toUpdateMission =
+                mission.copy(
+                    finished = finished,
+                    endDate = today
+                )
 
             val updated =
                 user.copy(
@@ -323,17 +324,21 @@ class UserService(
         yesterdayMissionSuccess: Boolean?,
         todayDone: Boolean?,
         isFirstAccess: Boolean?
-    ): Long = userRepository.updateQaHomeStateOverrides(
-        ObjectId(userId), longAbsence, yesterdayMissionSuccess, todayDone, isFirstAccess
-    )
+    ): Long =
+        userRepository.updateQaHomeStateOverrides(
+            ObjectId(userId),
+            longAbsence,
+            yesterdayMissionSuccess,
+            todayDone,
+            isFirstAccess
+        )
 
     suspend fun setPoint(
         userId: String,
         point: Long
     ): Long = userRepository.setPoint(ObjectId(userId), point)
 
-    suspend fun resetYearlyFortune(userId: String): Long =
-        userRepository.resetYearlyFortune(ObjectId(userId))
+    suspend fun resetYearlyFortune(userId: String): Long = userRepository.resetYearlyFortune(ObjectId(userId))
 
     suspend fun getWeekPastRoutines(
         userId: String,
