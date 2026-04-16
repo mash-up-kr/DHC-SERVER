@@ -113,6 +113,64 @@ data class QaPointRequest(
 )
 
 @Serializable
+data class WealthTestRequest(
+    val name: String,
+    val gender: Gender,
+    val birthDate: LocalDate,
+    val birthTime: BirthTime? = null
+) {
+    fun validate() {
+        val errors = mutableListOf<ErrorCode>()
+
+        if (name.isBlank()) {
+            errors.add(ErrorCode.MISSING_REQUIRED_FIELD)
+        }
+
+        val today =
+            Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+        if (birthDate > today) {
+            errors.add(ErrorCode.INVALID_BIRTH_DATE)
+        }
+
+        birthTime?.value?.let { time ->
+            if (time.hour !in 0..23 || time.minute !in 0..59) {
+                errors.add(ErrorCode.INVALID_TIME_FORMAT)
+            }
+        }
+
+        if (errors.isNotEmpty()) {
+            throw ValidationException(errors)
+        }
+    }
+}
+
+@Serializable
+data class WealthGroupCreateRequest(
+    val groupName: String,
+    val resultId: String? = null
+) {
+    fun validate() {
+        if (groupName.isBlank() || groupName.length > 24) {
+            throw BusinessException(ErrorCode.WEALTH_INVALID_GROUP_NAME)
+        }
+    }
+}
+
+@Serializable
+data class WealthGroupJoinRequest(
+    val resultId: String
+) {
+    fun validate() {
+        if (resultId.isBlank()) {
+            throw BusinessException(ErrorCode.MISSING_REQUIRED_FIELD)
+        }
+    }
+}
+
+@Serializable
 data class LoveTestRequest(
     val me: LoveTestMe,
     val you: LoveTestYou,

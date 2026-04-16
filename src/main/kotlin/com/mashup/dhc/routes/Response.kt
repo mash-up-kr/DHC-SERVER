@@ -2,7 +2,6 @@ package com.mashup.dhc.routes
 
 import com.mashup.dhc.domain.model.DailyFortune
 import com.mashup.dhc.domain.model.ElementBalance
-import com.mashup.dhc.domain.model.ElementStatus
 import com.mashup.dhc.domain.model.FiveElements
 import com.mashup.dhc.domain.model.FortuneCard
 import com.mashup.dhc.domain.model.FortuneOverview
@@ -428,30 +427,31 @@ data class YearlyFortuneResponse(
                 fiveElements = FiveElementsResponse.from(yearlyFortune.fiveElements),
                 yearlyEnergyTitle = yearlyFortune.yearlyEnergyTitle,
                 yearlyEnergyDetail = yearlyFortune.yearlyEnergyDetail,
-                tips = listOf(
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(),
-                        title = "행운의 메뉴",
-                        description = yearlyFortune.luckyMenu
+                tips =
+                    listOf(
+                        FortuneTip(
+                            image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(),
+                            title = "행운의 메뉴",
+                            description = yearlyFortune.luckyMenu
+                        ),
+                        FortuneTip(
+                            image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(),
+                            title = "행운의 색상",
+                            description = yearlyFortune.luckyColor,
+                            hexColor = yearlyFortune.luckyColorHex
+                        ),
+                        FortuneTip(
+                            image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(),
+                            title = "피해야 할 색상",
+                            description = yearlyFortune.unluckyColor,
+                            hexColor = yearlyFortune.unluckyColorHex
+                        ),
+                        FortuneTip(
+                            image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(),
+                            title = "피해야 할 음식",
+                            description = yearlyFortune.unluckyMenu
+                        )
                     ),
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(),
-                        title = "행운의 색상",
-                        description = yearlyFortune.luckyColor,
-                        hexColor = yearlyFortune.luckyColorHex
-                    ),
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(),
-                        title = "피해야 할 색상",
-                        description = yearlyFortune.unluckyColor,
-                        hexColor = yearlyFortune.unluckyColorHex
-                    ),
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(),
-                        title = "피해야 할 음식",
-                        description = yearlyFortune.unluckyMenu
-                    )
-                ),
                 cardInfo =
                     FortuneCard(
                         image = scoreRange.getCardImage(),
@@ -472,12 +472,24 @@ data class FortuneOverviewResponse(
     companion object {
         fun from(overview: FortuneOverview): FortuneOverviewResponse =
             FortuneOverviewResponse(
-                money = FortuneCategoryResponse("금전운", overview.money.description,
-                    ImageUrlMapper.Fortune.getOverviewMoneyImageUrl()),
-                love = FortuneCategoryResponse("연애운", overview.love.description,
-                    ImageUrlMapper.Fortune.getOverviewLoveImageUrl()),
-                study = FortuneCategoryResponse("학업운", overview.study.description,
-                    ImageUrlMapper.Fortune.getOverviewStudyImageUrl())
+                money =
+                    FortuneCategoryResponse(
+                        "금전운",
+                        overview.money.description,
+                        ImageUrlMapper.Fortune.getOverviewMoneyImageUrl()
+                    ),
+                love =
+                    FortuneCategoryResponse(
+                        "연애운",
+                        overview.love.description,
+                        ImageUrlMapper.Fortune.getOverviewLoveImageUrl()
+                    ),
+                study =
+                    FortuneCategoryResponse(
+                        "학업운",
+                        overview.study.description,
+                        ImageUrlMapper.Fortune.getOverviewStudyImageUrl()
+                    )
             )
     }
 }
@@ -581,3 +593,54 @@ data class WealthFortuneEvent(
     val iconUrl: Image
 )
 
+@Serializable
+data class WealthTestResultResponse(
+    val resultId: String,
+    val name: String,
+    val result: WealthFortuneResultResponse
+)
+
+@Serializable
+data class WealthTestStatsResponse(
+    val totalParticipants: Long
+)
+
+@Serializable
+data class WealthGroupCreateResponse(
+    val groupId: String,
+    val groupName: String,
+    val inviteCode: String,
+    val memberCount: Int
+)
+
+@Serializable
+data class WealthGroupInviteResponse(
+    val groupId: String,
+    val groupName: String,
+    val memberCount: Int
+)
+
+@Serializable
+data class WealthGroupJoinResponse(
+    val groupId: String,
+    val groupName: String,
+    val memberCount: Int
+)
+
+@Serializable
+data class WealthGroupRankingResponse(
+    val groupName: String,
+    val inviteCode: String,
+    val totalMemberCount: Int,
+    val ageGroup: String,
+    val rankings: List<WealthGroupRankingEntry>
+)
+
+@Serializable
+data class WealthGroupRankingEntry(
+    val rank: Int,
+    val resultId: String,
+    val name: String,
+    val amount: Long,
+    val result: WealthFortuneResultResponse
+)

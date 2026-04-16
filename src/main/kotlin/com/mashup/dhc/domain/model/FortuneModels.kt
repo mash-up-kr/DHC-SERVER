@@ -187,8 +187,7 @@ enum class FortuneScoreRange(
         Image.forMainCard("${range.first}-${range.last}", format)
 
     companion object {
-        fun fromScore(score: Int): FortuneScoreRange =
-            entries.find { score in it.range } ?: SCORE_47_50
+        fun fromScore(score: Int): FortuneScoreRange = entries.find { score in it.range } ?: SCORE_47_50
     }
 }
 

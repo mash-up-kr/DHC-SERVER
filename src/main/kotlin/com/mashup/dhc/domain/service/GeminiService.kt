@@ -309,13 +309,14 @@ class GeminiService(
             - 출생시간: ${me.birthTime ?: "모름"}
             """.trimIndent()
 
-        val youInfo = buildString {
-            appendLine("- 성별: ${you.gender}")
-            appendLine("- 이름: ${you.name}")
-            appendLine("- 생년월일: ${you.birthDate ?: "모름"}")
-            appendLine("- 출생시간: ${you.birthTime ?: "모름"}")
-            you.additional?.let { appendLine("- 추가정보: $it") }
-        }.trimEnd()
+        val youInfo =
+            buildString {
+                appendLine("- 성별: ${you.gender}")
+                appendLine("- 이름: ${you.name}")
+                appendLine("- 생년월일: ${you.birthDate ?: "모름"}")
+                appendLine("- 출생시간: ${you.birthTime ?: "모름"}")
+                you.additional?.let { appendLine("- 추가정보: $it") }
+            }.trimEnd()
 
         return """
             $systemInstruction

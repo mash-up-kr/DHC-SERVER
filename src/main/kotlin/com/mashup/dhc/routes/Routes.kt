@@ -64,8 +64,7 @@ private fun parseImageFormat(formatParam: String?): ImageFormat =
         ImageFormat.SVG
     }
 
-private fun List<Money>.sumOrZero(): Money =
-    reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
+private fun List<Money>.sumOrZero(): Money = reduceOrNull(Money::plus) ?: Money(BigDecimal.ZERO)
 
 val generationAverageSpendMoney: Map<Generation, Map<Gender, Money>> =
     mapOf(
@@ -142,7 +141,7 @@ fun Route.userRoutes(
         completeShare(shareService)
     }
     route("/api") {
-        wealthFortuneTest()
+        wealthTestRoutes()
     }
     route("/api") {
         qaRoutes(userService)
@@ -162,35 +161,37 @@ fun Route.loveTest(geminiService: GeminiService) {
             LoveTestViewResponse(
                 score = score,
                 fortuneDetail = geminiResponse.fortuneDetail,
-                fortuneCard = FortuneCard(
-                    image = scoreRange.getCardImage(),
-                    title = scoreRange.animalName,
-                    subTitle = scoreRange.title
-                ),
-                fortuneTips = listOf(
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(ImageFormat.SVG),
-                        title = "행운의 메뉴",
-                        description = geminiResponse.todayMenu
+                fortuneCard =
+                    FortuneCard(
+                        image = scoreRange.getCardImage(),
+                        title = scoreRange.animalName,
+                        subTitle = scoreRange.title
                     ),
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(ImageFormat.SVG),
-                        title = "행운의 색상",
-                        description = geminiResponse.luckyColor,
-                        hexColor = geminiResponse.luckyColorHex
+                fortuneTips =
+                    listOf(
+                        FortuneTip(
+                            image = ImageUrlMapper.Fortune.getTodayMenuImageUrl(ImageFormat.SVG),
+                            title = "행운의 메뉴",
+                            description = geminiResponse.todayMenu
+                        ),
+                        FortuneTip(
+                            image = ImageUrlMapper.Fortune.getLuckyColorImageUrl(ImageFormat.SVG),
+                            title = "행운의 색상",
+                            description = geminiResponse.luckyColor,
+                            hexColor = geminiResponse.luckyColorHex
+                        ),
+                        FortuneTip(
+                            image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(ImageFormat.SVG),
+                            title = "피해야 할 색상",
+                            description = geminiResponse.jinxedColor,
+                            hexColor = geminiResponse.jinxedColorHex
+                        ),
+                        FortuneTip(
+                            image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(ImageFormat.SVG),
+                            title = "이 음식은 조심해!",
+                            description = geminiResponse.jinxedMenu
+                        )
                     ),
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getJinxedColorImageUrl(ImageFormat.SVG),
-                        title = "피해야 할 색상",
-                        description = geminiResponse.jinxedColor,
-                        hexColor = geminiResponse.jinxedColorHex
-                    ),
-                    FortuneTip(
-                        image = ImageUrlMapper.Fortune.getJinxedMenuImageUrl(ImageFormat.SVG),
-                        title = "이 음식은 조심해!",
-                        description = geminiResponse.jinxedMenu
-                    )
-                ),
                 confessDate = LocalDate.parse(geminiResponse.confessDate),
                 confessLocation = geminiResponse.confessLocation
             )
@@ -234,11 +235,12 @@ fun Route.rewardProgress(userService: UserService) {
                         isUsed = user.yearlyFortuneUsed,
                         iconURL = if (isYearlyFortuneUnlocked) ImageUrlMapper.getRewardLevelImageUrl(8) else null,
                         icon = if (isYearlyFortuneUnlocked) ImageUrlMapper.getRewardLevelImageUrl(8) else null,
-                        message = when {
-                            !isYearlyFortuneUnlocked -> "레벨 8 달성 시 해금됩니다"
-                            !user.yearlyFortuneUsed -> "1년 운세를 확인해보세요!"
-                            else -> null
-                        },
+                        message =
+                            when {
+                                !isYearlyFortuneUnlocked -> "레벨 8 달성 시 해금됩니다"
+                                !user.yearlyFortuneUsed -> "1년 운세를 확인해보세요!"
+                                else -> null
+                            },
                         type = RewardType.YEARLY_FORTUNE
                     )
                 )
@@ -376,10 +378,13 @@ private fun Route.home(
 
         // 2일 이상 미접속 여부 및 첫 접속 여부 계산 (lastAccessDate 업데이트 전에 계산)
         val lastAccess = user.lastAccessDate
-        val createdDate = user.id?.let {
-            Instant.fromEpochSeconds(it.timestamp.toLong())
-                .toLocalDateTime(TimeZone.currentSystemDefault()).date
-        }
+        val createdDate =
+            user.id?.let {
+                Instant
+                    .fromEpochSeconds(it.timestamp.toLong())
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .date
+            }
         val isFirstAccess = user.qaOverrideIsFirstAccess ?: (createdDate == now)
         val daysSinceLastAccess = lastAccess?.let { (now.toEpochDays() - it.toEpochDays()).toInt() } ?: 0
         val longAbsence = user.qaOverrideLongAbsence ?: (daysSinceLastAccess >= 2)
@@ -391,13 +396,21 @@ private fun Route.home(
         val isAlreadyAllDone = user.todayDailyMissionList.any { it.endDate?.run { this < now } ?: false }
         if (isAlreadyAllDone) {
             // 미션 수행일 = endDate - 1 (일일 미션은 생성일 + 1이 endDate)
-            val missionDate = user.todayDailyMissionList.first().endDate!!
-                .minus(1, DateTimeUnit.DAY)
+            val missionDate =
+                user.todayDailyMissionList
+                    .first()
+                    .endDate!!
+                    .minus(1, DateTimeUnit.DAY)
 
             // 자동 롤오버: 미션 수행일 기준으로 포인트 정산 (배율 적용)
             val allMissions = user.todayDailyMissionList + listOfNotNull(user.longTermMission)
             settleMissions(
-                userId, missionDate, allMissions, userService, pointMultiplierService, isExplicit = false
+                userId,
+                missionDate,
+                allMissions,
+                userService,
+                pointMultiplierService,
+                isExplicit = false
             )
 
             userService.summaryTodayMission(
@@ -448,25 +461,26 @@ private fun Route.home(
 
         // todayDailyMissionList 구성
         // todayDone이면 완료한 미션(PastRoutineHistory)을 반환, 아니면 현재 미션 반환
-        val todayMissions = if (todayDone) {
-            todayPastRoutines
-                .flatMap { it.missions }
-                .filter { it.type != MissionType.LONG_TERM }
-                .map { MissionResponse.from(it) }
-        } else {
-            val dailyMissions = latestUser.todayDailyMissionList.map { MissionResponse.from(it) }
-            if (loveMissionInfo != null) {
-                val loveMissionResponse =
-                    MissionResponse.fromLoveMission(
-                        loveMissionInfo.mission,
-                        loveMissionInfo.dayNumber,
-                        loveMissionInfo.remainingDays
-                    )
-                listOf(loveMissionResponse) + dailyMissions
+        val todayMissions =
+            if (todayDone) {
+                todayPastRoutines
+                    .flatMap { it.missions }
+                    .filter { it.type != MissionType.LONG_TERM }
+                    .map { MissionResponse.from(it) }
             } else {
-                dailyMissions
+                val dailyMissions = latestUser.todayDailyMissionList.map { MissionResponse.from(it) }
+                if (loveMissionInfo != null) {
+                    val loveMissionResponse =
+                        MissionResponse.fromLoveMission(
+                            loveMissionInfo.mission,
+                            loveMissionInfo.dayNumber,
+                            loveMissionInfo.remainingDays
+                        )
+                    listOf(loveMissionResponse) + dailyMissions
+                } else {
+                    dailyMissions
+                }
             }
-        }
 
         // 궁합 테스트 배너 (목 데이터)
         val testBanner =
@@ -482,16 +496,18 @@ private fun Route.home(
         call.respond(
             HttpStatusCode.OK,
             HomeViewResponse(
-                longTermMission = if (todayDone) {
-                    // PastRoutineHistory에 longTermMission이 있으면 사용, 없으면 현재 유저의 longTermMission 사용
-                    (todayPastRoutines
-                        .flatMap { it.missions }
-                        .firstOrNull { it.type == MissionType.LONG_TERM }
-                        ?: latestUser.longTermMission)
-                        ?.let { MissionResponse.from(it) }
-                } else {
-                    latestUser.longTermMission?.let { MissionResponse.from(it) }
-                },
+                longTermMission =
+                    if (todayDone) {
+                        // PastRoutineHistory에 longTermMission이 있으면 사용, 없으면 현재 유저의 longTermMission 사용
+                        (
+                            todayPastRoutines
+                                .flatMap { it.missions }
+                                .firstOrNull { it.type == MissionType.LONG_TERM }
+                                ?: latestUser.longTermMission
+                        )?.let { MissionResponse.from(it) }
+                    } else {
+                        latestUser.longTermMission?.let { MissionResponse.from(it) }
+                    },
                 todayDailyMissionList = todayMissions,
                 todayDailyFortune = todayDailyFortune.let { FortuneResponse.from(it) },
                 todayDone = todayDone,
@@ -525,9 +541,15 @@ private fun Route.endToday(
         val today = now()
 
         // 포인트 정산 (배율 적용)
-        val earnedPoint = settleMissions(
-            userId, today, allMissions, userService, pointMultiplierService, isExplicit = true
-        )
+        val earnedPoint =
+            settleMissions(
+                userId,
+                today,
+                allMissions,
+                userService,
+                pointMultiplierService,
+                isExplicit = true
+            )
 
         val todaySavedMoney =
             userService.summaryTodayMission(
@@ -617,15 +639,18 @@ private fun Route.myPage(userService: UserService) {
                 user.birthTime,
                 user.preferredMissionCategoryList.map { MissionCategoryResponse.from(it, format) },
                 true, // TODO: alarm
-                fortuneTests = listOf(
-                    FortuneTestInfo(
-                        imageURL = "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/icon/love_test.png",
-                        image = Image.custom("logos/icon/love_test.png"),
-                        displayName = "궁합 테스트",
-                        testURL = "https://dhc-web.vercel.app/love-test",
-                        testUrl = "https://dhc-web.vercel.app/love-test"
+                fortuneTests =
+                    listOf(
+                        FortuneTestInfo(
+                            imageURL =
+                                "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb" +
+                                    "/b/dhc-storage/o/logos/icon/love_test.png",
+                            image = Image.custom("logos/icon/love_test.png"),
+                            displayName = "궁합 테스트",
+                            testURL = "https://dhc-web.vercel.app/love-test",
+                            testUrl = "https://dhc-web.vercel.app/love-test"
+                        )
                     )
-                )
             )
         )
     }
@@ -841,11 +866,12 @@ private fun Route.addJulyPastRoutineHistory(userService: UserService) {
 
         val addedHistories = userService.addJulyPastRoutineHistories(userId, currentYear, julyData)
 
-        val totalSavedMoney = addedHistories
-            .flatMap { it.missions }
-            .filter { it.finished }
-            .map { it.cost }
-            .sumOrZero()
+        val totalSavedMoney =
+            addedHistories
+                .flatMap { it.missions }
+                .filter { it.finished }
+                .map { it.cost }
+                .sumOrZero()
 
         call.respond(
             HttpStatusCode.Created,
@@ -893,104 +919,419 @@ private fun Route.completeShare(shareService: ShareService) {
 // 부자 테스트 (Wealth Fortune Test) - Mock
 // =============================================================================
 
-private val wealthFortuneResults = listOf(
-    WealthFortuneResultResponse(
-        id = 1,
-        fortuneType = "마이더스의 손 형",
-        fortuneTypeDescription = "손만 대면 수익이 터지는 사업가",
-        fortuneDetail = "당신은 자본주의 시장에서 돈이 흐르는 길목을 본능적으로 포착하는 사냥꾼의 감각을 타고났습니다. 남들이 위험하다고 고개를 저을 때 당신은 그 안의 숨겨진 가치를 발견하며, 과감한 결단력으로 기회를 수익으로 치환하는 에너지가 강력합니다.\n\n특히 위기 상황에서 평정심을 유지하며 남들이 보지 못하는 틈새를 공략하는 기질은 당신을 최상위 자산가로 이끄는 핵심 동력이 됩니다. 하이 리스크 종목에서도 당신만의 탈출 타이밍을 정확히 짚어내어 손실은 최소화하고 이익은 극대화하는 천부적인 감각을 지녔습니다.\n\n말년에는 직접 움직이지 않아도 자본이 스스로 일하는 완벽한 현금 흐름 시스템을 소유하게 될 것입니다. 다만 너무 이른 성공으로 인해 주변의 시기가 따를 수 있으니, 적절한 시기에 나눔을 실천한다면 그 부의 유통기한은 대대로 이어질 것입니다.",
-        fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/midas.png"),
-        graphData = listOf(
-            WealthFortuneGraphPoint(age = 20, amount = 55_000_000),
-            WealthFortuneGraphPoint(age = 40, amount = 800_000_000),
-            WealthFortuneGraphPoint(age = 60, amount = 3_500_000_000),
-            WealthFortuneGraphPoint(age = 80, amount = 9_000_000_000)
+@Suppress("ktlint:standard:max-line-length")
+private val wealthFortuneResults =
+    listOf(
+        WealthFortuneResultResponse(
+            id = 1,
+            fortuneType = "마이더스의 손 형",
+            fortuneTypeDescription = "손만 대면 수익이 터지는 사업가",
+            fortuneDetail = "당신은 자본주의 시장에서 돈이 흐르는 길목을 본능적으로 포착하는 사냥꾼의 감각을 타고났습니다. 남들이 위험하다고 고개를 저을 때 당신은 그 안의 숨겨진 가치를 발견하며, 과감한 결단력으로 기회를 수익으로 치환하는 에너지가 강력합니다.\n\n특히 위기 상황에서 평정심을 유지하며 남들이 보지 못하는 틈새를 공략하는 기질은 당신을 최상위 자산가로 이끄는 핵심 동력이 됩니다. 하이 리스크 종목에서도 당신만의 탈출 타이밍을 정확히 짚어내어 손실은 최소화하고 이익은 극대화하는 천부적인 감각을 지녔습니다.\n\n말년에는 직접 움직이지 않아도 자본이 스스로 일하는 완벽한 현금 흐름 시스템을 소유하게 될 것입니다. 다만 너무 이른 성공으로 인해 주변의 시기가 따를 수 있으니, 적절한 시기에 나눔을 실천한다면 그 부의 유통기한은 대대로 이어질 것입니다.",
+            fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/midas.png"),
+            graphData =
+                listOf(
+                    WealthFortuneGraphPoint(age = 20, amount = 55_000_000),
+                    WealthFortuneGraphPoint(age = 30, amount = 300_000_000),
+                    WealthFortuneGraphPoint(age = 40, amount = 800_000_000),
+                    WealthFortuneGraphPoint(age = 50, amount = 1_800_000_000),
+                    WealthFortuneGraphPoint(age = 60, amount = 3_500_000_000),
+                    WealthFortuneGraphPoint(age = 70, amount = 6_000_000_000),
+                    WealthFortuneGraphPoint(age = 80, amount = 9_000_000_000)
+                ),
+            events =
+                listOf(
+                    WealthFortuneEvent(
+                        age = 31,
+                        description = "대충 던진 밈코인이 떡상함",
+                        amount = 120_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 46,
+                        description = "술김에 산 골동품이 가짜로 판명",
+                        amount = -45_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 62,
+                        description = "취미로 만든 앱이 대기업에 팔림",
+                        amount = 2_000_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    )
+                )
         ),
-        events = listOf(
-            WealthFortuneEvent(age = 31, description = "대충 던진 밈코인이 떡상함", amount = 120_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")),
-            WealthFortuneEvent(age = 46, description = "술김에 산 골동품이 가짜로 판명", amount = -45_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")),
-            WealthFortuneEvent(age = 62, description = "취미로 만든 앱이 대기업에 팔림", amount = 2_000_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png"))
-        )
-    ),
-    WealthFortuneResultResponse(
-        id = 2,
-        fortuneType = "마이너스의 손 형",
-        fortuneTypeDescription = "내가 사면 떨어지고 팔면 오르는 기이한 운명",
-        fortuneDetail = "당신의 직관은 이상하리만큼 시장의 단기적인 파동과 정반대로 움직이는 경향이 있습니다. 매수를 결정한 직후 차트가 꺾이거나, 인내하다 팔아치운 직후 폭등하는 경험을 반복하며 '나는 재물복이 없다'고 생각하기 쉽지만 이는 사실이 아닙니다.\n\n당신의 진짜 재물복은 '직관'이 아닌 '무심함'과 '시간'에 설계되어 있습니다. 스스로의 판단을 믿기보다는 우량한 자산에 장기적으로 묻어두는 전략이 필요합니다. 잔파도에 흔들리지 않고 묵묵히 숫자를 모아가는 과정에서 당신의 운명적인 꼬임이 풀리기 시작합니다.\n\n복리의 마법이 당신의 모든 실수를 상쇄하고도 남을 만큼 거대한 성벽을 쌓아줄 것입니다. 말년에는 누구보다 단단하고 평온한 경제적 자유를 누릴 반전의 주인공이 될 것이니, 당장의 수익률에 일희일비하지 않는 태도가 부자로 가는 유일한 길입니다.",
-        fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/minus.png"),
-        graphData = listOf(
-            WealthFortuneGraphPoint(age = 20, amount = 40_000_000),
-            WealthFortuneGraphPoint(age = 40, amount = 25_000_000),
-            WealthFortuneGraphPoint(age = 60, amount = 150_000_000),
-            WealthFortuneGraphPoint(age = 80, amount = 90_000_000)
+        WealthFortuneResultResponse(
+            id = 2,
+            fortuneType = "마이너스의 손 형",
+            fortuneTypeDescription = "내가 사면 떨어지고 팔면 오르는 기이한 운명",
+            fortuneDetail = "당신의 직관은 이상하리만큼 시장의 단기적인 파동과 정반대로 움직이는 경향이 있습니다. 매수를 결정한 직후 차트가 꺾이거나, 인내하다 팔아치운 직후 폭등하는 경험을 반복하며 '나는 재물복이 없다'고 생각하기 쉽지만 이는 사실이 아닙니다.\n\n당신의 진짜 재물복은 '직관'이 아닌 '무심함'과 '시간'에 설계되어 있습니다. 스스로의 판단을 믿기보다는 우량한 자산에 장기적으로 묻어두는 전략이 필요합니다. 잔파도에 흔들리지 않고 묵묵히 숫자를 모아가는 과정에서 당신의 운명적인 꼬임이 풀리기 시작합니다.\n\n복리의 마법이 당신의 모든 실수를 상쇄하고도 남을 만큼 거대한 성벽을 쌓아줄 것입니다. 말년에는 누구보다 단단하고 평온한 경제적 자유를 누릴 반전의 주인공이 될 것이니, 당장의 수익률에 일희일비하지 않는 태도가 부자로 가는 유일한 길입니다.",
+            fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/minus.png"),
+            graphData =
+                listOf(
+                    WealthFortuneGraphPoint(age = 20, amount = 40_000_000),
+                    WealthFortuneGraphPoint(age = 30, amount = 30_000_000),
+                    WealthFortuneGraphPoint(age = 40, amount = 25_000_000),
+                    WealthFortuneGraphPoint(age = 50, amount = 60_000_000),
+                    WealthFortuneGraphPoint(age = 60, amount = 150_000_000),
+                    WealthFortuneGraphPoint(age = 70, amount = 120_000_000),
+                    WealthFortuneGraphPoint(age = 80, amount = 90_000_000)
+                ),
+            events =
+                listOf(
+                    WealthFortuneEvent(
+                        age = 29,
+                        description = "풀매수하자마자 거래정지 당함",
+                        amount = -30_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 50,
+                        description = "중고거래 사기로 벽돌 배송받음",
+                        amount = -1_500_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 73,
+                        description = "30년 전 잊었던 주식이 대박남",
+                        amount = 500_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    )
+                )
         ),
-        events = listOf(
-            WealthFortuneEvent(age = 29, description = "풀매수하자마자 거래정지 당함", amount = -30_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")),
-            WealthFortuneEvent(age = 50, description = "중고거래 사기로 벽돌 배송받음", amount = -1_500_000, iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")),
-            WealthFortuneEvent(age = 73, description = "30년 전 잊었던 주식이 대박남", amount = 500_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png"))
-        )
-    ),
-    WealthFortuneResultResponse(
-        id = 3,
-        fortuneType = "짠테크 만렙 고수형",
-        fortuneTypeDescription = "티끌 모아 빌딩 올릴 자린고비",
-        fortuneDetail = "당신은 지출의 누수를 허용하지 않는 금융 성벽의 파수꾼입니다. 100원 단위의 지출조차 효율성을 따지며, 불필요한 과시 소비보다는 자산이 늘어가는 숫자의 즐거움을 누구보다 잘 알고 있습니다. 남들이 욜로를 외칠 때 당신은 미래를 설계하는 냉철한 현실주의자입니다.\n\n젊은 시절 남들이 유행을 쫓을 때 당신이 다진 비옥한 종잣돈은 노년에 거대한 그늘과 끊이지 않는 열매를 선사할 것입니다. 절약은 단순히 아끼는 행위가 아니라, 인생의 통제권을 본인의 손에 쥐는 과정임을 당신은 이미 증명하고 있습니다.\n\n60대 이후에는 친구들 사이에서 가장 먼저 '조물주 위의 건물주' 타이틀을 거머쥐게 될 실속파 부자의 전형입니다. 검소함 속에 숨겨진 강력한 자본력은 위기 상황에서 더욱 빛을 발하며, 당신을 가장 안전한 상류층으로 이끌어 줄 것입니다.",
-        fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/saver.png"),
-        graphData = listOf(
-            WealthFortuneGraphPoint(age = 20, amount = 60_000_000),
-            WealthFortuneGraphPoint(age = 40, amount = 400_000_000),
-            WealthFortuneGraphPoint(age = 60, amount = 1_500_000_000),
-            WealthFortuneGraphPoint(age = 80, amount = 3_500_000_000)
+        WealthFortuneResultResponse(
+            id = 3,
+            fortuneType = "짠테크 만렙 고수형",
+            fortuneTypeDescription = "티끌 모아 빌딩 올릴 자린고비",
+            fortuneDetail = "당신은 지출의 누수를 허용하지 않는 금융 성벽의 파수꾼입니다. 100원 단위의 지출조차 효율성을 따지며, 불필요한 과시 소비보다는 자산이 늘어가는 숫자의 즐거움을 누구보다 잘 알고 있습니다. 남들이 욜로를 외칠 때 당신은 미래를 설계하는 냉철한 현실주의자입니다.\n\n젊은 시절 남들이 유행을 쫓을 때 당신이 다진 비옥한 종잣돈은 노년에 거대한 그늘과 끊이지 않는 열매를 선사할 것입니다. 절약은 단순히 아끼는 행위가 아니라, 인생의 통제권을 본인의 손에 쥐는 과정임을 당신은 이미 증명하고 있습니다.\n\n60대 이후에는 친구들 사이에서 가장 먼저 '조물주 위의 건물주' 타이틀을 거머쥐게 될 실속파 부자의 전형입니다. 검소함 속에 숨겨진 강력한 자본력은 위기 상황에서 더욱 빛을 발하며, 당신을 가장 안전한 상류층으로 이끌어 줄 것입니다.",
+            fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/saver.png"),
+            graphData =
+                listOf(
+                    WealthFortuneGraphPoint(age = 20, amount = 60_000_000),
+                    WealthFortuneGraphPoint(age = 30, amount = 180_000_000),
+                    WealthFortuneGraphPoint(age = 40, amount = 400_000_000),
+                    WealthFortuneGraphPoint(age = 50, amount = 900_000_000),
+                    WealthFortuneGraphPoint(age = 60, amount = 1_500_000_000),
+                    WealthFortuneGraphPoint(age = 70, amount = 2_500_000_000),
+                    WealthFortuneGraphPoint(age = 80, amount = 3_500_000_000)
+                ),
+            events =
+                listOf(
+                    WealthFortuneEvent(
+                        age = 26,
+                        description = "길가다 5만원권 줍기 성공",
+                        amount = 50_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 44,
+                        description = "경품 응모로 냉장고 당첨됨",
+                        amount = 3_500_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 71,
+                        description = "30년 모은 포인트로 명품 가방 삼",
+                        amount = 10_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    )
+                )
         ),
-        events = listOf(
-            WealthFortuneEvent(age = 26, description = "길가다 5만원권 줍기 성공", amount = 50_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")),
-            WealthFortuneEvent(age = 44, description = "경품 응모로 냉장고 당첨됨", amount = 3_500_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")),
-            WealthFortuneEvent(age = 71, description = "30년 모은 포인트로 명품 가방 삼", amount = 10_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png"))
-        )
-    ),
-    WealthFortuneResultResponse(
-        id = 4,
-        fortuneType = "금사빠 금전 투자형",
-        fortuneTypeDescription = "감정이 앞서는 로맨티스트 투자자",
-        fortuneDetail = "당신은 투자 대상과 쉽게 사랑에 빠지는 로맨틱한 투자자입니다. 매혹적인 수익률 광고나 지인의 확신에 찬 한마디에 심장이 먼저 뛰며, 논리적인 분석보다는 미래의 장밋빛 전망에 현혹되기 쉬운 기질을 가지고 있습니다. 한 번 믿음을 주면 끝까지 믿어버리는 순수함이 장점이자 단점입니다.\n\n신기하게도 절체절명의 위기마다 당신을 돕는 귀인이 나타나거나 예상치 못한 횡재수로 구사일생하는 천운을 타고났습니다. 큰 손실을 보고도 금방 기운을 차려 다시 도전하는 긍정적인 에너지는 재물운을 끌어당기는 자석 역할을 합니다.\n\n이성적인 파트너의 조언을 시스템화한다면, 당신의 도전 정신은 남들이 상상하지 못한 기적 같은 자산 규모를 현실로 만들어줄 것입니다. 말년에는 풍부한 경험을 바탕으로 투자계의 마당발로 통하며 남부럽지 않은 자산을 유지하게 됩니다.",
-        fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/romantic.png"),
-        graphData = listOf(
-            WealthFortuneGraphPoint(age = 20, amount = 35_000_000),
-            WealthFortuneGraphPoint(age = 40, amount = 70_000_000),
-            WealthFortuneGraphPoint(age = 60, amount = 40_000_000),
-            WealthFortuneGraphPoint(age = 80, amount = 400_000_000)
+        WealthFortuneResultResponse(
+            id = 4,
+            fortuneType = "금사빠 금전 투자형",
+            fortuneTypeDescription = "감정이 앞서는 로맨티스트 투자자",
+            fortuneDetail = "당신은 투자 대상과 쉽게 사랑에 빠지는 로맨틱한 투자자입니다. 매혹적인 수익률 광고나 지인의 확신에 찬 한마디에 심장이 먼저 뛰며, 논리적인 분석보다는 미래의 장밋빛 전망에 현혹되기 쉬운 기질을 가지고 있습니다. 한 번 믿음을 주면 끝까지 믿어버리는 순수함이 장점이자 단점입니다.\n\n신기하게도 절체절명의 위기마다 당신을 돕는 귀인이 나타나거나 예상치 못한 횡재수로 구사일생하는 천운을 타고났습니다. 큰 손실을 보고도 금방 기운을 차려 다시 도전하는 긍정적인 에너지는 재물운을 끌어당기는 자석 역할을 합니다.\n\n이성적인 파트너의 조언을 시스템화한다면, 당신의 도전 정신은 남들이 상상하지 못한 기적 같은 자산 규모를 현실로 만들어줄 것입니다. 말년에는 풍부한 경험을 바탕으로 투자계의 마당발로 통하며 남부럽지 않은 자산을 유지하게 됩니다.",
+            fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/romantic.png"),
+            graphData =
+                listOf(
+                    WealthFortuneGraphPoint(age = 20, amount = 35_000_000),
+                    WealthFortuneGraphPoint(age = 30, amount = 50_000_000),
+                    WealthFortuneGraphPoint(age = 40, amount = 70_000_000),
+                    WealthFortuneGraphPoint(age = 50, amount = 55_000_000),
+                    WealthFortuneGraphPoint(age = 60, amount = 40_000_000),
+                    WealthFortuneGraphPoint(age = 70, amount = 180_000_000),
+                    WealthFortuneGraphPoint(age = 80, amount = 400_000_000)
+                ),
+            events =
+                listOf(
+                    WealthFortuneEvent(
+                        age = 32,
+                        description = "사기꾼에게 속아 '우주 땅' 매입",
+                        amount = -20_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 51,
+                        description = "가짜 연예인 사칭에 후원금 보냄",
+                        amount = -50_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 69,
+                        description = "창고에서 레어 카드 뭉치 발견",
+                        amount = 100_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    )
+                )
         ),
-        events = listOf(
-            WealthFortuneEvent(age = 32, description = "사기꾼에게 속아 '우주 땅' 매입", amount = -20_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")),
-            WealthFortuneEvent(age = 51, description = "가짜 연예인 사칭에 후원금 보냄", amount = -50_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_negative.png")),
-            WealthFortuneEvent(age = 69, description = "창고에서 레어 카드 뭉치 발견", amount = 100_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png"))
-        )
-    ),
-    WealthFortuneResultResponse(
-        id = 5,
-        fortuneType = "뚝심 있는 외길 장인형",
-        fortuneTypeDescription = "한 우물만 파서 부를 일구는 실력파",
-        fortuneDetail = "유행하는 테마주나 코인 열풍 속에서도 당신은 본인이 가야 할 길을 묵묵히 걷는 사람입니다. 당장의 큰 이익보다 본인의 전문 기술이나 커리어를 갈고닦는 데 집중하며, 그렇게 쌓인 '전문성'은 시간이 지남에 따라 대체 불가능한 가치로 치환됩니다.\n\n초반에는 성장이 더뎌 보여 조바심이 날 수도 있으나, 임계점을 돌파하는 순간 당신의 부는 폭발적인 가속도를 얻게 됩니다. 정직하게 흘린 땀방울이 자본으로 치환되는 과정은 누구보다 견고하며, 경기 불황의 파도에도 흔들리지 않는 뿌리 깊은 재력을 형성하게 합니다.\n\n말년에는 해당 분야의 거장으로서 부와 명예를 동시에 거머쥐고 자손들에게도 존경받는 자산가가 될 것입니다. 당신의 성실함은 배신하지 않으며, 인생 후반전으로 갈수록 금전적 여유와 정신적 만족감이 동시에 정점에 달하게 됩니다.",
-        fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/craftsman.png"),
-        graphData = listOf(
-            WealthFortuneGraphPoint(age = 20, amount = 25_000_000),
-            WealthFortuneGraphPoint(age = 40, amount = 200_000_000),
-            WealthFortuneGraphPoint(age = 60, amount = 1_200_000_000),
-            WealthFortuneGraphPoint(age = 80, amount = 3_000_000_000)
-        ),
-        events = listOf(
-            WealthFortuneEvent(age = 38, description = "한 우물 판 기술로 연봉 떡상", amount = 80_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")),
-            WealthFortuneEvent(age = 55, description = "장인 정신에 감동한 부자가 땅 증여", amount = 500_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")),
-            WealthFortuneEvent(age = 74, description = "평생의 노하우 담긴 저서가 대박", amount = 200_000_000, iconUrl = Image.custom("logos/fortune/wealth/event_positive.png"))
+        WealthFortuneResultResponse(
+            id = 5,
+            fortuneType = "뚝심 있는 외길 장인형",
+            fortuneTypeDescription = "한 우물만 파서 부를 일구는 실력파",
+            fortuneDetail = "유행하는 테마주나 코인 열풍 속에서도 당신은 본인이 가야 할 길을 묵묵히 걷는 사람입니다. 당장의 큰 이익보다 본인의 전문 기술이나 커리어를 갈고닦는 데 집중하며, 그렇게 쌓인 '전문성'은 시간이 지남에 따라 대체 불가능한 가치로 치환됩니다.\n\n초반에는 성장이 더뎌 보여 조바심이 날 수도 있으나, 임계점을 돌파하는 순간 당신의 부는 폭발적인 가속도를 얻게 됩니다. 정직하게 흘린 땀방울이 자본으로 치환되는 과정은 누구보다 견고하며, 경기 불황의 파도에도 흔들리지 않는 뿌리 깊은 재력을 형성하게 합니다.\n\n말년에는 해당 분야의 거장으로서 부와 명예를 동시에 거머쥐고 자손들에게도 존경받는 자산가가 될 것입니다. 당신의 성실함은 배신하지 않으며, 인생 후반전으로 갈수록 금전적 여유와 정신적 만족감이 동시에 정점에 달하게 됩니다.",
+            fortuneTypeImageUrl = Image.custom("logos/fortune/wealth/craftsman.png"),
+            graphData =
+                listOf(
+                    WealthFortuneGraphPoint(age = 20, amount = 25_000_000),
+                    WealthFortuneGraphPoint(age = 30, amount = 90_000_000),
+                    WealthFortuneGraphPoint(age = 40, amount = 200_000_000),
+                    WealthFortuneGraphPoint(age = 50, amount = 600_000_000),
+                    WealthFortuneGraphPoint(age = 60, amount = 1_200_000_000),
+                    WealthFortuneGraphPoint(age = 70, amount = 2_200_000_000),
+                    WealthFortuneGraphPoint(age = 80, amount = 3_000_000_000)
+                ),
+            events =
+                listOf(
+                    WealthFortuneEvent(
+                        age = 38,
+                        description = "한 우물 판 기술로 연봉 떡상",
+                        amount = 80_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 55,
+                        description = "장인 정신에 감동한 부자가 땅 증여",
+                        amount = 500_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    ),
+                    WealthFortuneEvent(
+                        age = 74,
+                        description = "평생의 노하우 담긴 저서가 대박",
+                        amount = 200_000_000,
+                        iconUrl = Image.custom("logos/fortune/wealth/event_positive.png")
+                    )
+                )
         )
     )
+
+// Mock 인메모리 저장소
+private data class StoredWealthResult(
+    val resultId: String,
+    val name: String,
+    val result: WealthFortuneResultResponse,
+    val createdAt: Long = System.currentTimeMillis()
 )
 
-fun Route.wealthFortuneTest() {
-    get("/wealth-fortune-test") {
-        val result = wealthFortuneResults.random()
-        call.respond(HttpStatusCode.OK, result)
+private data class StoredWealthGroup(
+    val groupId: String,
+    val groupName: String,
+    val inviteCode: String,
+    val memberResultIds: MutableList<String>
+)
+
+private val wealthResultStore = java.util.concurrent.ConcurrentHashMap<String, StoredWealthResult>()
+private val wealthGroupStore = java.util.concurrent.ConcurrentHashMap<String, StoredWealthGroup>()
+private val wealthInviteCodeIndex = java.util.concurrent.ConcurrentHashMap<String, String>() // inviteCode -> groupId
+private val wealthTestCounter =
+    java.util.concurrent.atomic
+        .AtomicLong(389L) // 초기값 - 디자인 "389명"
+
+private const val WEALTH_GROUP_MAX_MEMBERS = 50
+
+private fun generateInviteCode(): String {
+    val chars = ('a'..'z') + ('0'..'9')
+    return (1..8).map { chars.random() }.joinToString("")
+}
+
+private fun WealthFortuneResultResponse.amountByAgeGroup(ageGroup: String): Long =
+    when (ageGroup) {
+        "all" -> graphData.maxOf { it.amount }
+        else -> {
+            val age =
+                ageGroup.toIntOrNull()
+                    ?: throw BusinessException(ErrorCode.WEALTH_INVALID_AGE_GROUP)
+            graphData.find { it.age == age }?.amount
+                ?: throw BusinessException(ErrorCode.WEALTH_INVALID_AGE_GROUP)
+        }
     }
+
+fun Route.wealthTestRoutes() {
+    // 테스트 실행
+    post("/wealth-test") {
+        val request = call.receive<WealthTestRequest>()
+        request.validate()
+
+        val result = wealthFortuneResults.random()
+        val resultId =
+            java.util.UUID
+                .randomUUID()
+                .toString()
+        wealthResultStore[resultId] = StoredWealthResult(resultId, request.name, result)
+        wealthTestCounter.incrementAndGet()
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthTestResultResponse(resultId = resultId, name = request.name, result = result)
+        )
+    }
+
+    // 개인 결과 조회
+    get("/wealth-test/results/{resultId}") {
+        val resultId = call.requirePathParameter("resultId")
+        val stored =
+            wealthResultStore[resultId]
+                ?: throw BusinessException(ErrorCode.WEALTH_RESULT_NOT_FOUND)
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthTestResultResponse(resultId = stored.resultId, name = stored.name, result = stored.result)
+        )
+    }
+
+    // 누적 참여자 수
+    get("/wealth-test/stats") {
+        call.respond(
+            HttpStatusCode.OK,
+            WealthTestStatsResponse(totalParticipants = wealthTestCounter.get())
+        )
+    }
+
+    // 그룹 생성
+    post("/wealth-test/groups") {
+        val request = call.receive<WealthGroupCreateRequest>()
+        request.validate()
+
+        request.resultId?.let {
+            if (!wealthResultStore.containsKey(it)) {
+                throw BusinessException(ErrorCode.WEALTH_RESULT_NOT_FOUND)
+            }
+        }
+
+        val groupId =
+            java.util.UUID
+                .randomUUID()
+                .toString()
+        val inviteCode = generateUniqueInviteCode()
+        val members = request.resultId?.let { mutableListOf(it) } ?: mutableListOf()
+
+        val group =
+            StoredWealthGroup(
+                groupId = groupId,
+                groupName = request.groupName,
+                inviteCode = inviteCode,
+                memberResultIds = members
+            )
+        wealthGroupStore[groupId] = group
+        wealthInviteCodeIndex[inviteCode] = groupId
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthGroupCreateResponse(
+                groupId = groupId,
+                groupName = group.groupName,
+                inviteCode = inviteCode,
+                memberCount = members.size
+            )
+        )
+    }
+
+    // 초대 코드로 그룹 정보 조회
+    get("/wealth-test/groups/invite/{inviteCode}") {
+        val inviteCode = call.requirePathParameter("inviteCode")
+        val groupId =
+            wealthInviteCodeIndex[inviteCode]
+                ?: throw BusinessException(ErrorCode.WEALTH_GROUP_NOT_FOUND)
+        val group =
+            wealthGroupStore[groupId]
+                ?: throw BusinessException(ErrorCode.WEALTH_GROUP_NOT_FOUND)
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthGroupInviteResponse(
+                groupId = group.groupId,
+                groupName = group.groupName,
+                memberCount = group.memberResultIds.size
+            )
+        )
+    }
+
+    // 그룹 가입
+    post("/wealth-test/groups/{groupId}/join") {
+        val groupId = call.requirePathParameter("groupId")
+        val request = call.receive<WealthGroupJoinRequest>()
+        request.validate()
+
+        val group =
+            wealthGroupStore[groupId]
+                ?: throw BusinessException(ErrorCode.WEALTH_GROUP_NOT_FOUND)
+
+        if (!wealthResultStore.containsKey(request.resultId)) {
+            throw BusinessException(ErrorCode.WEALTH_RESULT_NOT_FOUND)
+        }
+
+        synchronized(group.memberResultIds) {
+            if (group.memberResultIds.size >= WEALTH_GROUP_MAX_MEMBERS) {
+                throw BusinessException(ErrorCode.WEALTH_GROUP_FULL)
+            }
+            if (!group.memberResultIds.contains(request.resultId)) {
+                group.memberResultIds.add(request.resultId)
+            }
+        }
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthGroupJoinResponse(
+                groupId = group.groupId,
+                groupName = group.groupName,
+                memberCount = group.memberResultIds.size
+            )
+        )
+    }
+
+    // 그룹 랭킹 조회
+    get("/wealth-test/groups/{groupId}/ranking") {
+        val groupId = call.requirePathParameter("groupId")
+        val ageGroup = call.request.queryParameters["ageGroup"] ?: "all"
+
+        val group =
+            wealthGroupStore[groupId]
+                ?: throw BusinessException(ErrorCode.WEALTH_GROUP_NOT_FOUND)
+
+        val members = group.memberResultIds.mapNotNull { wealthResultStore[it] }
+        val ranked =
+            members
+                .map { stored -> stored to stored.result.amountByAgeGroup(ageGroup) }
+                .sortedWith(
+                    compareByDescending<Pair<StoredWealthResult, Long>> { it.second }.thenBy { it.first.createdAt }
+                ).mapIndexed { idx, (stored, amount) ->
+                    WealthGroupRankingEntry(
+                        rank = idx + 1,
+                        resultId = stored.resultId,
+                        name = stored.name,
+                        amount = amount,
+                        result = stored.result
+                    )
+                }
+
+        call.respond(
+            HttpStatusCode.OK,
+            WealthGroupRankingResponse(
+                groupName = group.groupName,
+                inviteCode = group.inviteCode,
+                totalMemberCount = ranked.size,
+                ageGroup = ageGroup,
+                rankings = ranked
+            )
+        )
+    }
+}
+
+private fun generateUniqueInviteCode(): String {
+    repeat(10) {
+        val code = generateInviteCode()
+        if (!wealthInviteCodeIndex.containsKey(code)) return code
+    }
+    throw InternalServerErrorException()
 }
 
 // =============================================================================
