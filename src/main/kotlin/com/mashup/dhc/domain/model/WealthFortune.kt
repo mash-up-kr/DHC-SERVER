@@ -93,6 +93,18 @@ class WealthFortuneRepository(
             .getCollection<WealthFortune>(WEALTH_FORTUNE_COLLECTION)
             .countDocuments()
 
+    suspend fun deleteAll(): Long {
+        try {
+            return database
+                .getCollection<WealthFortune>(WEALTH_FORTUNE_COLLECTION)
+                .deleteMany(org.bson.Document())
+                .deletedCount
+        } catch (e: MongoException) {
+            System.err.println("Unable to delete WealthFortune docs: $e")
+        }
+        return 0
+    }
+
     suspend fun insertOne(wealthFortune: WealthFortune): BsonValue? {
         try {
             return database

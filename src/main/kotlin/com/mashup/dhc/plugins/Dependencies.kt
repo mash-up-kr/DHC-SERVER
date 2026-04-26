@@ -80,13 +80,13 @@ fun Application.configureDependencies(): Dependencies {
     val wealthFortuneResultRepository = WealthFortuneResultRepository(mongoDatabase)
     val wealthFortuneGroupRepository = WealthFortuneGroupRepository(mongoDatabase)
 
-    // 부자 테스트 인덱스는 컬렉션별 병렬 생성, 시드 적재는 wealth_fortune 인덱스 이후 별도 launch
-    val wealthFortuneSeedLoader = WealthFortuneSeedLoader(wealthFortuneRepository)
+    // 부자 테스트 인덱스는 컬렉션별 병렬 생성, 시드 동기화는 wealth_fortune 인덱스 이후 별도 launch
+    val wealthFortuneSeedLoader = WealthFortuneSeedLoader(mongoDatabase, wealthFortuneRepository)
     backgroundScope.launch { wealthFortuneResultRepository.ensureIndexes() }
     backgroundScope.launch { wealthFortuneGroupRepository.ensureIndexes() }
     backgroundScope.launch {
         wealthFortuneRepository.ensureIndexes()
-        wealthFortuneSeedLoader.seedIfEmpty()
+        wealthFortuneSeedLoader.sync()
     }
 
     // Service 생성
