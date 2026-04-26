@@ -2798,7 +2798,7 @@ components:
       properties:
         resultId:
           type: string
-          example: "550e8400-e29b-41d4-a716-446655440000"
+          example: "6651a0cdef0123456789abcd"
         name:
           type: string
           example: "홍길동"
@@ -2840,7 +2840,7 @@ components:
       properties:
         groupId:
           type: string
-          example: "660f9500-f39c-52e5-b827-557766551111"
+          example: "6651b1d2ef0123456789abce"
         groupName:
           type: string
           example: "부자 모임"
