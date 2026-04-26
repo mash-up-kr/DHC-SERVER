@@ -2,9 +2,11 @@ package com.mashup.dhc.plugins
 
 import com.mashup.dhc.probe.probeRoute
 import com.mashup.dhc.routes.userRoutes
+import com.mashup.dhc.routes.wealthTestRoutes
 import io.ktor.server.application.Application
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.swagger.swaggerUI
+import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 
 fun Application.configureRouting(dependencies: Dependencies) {
@@ -18,6 +20,13 @@ fun Application.configureRouting(dependencies: Dependencies) {
             dependencies.pointMultiplierService,
             dependencies.geminiService
         )
+        route("/api") {
+            wealthTestRoutes(
+                dependencies.wealthFortuneRepository,
+                dependencies.wealthFortuneResultRepository,
+                dependencies.wealthFortuneGroupRepository
+            )
+        }
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
 
         // 정적 파일 제공

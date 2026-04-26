@@ -6,6 +6,9 @@ import com.mashup.dhc.domain.model.MissionRepository
 import com.mashup.dhc.domain.model.PastRoutineHistoryRepository
 import com.mashup.dhc.domain.model.ShareRepository
 import com.mashup.dhc.domain.model.UserRepository
+import com.mashup.dhc.domain.model.WealthFortuneGroupRepository
+import com.mashup.dhc.domain.model.WealthFortuneRepository
+import com.mashup.dhc.domain.model.WealthFortuneResultRepository
 import com.mashup.dhc.domain.service.FortuneService
 import com.mashup.dhc.domain.service.GeminiService
 import com.mashup.dhc.domain.service.LoveMissionService
@@ -15,6 +18,7 @@ import com.mashup.dhc.domain.service.PointMultiplierService
 import com.mashup.dhc.domain.service.ShareService
 import com.mashup.dhc.domain.service.TransactionService
 import com.mashup.dhc.domain.service.UserService
+import com.mashup.dhc.domain.service.WealthFortuneSeedLoader
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import io.ktor.server.application.Application
@@ -25,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 data class Dependencies(
     val userService: UserService,
@@ -34,7 +39,10 @@ data class Dependencies(
     val pointMultiplierService: PointMultiplierService,
     val geminiService: GeminiService,
     val mongoClient: MongoClient,
-    val mongoDatabase: MongoDatabase
+    val mongoDatabase: MongoDatabase,
+    val wealthFortuneRepository: WealthFortuneRepository,
+    val wealthFortuneResultRepository: WealthFortuneResultRepository,
+    val wealthFortuneGroupRepository: WealthFortuneGroupRepository
 )
 
 fun Application.configureDependencies(): Dependencies {
@@ -68,6 +76,18 @@ fun Application.configureDependencies(): Dependencies {
     val fortuneRepository = FortuneRepository(mongoDatabase)
     val shareRepository = ShareRepository(mongoDatabase)
     val loveMissionRepository = LoveMissionRepository(mongoDatabase)
+    val wealthFortuneRepository = WealthFortuneRepository(mongoDatabase)
+    val wealthFortuneResultRepository = WealthFortuneResultRepository(mongoDatabase)
+    val wealthFortuneGroupRepository = WealthFortuneGroupRepository(mongoDatabase)
+
+    // 부자 테스트 인덱스는 컬렉션별 병렬 생성, 시드 적재는 wealth_fortune 인덱스 이후 별도 launch
+    val wealthFortuneSeedLoader = WealthFortuneSeedLoader(wealthFortuneRepository)
+    backgroundScope.launch { wealthFortuneResultRepository.ensureIndexes() }
+    backgroundScope.launch { wealthFortuneGroupRepository.ensureIndexes() }
+    backgroundScope.launch {
+        wealthFortuneRepository.ensureIndexes()
+        wealthFortuneSeedLoader.seedIfEmpty()
+    }
 
     // Service 생성
     val transactionService = TransactionService(mongoClient)
@@ -125,7 +145,10 @@ fun Application.configureDependencies(): Dependencies {
         pointMultiplierService = pointMultiplierService,
         geminiService = geminiService,
         mongoClient = mongoClient,
-        mongoDatabase = mongoDatabase
+        mongoDatabase = mongoDatabase,
+        wealthFortuneRepository = wealthFortuneRepository,
+        wealthFortuneResultRepository = wealthFortuneResultRepository,
+        wealthFortuneGroupRepository = wealthFortuneGroupRepository
     )
 }
 

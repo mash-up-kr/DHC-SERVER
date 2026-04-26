@@ -2692,14 +2692,13 @@ components:
         - fortuneType
         - fortuneTypeDescription
         - fortuneDetail
-        - fortuneTypeImageUrl
         - graphData
         - events
       properties:
         id:
-          type: integer
-          description: "금전운 타입 ID"
-          example: 1
+          type: string
+          description: "금전운 콘텐츠 ID (ObjectId hex). 캐릭터 이미지는 FE 에서 별도 매핑."
+          example: "6651a0cdef0123456789abcd"
         fortuneType:
           type: string
           description: "금전운 타입명"
@@ -2712,10 +2711,6 @@ components:
           type: string
           description: "금전운 상세 본문"
           example: "당신은 자본주의 시장에서 돈이 흐르는 길목을..."
-        fortuneTypeImageUrl:
-          type: string
-          description: "금전운 타입 이미지 URL"
-          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/midas.png"
         graphData:
           type: array
           description: "연령대별 자산 그래프 데이터 (20/30/40/50/60/70/80대, 총 7개 포인트)"

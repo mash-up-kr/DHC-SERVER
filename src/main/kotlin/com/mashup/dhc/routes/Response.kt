@@ -570,11 +570,10 @@ data class QaPointResponse(
 
 @Serializable
 data class WealthFortuneResultResponse(
-    val id: Int,
+    val id: String,
     val fortuneType: String,
     val fortuneTypeDescription: String,
     val fortuneDetail: String,
-    val fortuneTypeImageUrl: Image,
     val graphData: List<WealthFortuneGraphPoint>,
     val events: List<WealthFortuneEvent>
 )
