@@ -30,6 +30,7 @@ data class WealthFortune(
     @BsonId val id: ObjectId? = null,
     val fortuneType: String,
     val fortuneTypeDescription: String,
+    val fortuneTypeImageUrl: Image,
     val fortuneDetail: String,
     val graphData: List<WealthFortuneGraphPointDoc>,
     val events: List<WealthFortuneEventDoc>

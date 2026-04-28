@@ -932,6 +932,7 @@ private fun WealthFortune.toResultResponse(): WealthFortuneResultResponse =
         id = id?.toHexString() ?: "",
         fortuneType = fortuneType,
         fortuneTypeDescription = fortuneTypeDescription,
+        fortuneTypeImageUrl = fortuneTypeImageUrl,
         fortuneDetail = fortuneDetail,
         graphData = graphData.map { WealthFortuneGraphPoint(age = it.age, amount = it.amount) },
         events =

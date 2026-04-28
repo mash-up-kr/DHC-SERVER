@@ -573,6 +573,7 @@ data class WealthFortuneResultResponse(
     val id: String,
     val fortuneType: String,
     val fortuneTypeDescription: String,
+    val fortuneTypeImageUrl: Image,
     val fortuneDetail: String,
     val graphData: List<WealthFortuneGraphPoint>,
     val events: List<WealthFortuneEvent>

@@ -2691,22 +2691,28 @@ components:
         - id
         - fortuneType
         - fortuneTypeDescription
+        - fortuneTypeImageUrl
         - fortuneDetail
         - graphData
         - events
       properties:
         id:
           type: string
-          description: "금전운 콘텐츠 ID (ObjectId hex). 캐릭터 이미지는 FE 에서 별도 매핑."
+          description: "금전운 콘텐츠 ID (ObjectId hex)"
           example: "6651a0cdef0123456789abcd"
         fortuneType:
           type: string
           description: "금전운 타입명"
-          example: "마이더스의 손 형"
+          example: "황금 알 낳는 거위형"
         fortuneTypeDescription:
           type: string
           description: "금전운 타입 한줄 설명"
-          example: "손만 대면 수익이 터지는 사업가"
+          example: "손대는 사업마다 황금알로 부화시키는 천부적인 생산 능력자"
+        fortuneTypeImageUrl:
+          type: string
+          format: uri
+          description: "금전운 타입 캐릭터 이미지 URL"
+          example: "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/axircf8nexkb/b/dhc-storage/o/logos/fortune/wealth/png/goose.png"
         fortuneDetail:
           type: string
           description: "금전운 상세 본문"

@@ -84,6 +84,7 @@ class WealthFortuneSeedLoader(
 private data class WealthFortuneSeedDto(
     val fortuneType: String,
     val fortuneTypeDescription: String,
+    val fortuneTypeImageUrl: String,
     val fortuneDetail: String,
     val graphData: List<GraphPointDto>,
     val events: List<EventDto>
@@ -92,6 +93,7 @@ private data class WealthFortuneSeedDto(
         WealthFortune(
             fortuneType = fortuneType,
             fortuneTypeDescription = fortuneTypeDescription,
+            fortuneTypeImageUrl = Image.custom(fortuneTypeImageUrl),
             fortuneDetail = fortuneDetail,
             graphData = graphData.map { WealthFortuneGraphPointDoc(it.age, it.amount) },
             events =
